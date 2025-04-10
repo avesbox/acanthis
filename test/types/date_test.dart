@@ -194,5 +194,14 @@ void main() {
             throwsA(TypeMatcher<ValidationError>()));
       },
     );
+
+    test("checks and transformations can be used as annotations", () {
+      // TODO: DateTime has no const constructor
+      // @DateChecks.min(DateTime())
+      // @DateChecks.max(Duration(days: 1))
+      @DateChecks.differsFromNow(Duration(days: 1))
+      // ignore: unused_local_variable
+          final a = 1;
+    });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:acanthis/acanthis.dart' as acanthis;
 import 'package:acanthis/acanthis.dart';
+import 'package:acanthis/src/types/string.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -395,6 +396,55 @@ void main() {
 
       expect(resultParse.success, true);
       expect(resultParse.value, 'test');
+    });
+    test("checks and transformations can be used as annotations", () {
+      // TODO: RegExp is not const
+      //@StringChecks.pattern(RegExp(r'^[a-z]+$'))
+      @StringChecks.email
+      @StringChecks.min(1)
+      @StringChecks.max(1)
+      @StringChecks.letters
+      @StringChecks.strictLetters
+      @StringChecks.digits
+      @StringChecks.strictDigits
+      @StringChecks.alphanumeric
+      @StringChecks.strictAlphanumeric
+      @StringChecks.alphanumericWithSpaces
+      @StringChecks.strictAlphanumericWithSpaces
+      @StringChecks.specialCharacters
+      @StringChecks.strictSpecialCharacters
+      @StringChecks.allCharacters
+      @StringChecks.strictAllCharacters
+      @StringChecks.upperCase
+      @StringChecks.lowerCase
+      @StringChecks.mixedCase
+      @StringChecks.dateTime
+      @StringChecks.time
+      @StringChecks.uri
+      @StringChecks.required
+      @StringChecks.length(2)
+      @StringChecks.contains("")
+      @StringChecks.startsWith("")
+      @StringChecks.endsWith("")
+      @StringChecks.cuid
+      @StringChecks.cuid2
+      @StringChecks.ulid
+      @StringChecks.uuid
+      @StringChecks.nanoid
+      @StringChecks.jwt
+      @StringChecks.base64
+      @StringChecks.hexColor
+      @StringChecks.url
+      @StringChecks.card
+      @StringChecks.uncompromised
+      @StringTransforms.toUpperCase
+      @StringTransforms.toLowerCase
+      @StringTransforms.base64Encode
+      @StringTransforms.base64Decode
+      @StringTransforms.trim
+
+      // ignore: unused_local_variable
+          final a = 1;
     });
   });
 

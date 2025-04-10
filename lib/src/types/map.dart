@@ -444,7 +444,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  AcanthisMap<V> withAsyncCheck(AcanthisAsyncCheck<Map<String, V>> check) {
+  AcanthisMap<V> withAsyncCheck(BaseAcanthisAsyncCheck<Map<String, V>> check) {
     return AcanthisMap<V>._(
       fields: _fields,
       passthrough: _passthrough,
@@ -456,7 +456,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  AcanthisMap<V> withCheck(AcanthisCheck<Map<String, V>> check) {
+  AcanthisMap<V> withCheck(BaseAcanthisCheck<Map<String, V>> check) {
     return AcanthisMap<V>._(
       fields: _fields,
       passthrough: _passthrough,
@@ -469,7 +469,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   AcanthisMap<V> withTransformation(
-      AcanthisTransformation<Map<String, V>> transformation) {
+      BaseAcanthisTransformation<Map<String, V>> transformation) {
     return AcanthisMap<V>._(
       fields: _fields,
       passthrough: _passthrough,
@@ -518,7 +518,7 @@ class LazyEntry extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withAsyncCheck(AcanthisAsyncCheck check) {
+  LazyEntry withAsyncCheck(BaseAcanthisAsyncCheck check) {
     return LazyEntry(
       _type,
       operations: operations.add(check),
@@ -527,7 +527,7 @@ class LazyEntry extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withCheck(AcanthisCheck check) {
+  LazyEntry withCheck(BaseAcanthisCheck check) {
     return LazyEntry(
       _type,
       operations: operations.add(check),
@@ -535,7 +535,7 @@ class LazyEntry extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withTransformation(AcanthisTransformation transformation) {
+  LazyEntry withTransformation(BaseAcanthisTransformation transformation) {
     return LazyEntry(
       _type,
       operations: operations.add(transformation),

@@ -1,10 +1,14 @@
 import 'package:acanthis/acanthis.dart' as acanthis;
 import 'package:acanthis/acanthis.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 
 import 'package:test/test.dart';
 
 void main() {
   group('$AcanthisMap', () {
+    test("Can be created using `const`", () {
+      const AcanthisMap(IMap.empty());
+    });
     test(
         'when creating a map validator,'
         'and the map is valid, '

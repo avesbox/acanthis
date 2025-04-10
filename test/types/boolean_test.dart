@@ -103,5 +103,12 @@ void main() {
 
       expect(resultParse.success, true);
     });
+
+    test("checks and transformations can be used as annotations", () {
+      @BooleanChecks.isTrue
+      @BooleanChecks.isFalse
+      // ignore: unused_local_variable
+          final a = 1;
+    });
   });
 }

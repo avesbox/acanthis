@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 void main() {
   group('$AcanthisNullable', () {
     test("Can be created using `const`", () {
-      const AcanthisNullable(AcanthisDate());
+      const AcanthisNullable(AcanthisType<DateTime>());
     });
     test(
         'when creating a nullable validator on a string,'

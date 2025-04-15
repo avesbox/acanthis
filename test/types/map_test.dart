@@ -5,6 +5,9 @@ import 'package:test/test.dart';
 
 void main() {
   group('$AcanthisMap', () {
+    test("Can be created using `const`", () {
+      const AcanthisMap({});
+    });
     test(
         'when creating a map validator,'
         'and the map is valid, '

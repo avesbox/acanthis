@@ -9,8 +9,8 @@ void main() {
   group('$AcanthisPipeline', () {
     test("Can be created using `const`", () {
       const AcanthisPipeline(
-        inType: AcanthisDate(),
-        outType: AcanthisDate(),
+        inType: AcanthisType<DateTime>(),
+        outType: AcanthisType<DateTime>(),
         transform: _transformDateTime,
       );
     });

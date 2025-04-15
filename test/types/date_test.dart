@@ -4,9 +4,9 @@ import 'package:test/test.dart';
 import 'package:acanthis/acanthis.dart' as acanthis;
 
 void main() {
-  group('$AcanthisDate', () {
+  group('$AcanthisType<DateTime> ', () {
     test("Can be created using `const`", () {
-      const AcanthisDate();
+      const AcanthisType<DateTime>();
     });
     test(
         'when creating a date validator,'
@@ -194,5 +194,14 @@ void main() {
             throwsA(TypeMatcher<ValidationError>()));
       },
     );
+
+    test("checks and transformations can be used as annotations", () {
+      // TODO: DateTime has no const constructor
+      // @DateChecks.min(DateTime())
+      // @DateChecks.max(Duration(days: 1))
+      @DateChecks.differsFromNow(Duration(days: 1))
+      // ignore: unused_local_variable
+          final a = 1;
+    });
   });
 }

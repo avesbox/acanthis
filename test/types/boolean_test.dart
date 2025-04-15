@@ -2,9 +2,9 @@ import 'package:acanthis/acanthis.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('$AcanthisBoolean', () {
+  group('$AcanthisType<bool> ', () {
     test("Can be created using `const`", () {
-      const AcanthisBoolean();
+      const AcanthisType<bool>();
     });
     test(
         'when creating a boolean validator, '
@@ -102,6 +102,13 @@ void main() {
       final resultParse = b.parse([true, false]);
 
       expect(resultParse.success, true);
+    });
+
+    test("checks and transformations can be used as annotations", () {
+      @BooleanChecks.isTrue
+      @BooleanChecks.isFalse
+      // ignore: unused_local_variable
+          final a = 1;
     });
   });
 }

@@ -4,9 +4,9 @@ import 'package:test/test.dart';
 import 'package:acanthis/acanthis.dart' as acanthis;
 
 void main() {
-  group('$AcanthisNumber', () {
+  group('$AcanthisType<num> ', () {
     test("Can be created using `const`", () {
-      const AcanthisNumber();
+      const AcanthisType<num>();
     });
     test(
         'when creating a number validator,'
@@ -476,5 +476,25 @@ void main() {
         expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
       },
     );
+    test("checks and transformations can be used as annotations", () {
+      @NumericChecks.between(min: 5, max: 11)
+      @NumericChecks.int
+      @NumericChecks.multipleOf(2)
+      @NumericChecks.positive
+      @NumericChecks.finite
+      @NumericChecks.notNaN
+      @NumericChecks.double
+      @NumericChecks.infinite
+      @NumericChecks.nan
+      @NumericChecks.negative
+      @NumericChecks.lt(10)
+      @NumericChecks.gt(5)
+      @NumericChecks.lte(10)
+      @NumericChecks.gte(5)
+      @NumericTransforms.pow(5)
+
+      // ignore: unused_local_variable
+          final a = 1;
+    });
   });
 }

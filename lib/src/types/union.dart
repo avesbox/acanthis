@@ -52,27 +52,27 @@ class AcanthisUnion extends AcanthisType<dynamic> {
   }
 
   @override
-  AcanthisUnion withAsyncCheck(AcanthisAsyncCheck check) {
+  AcanthisUnion withAsyncCheck(BaseAcanthisAsyncCheck check) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(check),
+      operations: [...operations, check],
       isAsync: true,
     );
   }
 
   @override
-  AcanthisUnion withCheck(AcanthisCheck check) {
+  AcanthisUnion withCheck(BaseAcanthisCheck check) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(check),
+      operations: [...operations, check],
     );
   }
 
   @override
-  AcanthisUnion withTransformation(AcanthisTransformation transformation) {
+  AcanthisUnion withTransformation(BaseAcanthisTransformation transformation) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(transformation),
+      operations: [...operations, transformation],
     );
   }
 }

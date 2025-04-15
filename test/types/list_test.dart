@@ -5,7 +5,7 @@ import 'package:acanthis/acanthis.dart' as acanthis;
 void main() {
   group('$AcanthisList', () {
     test("Can be created using `const`", () {
-      const AcanthisList(AcanthisDate());
+      const AcanthisList(AcanthisType<DateTime>());
     });
     test(
         'when creating a list validator,'
@@ -194,6 +194,17 @@ void main() {
 
       expect(resultParse.success, true);
       expect(resultParse.value, ['VALUE', 'OTHER', 'ANOTHER', 'ONEEE']);
+    });
+    test("checks and transformations can be used as annotations", () {
+      @ListChecks.anyOf([])
+      @ListChecks.everyOf([])
+      @ListChecks.unique()
+      @ListChecks.length(1)
+      @ListChecks.min(1)
+      @ListChecks.max(1)
+
+      // ignore: unused_local_variable
+          final a = 1;
     });
   });
 

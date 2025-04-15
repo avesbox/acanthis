@@ -45,39 +45,35 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return super.tryParseAsync(value);
   }
 
-  /// Make a list of nullable elements
-  AcanthisList<T?> list() {
-    return AcanthisList(this);
-  }
-
-  /// Create a union from the nullable
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
   @override
   AcanthisNullable nullable({T? defaultValue}) {
     return this;
   }
 
   @override
-  AcanthisNullable<T> withAsyncCheck(AcanthisAsyncCheck<T?> check) {
+  AcanthisNullable<T> withAsyncCheck(BaseAcanthisAsyncCheck<T?> check) {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
-        operations: operations.add(check),
+        operations: [...operations, check],
         isAsync: true);
   }
 
   @override
-  AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
-    return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(check));
+  AcanthisNullable<T> withCheck(BaseAcanthisCheck<T?> check) {
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: [...operations, check],
+    );
   }
 
   @override
   AcanthisNullable<T> withTransformation(
-      AcanthisTransformation<T?> transformation) {
-    return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(transformation));
+      BaseAcanthisTransformation<T?> transformation) {
+    return AcanthisNullable(
+      element,
+      operations: [...operations, transformation],
+      defaultValue: defaultValue,
+    );
   }
 }

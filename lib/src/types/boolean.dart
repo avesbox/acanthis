@@ -1,3 +1,6 @@
+import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:nanoid2/nanoid2.dart';
+
 import 'list.dart';
 import 'types.dart';
 import 'union.dart';
@@ -6,6 +9,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
   const AcanthisBoolean({
     super.operations,
     super.isAsync,
+    super.key,
   });
 
   /// Add a check to the boolean to check if it is true
@@ -39,6 +43,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
     return AcanthisBoolean(
       operations: operations.add(check),
       isAsync: true,
+      key: key,
     );
   }
 
@@ -46,6 +51,8 @@ class AcanthisBoolean extends AcanthisType<bool> {
   AcanthisBoolean withCheck(AcanthisCheck<bool> check) {
     return AcanthisBoolean(
       operations: operations.add(check),
+      key: key,
+      isAsync: isAsync,
     );
   }
 
@@ -54,8 +61,34 @@ class AcanthisBoolean extends AcanthisType<bool> {
       AcanthisTransformation<bool> transformation) {
     return AcanthisBoolean(
       operations: operations.add(transformation),
+      key: key,
+      isAsync: isAsync,
     );
   }
+  
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    return {
+      'type': 'boolean',
+      if(metadata != null) ...metadata.toJson(),
+    };
+  }
+
+  @override
+  AcanthisBoolean meta(MetadataEntry<bool> metadata) {
+    String key = this.key;
+    if(key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisBoolean(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+
 }
 
 /// Create a boolean validator

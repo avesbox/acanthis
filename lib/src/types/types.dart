@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:meta/meta.dart';
 import '../exceptions/async_exception.dart';
@@ -12,9 +15,11 @@ abstract class AcanthisType<O> {
 
   final bool isAsync;
 
+  final String key;
+
   /// The constructor of the class
   const AcanthisType(
-      {this.operations = const IList.empty(), this.isAsync = false});
+      {this.operations = const IList.empty(), this.isAsync = false, this.key = ''});
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -34,7 +39,7 @@ abstract class AcanthisType<O> {
         newValue = operation(newValue);
       }
     }
-    return AcanthisParseResult(value: newValue);
+    return AcanthisParseResult(value: newValue, metadata: MetadataRegistry().get(key));
   }
 
   /// The tryParse method to try to parse the value
@@ -61,7 +66,7 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue, errors: errors, success: errors.isEmpty);
+        value: newValue, errors: errors, success: errors.isEmpty, metadata: MetadataRegistry().get(key));
   }
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
@@ -83,7 +88,7 @@ abstract class AcanthisType<O> {
         newValue = operation(newValue);
       }
     }
-    return AcanthisParseResult(value: newValue);
+    return AcanthisParseResult<O>(value: newValue, metadata: MetadataRegistry().get(key));
   }
 
   /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
@@ -111,7 +116,7 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue, errors: errors, success: errors.isEmpty);
+        value: newValue, errors: errors, success: errors.isEmpty, metadata: MetadataRegistry().get(key)); 
   }
 
   /// Add a check to the type
@@ -159,6 +164,17 @@ abstract class AcanthisType<O> {
     return withTransformation(
         AcanthisTransformation<O>(transformation: transformation));
   }
+
+  Map<String, dynamic> toJsonSchema();
+
+  AcanthisType<O> meta(MetadataEntry<O> metadata);
+
+  String toJsonSchemaString({int indent = 2}) {
+    final encoder = JsonEncoder.withIndent(' ' * indent);
+    final json = toJsonSchema();
+    return encoder.convert(json);
+  }
+
 }
 
 /// A class that represents a check operation
@@ -329,9 +345,12 @@ class AcanthisParseResult<O> {
   /// A boolean that indicates if the parsing was successful or not
   final bool success;
 
+  /// The metadata of the type
+  final MetadataEntry<O>? metadata;
+
   /// The constructor of the class
   const AcanthisParseResult(
-      {required this.value, this.errors = const {}, this.success = true});
+      {required this.value, this.errors = const {}, this.success = true, this.metadata});
 
   @override
   String toString() {

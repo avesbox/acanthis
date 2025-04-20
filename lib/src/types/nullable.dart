@@ -1,4 +1,6 @@
 import 'package:acanthis/acanthis.dart';
+import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate nullable types
 class AcanthisNullable<T> extends AcanthisType<T?> {
@@ -9,7 +11,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   final AcanthisType<T> element;
 
   const AcanthisNullable(this.element,
-      {this.defaultValue, super.operations, super.isAsync});
+      {this.defaultValue, super.operations, super.isAsync, super.key});
 
   /// override of the [parse] method from [AcanthisType]
   @override
@@ -65,19 +67,47 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
         operations: operations.add(check),
-        isAsync: true);
+        isAsync: true,
+        key: key);
   }
 
   @override
   AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
     return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(check));
+        defaultValue: defaultValue, operations: operations.add(check), isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisNullable<T> withTransformation(
       AcanthisTransformation<T?> transformation) {
     return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(transformation));
+        defaultValue: defaultValue, operations: operations.add(transformation), isAsync: isAsync, key: key);
+  }
+
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    return {
+      'type': 'null',
+      if (metadata != null) ...metadata.toJson(),
+      'default': defaultValue,
+      'properties': element.toJsonSchema(),
+    };
+  }
+  
+  @override
+  AcanthisType<T?> meta(MetadataEntry<T?> metadata) {
+    String key = this.key;
+    if (key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
   }
 }

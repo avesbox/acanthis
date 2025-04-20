@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:nanoid2/nanoid2.dart' as n;
 import 'package:email_validator/email_validator.dart';
 
 import 'dart:convert' as convert;
+import '../registries/metadata_registry.dart';
 import 'list.dart';
 import 'types.dart';
 import 'union.dart';
@@ -36,7 +38,7 @@ const _timeRegex = r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9](?::([0-5]\d))?$';
 
 /// A class to validate string types
 class AcanthisString extends AcanthisType<String> {
-  const AcanthisString({super.isAsync, super.operations});
+  const AcanthisString({super.isAsync, super.operations, super.key});
 
   /// Add a check to the string to check if it is a valid email
   AcanthisString email() {
@@ -48,18 +50,12 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if its length is at least [length]
   AcanthisString min(int length) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => value.length >= length,
-        error: 'Value must be at least $length characters long',
-        name: 'min'));
+    return withCheck(LengthCheck.length(length));
   }
 
   /// Add a check to the string to check if its length is at most [length]
   AcanthisString max(int length) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => value.length <= length,
-        error: 'Value must be at most $length characters long',
-        name: 'maxLength'));
+    return withCheck(LengthCheck.max(length));
   }
 
   /// Add a check to the string to check if follows the pattern [pattern]
@@ -234,10 +230,7 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if it's length is exactly [length]
   AcanthisString length(int length) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => value.length == length,
-        error: 'Value cannot be empty',
-        name: 'notEmpty'));
+    return withCheck(LengthCheck.length(length));
   }
 
   /// Add a check to the string to check if it contains [value]
@@ -291,6 +284,10 @@ class AcanthisString extends AcanthisType<String> {
       alternate = !alternate;
     }
     return sum % 10 == 0;
+  }
+
+  AcanthisString enumerated<T extends Enum>(List<T> enumValues) {
+    return withCheck(EnumeratedCheck(enumValues: enumValues));
   }
 
   AcanthisString cuid() {
@@ -391,19 +388,100 @@ class AcanthisString extends AcanthisType<String> {
 
   @override
   AcanthisString withAsyncCheck(AcanthisAsyncCheck<String> check) {
-    return AcanthisString(operations: operations.add(check), isAsync: true);
+    return AcanthisString(operations: operations.add(check), isAsync: true, key: key);
   }
 
   @override
   AcanthisString withCheck(AcanthisCheck<String> check) {
-    return AcanthisString(operations: operations.add(check));
+    return AcanthisString(operations: operations.add(check), isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisString withTransformation(
       AcanthisTransformation<String> transformation) {
-    return AcanthisString(operations: operations.add(transformation));
+    return AcanthisString(operations: operations.add(transformation), isAsync: isAsync, key: key);
   }
+
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final lengthChecks = operations.whereType<LengthCheck>();
+    final lengthChecksMap = {};
+
+    for (var check in lengthChecks) {
+      if (check.name == 'max') {
+        lengthChecksMap['maxLength'] = check.value;
+      } else if (check.name == 'min') {
+        lengthChecksMap['minLength'] = check.value;
+      } else if (check.name == 'length') {
+        lengthChecksMap['maxLength'] = check.value;
+        lengthChecksMap['minLength'] = check.value;
+      }
+    }
+    final metadata = MetadataRegistry().get(key);
+    return {
+      'type': 'string',
+      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+      if(metadata != null) ...metadata.toJson(),
+    };
+  }
+
+  @override
+  AcanthisString meta(MetadataEntry<String> metadata) {
+    String key = this.key;
+    if (key.isEmpty) {
+      key = n.nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisString(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+
+}
+
+class EnumeratedCheck<T extends Enum> extends AcanthisCheck<String> {
+  final List<T> enumValues;
+
+  EnumeratedCheck({required this.enumValues})
+      : super(onCheck: (value) {
+          final enumValue = enumValues.map((e) => e.name).toList();
+          return enumValue.contains(value);
+        },
+            error: 'Value must be one of the enumerated values',
+            name: 'enumerated');
+}
+
+class LengthCheck<T> extends AcanthisCheck<String> {
+  final int value;
+
+  LengthCheck({required super.onCheck, required this.value, required super.name, required super.error});
+
+  static LengthCheck<String> max(int length) {
+    return LengthCheck<String>(
+        onCheck: (value) => value.length <= length,
+        value: length,
+        name: 'max',
+        error: 'The string must be less than or equal to $length characters long');
+  }
+
+  static LengthCheck<String> min(int length) {
+    return LengthCheck<String>(
+        onCheck: (value) => value.length >= length,
+        value: length,
+        name: 'min',
+        error: 'The string must be greater than or equal to $length characters long');
+  }
+
+  static LengthCheck<String> length(int length) {
+    return LengthCheck<String>(
+        onCheck: (value) => value.length == length,
+        value: length,
+        name: 'length',
+        error: 'The string must be exactly $length characters long');
+  }
+
 }
 
 /// Create a new AcanthisString instance

@@ -1,9 +1,12 @@
 import 'dart:collection';
 
 import 'package:acanthis/src/exceptions/async_exception.dart';
+import 'package:acanthis/src/lazy_object_mapper.dart';
+import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:acanthis/src/types/nullable.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:meta/meta.dart';
+import 'package:nanoid2/nanoid2.dart';
 
 import '../exceptions/validation_error.dart';
 import 'list.dart';
@@ -20,6 +23,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   const AcanthisMap(
     this._fields,
+    {super.key}
   )   : _passthrough = false,
         _dependencies = const IList.empty(),
         _optionalFields = const IList.empty();
@@ -31,6 +35,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     required IList<String> optionalFields,
     super.isAsync,
     super.operations,
+    super.key,
   })  : _fields = fields,
         _passthrough = passthrough,
         _dependencies = dependencies,
@@ -38,11 +43,12 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   Map<String, V> _parse(Map<String, V> value) {
     final parsed = <String, V>{};
-    if (!_fields.keys.every((element) => value.containsKey(element))) {
-      for (var field in _fields.keys) {
-        if (!value.containsKey(field)) {
-          throw ValidationError('Field $field is required');
-        }
+    final optionalFieldsSet = _optionalFields.toSet();
+
+    // Validate required fields
+    for (var field in _fields.keys) {
+      if (!value.containsKey(field) && !optionalFieldsSet.contains(field)) {
+        throw ValidationError('Field $field is required');
       }
     }
     for (var obj in value.entries) {
@@ -85,38 +91,44 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   Future<Map<String, V>> _asyncParse(Map<String, V> value) async {
     final parsed = <String, V>{};
-    if (!_fields.keys.every((element) => value.containsKey(element))) {
-      for (var field in _fields.keys) {
-        if (!value.containsKey(field)) {
-          throw ValidationError('Field $field is required');
-        }
+    final optionalFieldsSet = _optionalFields.toSet();
+
+    // Validate required fields
+    for (var field in _fields.keys) {
+      if (!value.containsKey(field) && !optionalFieldsSet.contains(field)) {
+        throw ValidationError('Field $field is required');
       }
     }
-    for (var obj in value.entries) {
-      if (!_fields.containsKey(obj.key)) {
+
+    // Parse each field
+    for (var entry in value.entries) {
+      final key = entry.key;
+      final fieldValue = entry.value;
+
+      if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[obj.key] = obj.value;
+          parsed[key] = fieldValue;
           continue;
         }
-        throw ValidationError('Field ${obj.key} is not allowed in this object');
+        throw ValidationError('Field $key is not allowed in this object');
       }
-      final dynamic result;
-      if (_fields[obj.key] is LazyEntry) {
-        final type = (_fields[obj.key] as LazyEntry).call(this);
-        if (obj.value is List) {
-          result = type
-              .parseAsync(List<Map<String, dynamic>>.from(obj.value as List));
-        } else {
-          result = type.parseAsync(obj.value);
-        }
+
+      final fieldType = _fields[key];
+      if (fieldType is LazyEntry) {
+        final type = fieldType.call(this);
+        final result = await type.parseAsync(fieldValue);
+        parsed[key] = result.value;
       } else {
-        result = await _fields[obj.key]!.parseAsync(obj.value);
+        final result = await fieldType!.parseAsync(fieldValue);
+        parsed[key] = result.value;
       }
-      parsed[obj.key] = result.value;
     }
+
+    // Validate dependencies
     for (var dependency in _dependencies) {
       final dependFrom = _keyQuery(dependency.dependendsOn, value);
       final dependTo = _keyQuery(dependency.dependent, value);
+
       if (dependFrom != null && dependTo != null) {
         if (!dependency.dependency(dependFrom, dependTo)) {
           throw ValidationError(
@@ -127,52 +139,62 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             'The dependency or dependFrom field does not exist in the map');
       }
     }
+
     final result = await super.parseAsync(parsed);
     return result.value;
   }
 
-  (Map<String, V> values, Map<String, dynamic> errors) _tryParse(
-      Map<String, V> value) {
+  (Map<String, V>, Map<String, dynamic>) _tryParse(Map<String, V> value) {
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    if (!_fields.keys.every((element) =>
-        value.containsKey(element) || _optionalFields.contains(element))) {
-      for (var field in _fields.keys) {
-        if (!value.containsKey(field)) {
-          errors[field] = {'required': 'Field is required'};
-        }
+    final optionalFieldsSet = _optionalFields.toSet();
+
+    // Validate required fields
+    for (var field in _fields.keys) {
+      if (!value.containsKey(field) && !optionalFieldsSet.contains(field)) {
+        errors[field] = {'required': 'Field is required'};
       }
     }
-    for (var obj in value.entries) {
-      if (!_fields.containsKey(obj.key)) {
+
+    // Parse each field
+    for (var entry in value.entries) {
+      final key = entry.key;
+      final fieldValue = entry.value;
+
+      if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[obj.key] = obj.value;
+          parsed[key] = fieldValue;
         } else {
-          errors[obj.key] = {
-            'notAllowed': 'Field is not allowed in this object'
-          };
+          errors[key] = {'notAllowed': 'Field is not allowed in this object'};
         }
         continue;
       }
-      final AcanthisParseResult<dynamic> parsedValue;
-      if (_fields[obj.key] is LazyEntry) {
-        final type = (_fields[obj.key] as LazyEntry).call(this);
-        if (obj.value is List) {
-          parsedValue =
-              type.tryParse(List<Map<String, dynamic>>.from(obj.value as List));
+
+      final fieldType = _fields[key];
+      final AcanthisParseResult parsedValue;
+      if (fieldType is LazyEntry) {
+        final resolvedType = fieldType.call(this);
+        if (fieldValue is List) {
+          parsedValue = resolvedType.tryParse(
+              List<Map<String, dynamic>>.from(fieldValue as List));
         } else {
-          parsedValue = type.tryParse(obj.value);
+          parsedValue = resolvedType.tryParse(fieldValue);
         }
       } else {
-        parsedValue = _fields[obj.key]!.tryParse(obj.value);
+        parsedValue = fieldType!.tryParse(fieldValue);
       }
-      parsed[obj.key] = parsedValue.value;
-      errors[obj.key] = parsedValue.errors;
+
+      parsed[key] = parsedValue.value;
+      if (parsedValue.errors.isNotEmpty) {
+        errors[key] = parsedValue.errors;
+      }
     }
-    final result = super.tryParse(parsed);
+
+    // Validate dependencies
     for (var dependency in _dependencies) {
       final dependFrom = _keyQuery(dependency.dependendsOn, value);
       final dependTo = _keyQuery(dependency.dependent, value);
+
       if (dependFrom != null && dependTo != null) {
         if (!dependency.dependency(dependFrom, dependTo)) {
           errors[dependency.dependent] = {'dependency': 'Dependency not met'};
@@ -184,51 +206,65 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         };
       }
     }
-    return (result.value, errors);
+
+    final result = super.tryParse(parsed);
+    return (result.value, {...errors, ...result.errors});
   }
 
   Future<({Map<String, V> values, Map<String, dynamic> errors})> _tryParseAsync(
       Map<String, V> value) async {
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    if (!_fields.keys.every((element) =>
-        value.containsKey(element) || _optionalFields.contains(element))) {
-      for (var field in _fields.keys) {
-        if (!value.containsKey(field)) {
-          errors[field] = {'required': 'Field is required'};
-        }
+    final optionalFieldsSet = _optionalFields.toSet();
+
+    // Validate required fields
+    for (var field in _fields.keys) {
+      if (!value.containsKey(field) && !optionalFieldsSet.contains(field)) {
+        errors[field] = {'required': 'Field is required'};
       }
     }
-    for (var obj in value.entries) {
-      if (!_fields.containsKey(obj.key)) {
+
+    // Parse each field
+    for (var entry in value.entries) {
+      final key = entry.key;
+      final fieldValue = entry.value;
+
+      if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[obj.key] = obj.value;
+          parsed[key] = fieldValue;
         } else {
-          errors[obj.key] = {
-            'notAllowed': 'Field is not allowed in this object'
-          };
+          errors[key] = {'notAllowed': 'Field is not allowed in this object'};
         }
         continue;
       }
+
+      final fieldType = _fields[key];
       final AcanthisParseResult parsedValue;
-      if (_fields[obj.key] is LazyEntry) {
-        final type = (_fields[obj.key] as LazyEntry).call(this);
-        if (obj.value is List) {
-          parsedValue = await type.tryParseAsync(
-              List<Map<String, dynamic>>.from(obj.value as List));
+
+      try {
+        if (fieldType is LazyEntry) {
+          final resolvedType = fieldType.call(this);
+          if (fieldValue is List) {
+            parsedValue = await resolvedType.tryParseAsync(
+                List<Map<String, dynamic>>.from(fieldValue as List));
+          } else {
+            parsedValue = await resolvedType.tryParseAsync(fieldValue);
+          }
         } else {
-          parsedValue = await type.tryParseAsync(obj.value);
+          parsedValue = await fieldType!.tryParseAsync(fieldValue);
         }
-      } else {
-        parsedValue = await _fields[obj.key]!.tryParseAsync(obj.value);
+        parsed[key] = parsedValue.value;
+        errors[key] = parsedValue.errors;
+      } catch (e) {
+        errors[key] = {'error': e.toString()};
       }
-      parsed[obj.key] = parsedValue.value;
-      errors[obj.key] = parsedValue.errors;
     }
-    final result = await super.tryParseAsync(parsed);
+
+    // Validate dependencies
     for (var dependency in _dependencies) {
       final dependFrom = _keyQuery(dependency.dependendsOn, value);
       final dependTo = _keyQuery(dependency.dependent, value);
+
       if (dependFrom != null && dependTo != null) {
         if (!dependency.dependency(dependFrom, dependTo)) {
           errors[dependency.dependent] = {'dependency': 'Dependency not met'};
@@ -240,6 +276,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         };
       }
     }
+
+    // Parse the final result
+    final result = await super.tryParseAsync(parsed);
     return (values: result.value, errors: errors);
   }
 
@@ -250,6 +289,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (result is Map<String, dynamic>) {
         if (result.containsKey(k)) {
           result = result[k];
+        } else {
+          return null;
+        }
+      } else if(result is List) {
+        final kIndex = int.tryParse(k.replaceAll('[', '').replaceAll(']', ''));
+        if (kIndex != null && kIndex < result.length) {
+          result = result[kIndex];
         } else {
           return null;
         }
@@ -271,6 +317,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields.addAll(fields),
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -282,14 +329,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           'Cannot use tryParse with async operations');
     }
     final parsed = _parse(value);
-    return AcanthisParseResult(value: parsed);
+    return AcanthisParseResult(value: parsed, metadata: MetadataRegistry().get(key));
   }
 
   @override
   Future<AcanthisParseResult<Map<String, V>>> parseAsync(
       Map<String, V> value) async {
     final parsed = await _asyncParse(value);
-    return AcanthisParseResult(value: parsed);
+    return AcanthisParseResult(value: parsed, metadata: MetadataRegistry().get(key));
   }
 
   @override
@@ -299,7 +346,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     return AcanthisParseResult(
         value: parsed.values,
         errors: parsed.errors,
-        success: _recursiveSuccess(parsed.errors));
+        success: _recursiveSuccess(parsed.errors), metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -311,7 +358,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     final (parsed, errors) = _tryParse(value);
     return AcanthisParseResult(
-        value: parsed, errors: errors, success: _recursiveSuccess(errors));
+        value: parsed, errors: errors, success: _recursiveSuccess(errors), metadata: MetadataRegistry().get(key));
   }
 
   /// Create a list of maps
@@ -334,6 +381,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -363,6 +411,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -376,6 +425,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -394,6 +444,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -412,6 +463,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -424,6 +476,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations,
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -452,6 +505,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations.add(check),
       isAsync: true,
+      key: key
     );
   }
 
@@ -464,6 +518,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations.add(check),
       isAsync: isAsync,
+      key: key
     );
   }
 
@@ -477,8 +532,65 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       optionalFields: _optionalFields,
       operations: operations.add(transformation),
       isAsync: isAsync,
+      key: key
     );
   }
+
+  @override
+  AcanthisMap<V> meta(MetadataEntry<Map<String, V>> metadata) {
+    String objectKey = key;
+    if(objectKey.isEmpty) {
+      objectKey = nanoid();
+    }
+    MetadataRegistry().add(objectKey, metadata);
+    return AcanthisMap<V>._(
+      fields: _fields,
+      passthrough: _passthrough,
+      dependencies: _dependencies,
+      optionalFields: _optionalFields,
+      operations: operations,
+      isAsync: isAsync,
+      key: objectKey,
+    );
+  }
+  
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final schema = <String, dynamic>{};
+    final lazyEntries = _fields.entries.where((entry) => entry.value is LazyEntry).toList();
+    for (var entry in _fields.entries) {
+      if(entry.value is LazyEntry) {
+        final entryKey = '${entry.key}-lazy';
+        schema[entry.key] = {
+          r'$ref': '#/\$defs/$entryKey'
+        };
+      } else {
+        schema[entry.key] = entry.value.toJsonSchema();
+      }
+    }
+    final defsMap = {};
+    final lazyObjectMapper = LazyObjectMapper();
+    for (var entry in lazyEntries) {
+      final entryKey = '${entry.key}-lazy';
+      final lazyEntry = lazyObjectMapper.get(entryKey);
+      if(lazyEntry == false) {
+        defsMap[entryKey] = (entry.value as LazyEntry).toJsonSchema(parent: this, defs: true, defKey: entryKey);
+      }
+    }
+    final metadata = MetadataRegistry().get<Map<String, dynamic>>(key);
+    for(final key in defsMap.keys) {
+      lazyObjectMapper.remove(key);
+    }
+    return {
+      if(defsMap.isNotEmpty) r'$defs': defsMap,
+      'type': 'object',
+      if(metadata != null) ...metadata.toJson(),
+      'properties': schema,
+      'additionalProperties': _passthrough,
+      'required': _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+    };
+  }
+
 }
 
 /// Create a map of [fields]
@@ -495,8 +607,8 @@ class _Dependency {
   const _Dependency(this.dependent, this.dependendsOn, this.dependency);
 }
 
-class LazyEntry extends AcanthisType<dynamic> {
-  final AcanthisType Function(AcanthisMap parent) _type;
+class LazyEntry<O> extends AcanthisType<dynamic> {
+  final AcanthisType<O> Function(AcanthisMap parent) _type;
 
   const LazyEntry(
     this._type, {
@@ -504,7 +616,7 @@ class LazyEntry extends AcanthisType<dynamic> {
     super.isAsync,
   });
 
-  AcanthisType call(AcanthisMap parent) {
+  AcanthisType<O> call(AcanthisMap<dynamic> parent) {
     final type = _type(parent);
     if (type is LazyEntry) {
       throw StateError('Circular dependency detected');
@@ -541,7 +653,26 @@ class LazyEntry extends AcanthisType<dynamic> {
       operations: operations.add(transformation),
     );
   }
+  
+  @override
+  Map<String, dynamic> toJsonSchema({AcanthisMap<dynamic>? parent, bool defs = false, String defKey = ''}) {
+    final lazyObjectMapper = LazyObjectMapper();
+    final type = _type(parent!);
+    if (type is LazyEntry) {
+      throw StateError('Circular dependency detected');
+    }
+    if(defs) {
+      lazyObjectMapper.add(defKey);
+    }
+    final schema = type.toJsonSchema();
+    return schema;
+  }
+
+  @override
+  LazyEntry meta(MetadataEntry metadata) {
+    throw UnimplementedError('The implementation must be done from the parent');
+  }
 }
 
-LazyEntry lazy(AcanthisType Function(AcanthisMap parent) type) =>
-    LazyEntry(type);
+LazyEntry<O> lazy<O>(AcanthisType<O> Function(AcanthisMap<dynamic> parent) type) =>
+    LazyEntry<O>(type);

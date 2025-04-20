@@ -538,5 +538,26 @@ void main() {
       });
       expect(result.success, true);
     });
+
+    test(
+        'when the method toJsonSchema is called, then the result should be a valid json schema',
+        () {
+      final object = acanthis.object({
+        'name': acanthis.string().min(5).max(10).encode(),
+        'attributes': acanthis.lazy((parent) => parent.passthrough().list())
+      });
+
+      final result = object.toJsonSchema();
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['type'], 'object');
+      expect(result['properties'], isA<Map<String, dynamic>>());
+      expect(result['properties']['name'], isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes'], isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes']['type'], 'array');
+      expect(result['properties']['attributes']['items'],
+          isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes']['items']['type'], 'object');
+
+    });
   });
 }

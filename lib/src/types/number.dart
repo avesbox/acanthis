@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 
+import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:nanoid2/nanoid2.dart';
+
 import 'list.dart';
 import 'types.dart';
 import 'union.dart';
 
 /// A class to validate number types
 class AcanthisNumber extends AcanthisType<num> {
-  const AcanthisNumber({super.isAsync, super.operations});
+  const AcanthisNumber({super.isAsync, super.operations, super.key});
 
   /// Add a check to the number to check if it is less than or equal to [value]
   AcanthisNumber lte(num value) {
@@ -137,19 +140,52 @@ class AcanthisNumber extends AcanthisType<num> {
 
   @override
   AcanthisNumber withAsyncCheck(AcanthisAsyncCheck<num> check) {
-    return AcanthisNumber(operations: operations.add(check), isAsync: true);
+    return AcanthisNumber(operations: operations.add(check), isAsync: true, key: key);
   }
 
   @override
   AcanthisNumber withCheck(AcanthisCheck<num> check) {
-    return AcanthisNumber(operations: operations.add(check));
+    return AcanthisNumber(operations: operations.add(check), isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisNumber withTransformation(
       AcanthisTransformation<num> transformation) {
-    return AcanthisNumber(operations: operations.add(transformation));
+    return AcanthisNumber(operations: operations.add(transformation), isAsync: isAsync, key: key);
   }
+
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    String type = 'number';
+    final checks = operations.whereType<AcanthisCheck<num>>();
+    if (checks.isNotEmpty) {
+      for (var check in checks) {
+        if (check.name == 'integer') {
+          type = 'integer';
+        }
+      }
+    }
+    return {
+      'type': type,
+      if (metadata != null) ...metadata.toJson(),
+    };
+  }
+
+  @override
+  AcanthisNumber meta(MetadataEntry<num> metadata) {
+    String key = this.key;
+    if (key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisNumber(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+
 }
 
 /// Create a number type

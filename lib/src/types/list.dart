@@ -1,4 +1,6 @@
 import 'package:acanthis/src/exceptions/async_exception.dart';
+import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:nanoid2/nanoid2.dart';
 
 import 'types.dart';
 
@@ -6,7 +8,7 @@ import 'types.dart';
 class AcanthisList<T> extends AcanthisType<List<T>> {
   final AcanthisType<T> element;
 
-  const AcanthisList(this.element, {super.operations, super.isAsync});
+  const AcanthisList(this.element, {super.operations, super.isAsync, super.key});
 
   List<T> _parse(List<T> value) {
     final parsed = <T>[];
@@ -40,7 +42,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       parsed.add(parsedElement.value);
     }
     final result = await super.parseAsync(value);
-    return AcanthisParseResult(value: result.value);
+    return AcanthisParseResult(value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   @override
@@ -55,7 +57,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       }
     }
     final result = await super.tryParseAsync(value);
-    return AcanthisParseResult(value: result.value, errors: result.errors);
+    return AcanthisParseResult(value: result.value, errors: result.errors, metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [parse] from [AcanthisType]
@@ -66,7 +68,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
           'Cannot use tryParse with async operations');
     }
     final parsed = _parse(value);
-    return AcanthisParseResult(value: parsed);
+    return AcanthisParseResult(value: parsed, metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -78,7 +80,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final (parsed, errors) = _tryParse(value);
     return AcanthisParseResult(
-        value: parsed, errors: errors, success: _recursiveSuccess(errors));
+        value: parsed, errors: errors, success: _recursiveSuccess(errors), metadata: MetadataRegistry().get(key));
   }
 
   bool _recursiveSuccess(Map<String, dynamic> errors) {
@@ -148,6 +150,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: operations.add(check),
       isAsync: true,
+      key: key,
     );
   }
 
@@ -156,6 +159,8 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     return AcanthisList(
       element,
       operations: operations.add(check),
+      isAsync: isAsync,
+      key: key,
     );
   }
 
@@ -165,6 +170,34 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     return AcanthisList(
       element,
       operations: operations.add(transformation),
+      isAsync: isAsync,
+      key: key,
     );
   }
+
+  @override
+  AcanthisList<T> meta(MetadataEntry<List<T>> metadata) {
+    String key = this.key;
+    if(key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisList(
+      element,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+  
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    return {
+      'type': 'array',
+      if(metadata != null) ...metadata.toJson(),
+      'items': element.toJsonSchema(),
+    };
+  }
+
 }

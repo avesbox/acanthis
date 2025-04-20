@@ -1114,4 +1114,35 @@ void main() {
           ));
     },
   );
+
+  test(
+    'when creating an enumerated string validator, and the string is in the list of valid values, then the result should be successful',
+    () {
+      final string = acanthis.string().enumerated(TestEnum.values);
+      final result = string.tryParse('test');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('test');
+      expect(resultParse.success, true);
+    },
+  );
+
+  test(
+    'when creating an enumerated string validator, and the string is not in the list of valid values, then the result should be unsuccessful',
+    () {
+      final string = acanthis.string().enumerated(TestEnum.values);
+      final result = string.tryParse('test1');
+
+      expect(result.success, false);
+
+      expect(
+          () => string.parse('test1'),
+          throwsA(
+            TypeMatcher<ValidationError>(),
+          ));
+    },
+  );
 }
+
+enum TestEnum { test, test2 }

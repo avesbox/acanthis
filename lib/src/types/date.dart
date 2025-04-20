@@ -1,3 +1,6 @@
+import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:nanoid2/nanoid2.dart';
+
 import 'list.dart';
 import 'types.dart';
 import 'union.dart';
@@ -7,6 +10,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
   const AcanthisDate({
     super.operations,
     super.isAsync,
+    super.key,
   });
 
   /// Add a check to the date to check if it is before or equal to [value]
@@ -51,6 +55,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
     return AcanthisDate(
       operations: operations.add(check),
       isAsync: true,
+      key: key
     );
   }
 
@@ -58,6 +63,8 @@ class AcanthisDate extends AcanthisType<DateTime> {
   AcanthisDate withCheck(AcanthisCheck<DateTime> check) {
     return AcanthisDate(
       operations: operations.add(check),
+      isAsync: isAsync,
+      key: key
     );
   }
 
@@ -66,8 +73,35 @@ class AcanthisDate extends AcanthisType<DateTime> {
       AcanthisTransformation<DateTime> transformation) {
     return AcanthisDate(
       operations: operations.add(transformation),
+      isAsync: isAsync,
+      key: key
     );
   }
+  
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    return {
+      'type': 'string',
+      'format': 'date-time',
+      if (metadata != null) ...metadata.toJson(),
+    };
+  }
+
+  @override
+  AcanthisDate meta(MetadataEntry<DateTime> metadata) {
+    String key = this.key;
+    if(key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisDate(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+
 }
 
 /// Create a new date type

@@ -540,6 +540,67 @@ void main() {
     });
 
     test(
+        'when a map validator is created and the maxProperties check is used, '
+        'then the result should be successful if the map has less or equal than the max properties',
+        () {
+      final object = acanthis.object({
+        'name': acanthis.string().min(5).max(10).encode(),
+        'attributes': acanthis.lazy((parent) => parent.passthrough().list())
+      }).maxProperties(2);
+
+      final result = object.tryParse({
+        'name': 'Hello',
+        'attributes': [
+          {'name': 'Hello', 'attributes': []}
+        ]
+      });
+      expect(result.success, true);
+    });
+
+    test(
+        'when a map validator is created and the minProperties check is used, '
+        'then the result should be successful if the map has more or equal than the min properties',
+        () {
+      final object = acanthis.object({
+        'name': acanthis.string().min(5).max(10).encode(),
+        'attributes': acanthis.lazy((parent) => parent.passthrough().list())
+      }).minProperties(2);
+
+      final result = object.tryParse({
+        'name': 'Hello',
+        'attributes': [
+          {'name': 'Hello', 'attributes': [], 'age': 18}
+        ]
+      });
+      expect(result.success, true);
+    });
+
+    test(
+        'when a map validator is created and the type parameter in the passthrough method is used, '
+        'then all the unknown properties should be of the same type', () {
+      final object = acanthis.object({
+        'name': acanthis.string().min(5).max(10).encode(),
+        'attributes':
+            acanthis.lazy((parent) => parent.passthrough(type: number()).list())
+      }).minProperties(2);
+
+      final result = object.tryParse({
+        'name': 'Hello',
+        'attributes': [
+          {'name': 'Hello', 'attributes': [], 'age': 18}
+        ]
+      });
+      expect(result.success, true);
+      final result2 = object.tryParse({
+        'name': 'Hello',
+        'attributes': [
+          {'name': 'Hello', 'attributes': [], 'age': '18'}
+        ]
+      });
+      expect(result2.success, false);
+    });
+
+    test(
         'when the method toJsonSchema is called, then the result should be a valid json schema',
         () {
       final object = acanthis.object({
@@ -553,11 +614,55 @@ void main() {
       expect(result['properties'], isA<Map<String, dynamic>>());
       expect(result['properties']['name'], isA<Map<String, dynamic>>());
       expect(result['properties']['attributes'], isA<Map<String, dynamic>>());
-      expect(result['properties']['attributes']['type'], 'array');
-      expect(result['properties']['attributes']['items'],
-          isA<Map<String, dynamic>>());
-      expect(result['properties']['attributes']['items']['type'], 'object');
+      expect(result['properties']['attributes'].containsKey(r'$ref'), true);
+    });
 
+    test(
+        'when the method toJsonSchema is called and the object has metadata, '
+        'then the result should be a valid json schema with metadata', () {
+      final object = acanthis.object({
+        'name': acanthis.string().min(5).max(10).encode(),
+        'attributes': acanthis.lazy((parent) => parent.passthrough().list())
+      }).meta(
+        MetadataEntry(
+          examples: [
+            {'name': 'test', 'attributes': []}
+          ],
+          title: 'test title',
+        ),
+      );
+
+      final result = object.toJsonSchema();
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['type'], 'object');
+      expect(result['properties'], isA<Map<String, dynamic>>());
+      expect(result['properties']['name'], isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes'], isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes'].containsKey(r'$ref'), true);
+      expect(result['examples'], isA<List<Map<String, dynamic>>>());
+      expect(result['title'], 'test title');
+    });
+
+    test(
+        'when creating an object validator,'
+        'and use the toJsonSchema method and the constraint checks are used, '
+        'then the result should be a valid json schema with the constraints',
+        () {
+      final object = acanthis
+          .object({
+            'name': acanthis.string().min(5).max(10).encode(),
+            'attributes': acanthis.lazy((parent) => parent.passthrough().list())
+          })
+          .maxProperties(5)
+          .minProperties(2);
+      final result = object.toJsonSchema();
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['type'], 'object');
+      expect(result['properties'], isA<Map<String, dynamic>>());
+      expect(result['properties']['name'], isA<Map<String, dynamic>>());
+      expect(result['properties']['attributes'], isA<Map<String, dynamic>>());
+      expect(result['maxProperties'], 5);
+      expect(result['minProperties'], 2);
     });
   });
 }

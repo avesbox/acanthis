@@ -1,4 +1,5 @@
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/types/tuple.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'list.dart';
@@ -38,6 +39,11 @@ class AcanthisBoolean extends AcanthisType<bool> {
     return AcanthisUnion([this, ...elements]);
   }
 
+  /// Create a tuple from the nullable
+  AcanthisTuple tuple(List<AcanthisType> elements) {
+    return AcanthisTuple([this, ...elements]);
+  }
+
   @override
   AcanthisBoolean withAsyncCheck(AcanthisAsyncCheck<bool> check) {
     return AcanthisBoolean(
@@ -65,20 +71,20 @@ class AcanthisBoolean extends AcanthisType<bool> {
       isAsync: isAsync,
     );
   }
-  
+
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);
     return {
       'type': 'boolean',
-      if(metadata != null) ...metadata.toJson(),
+      if (metadata != null) ...metadata.toJson(),
     };
   }
 
   @override
   AcanthisBoolean meta(MetadataEntry<bool> metadata) {
     String key = this.key;
-    if(key.isEmpty) {
+    if (key.isEmpty) {
       key = nanoid();
     }
     MetadataRegistry().add(key, metadata);
@@ -88,7 +94,6 @@ class AcanthisBoolean extends AcanthisType<bool> {
       key: key,
     );
   }
-
 }
 
 /// Create a boolean validator

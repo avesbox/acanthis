@@ -9,7 +9,8 @@ import '../exceptions/validation_error.dart';
 class AcanthisUnion extends AcanthisType<dynamic> {
   final List<AcanthisType> elements;
 
-  const AcanthisUnion(this.elements, {super.operations, super.isAsync, super.key});
+  const AcanthisUnion(this.elements,
+      {super.operations, super.isAsync, super.key});
 
   /// override of the [parse] method from [AcanthisType]
   @override
@@ -82,7 +83,7 @@ class AcanthisUnion extends AcanthisType<dynamic> {
       key: key,
     );
   }
-  
+
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);

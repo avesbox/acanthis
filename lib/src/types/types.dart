@@ -19,7 +19,9 @@ abstract class AcanthisType<O> {
 
   /// The constructor of the class
   const AcanthisType(
-      {this.operations = const IList.empty(), this.isAsync = false, this.key = ''});
+      {this.operations = const IList.empty(),
+      this.isAsync = false,
+      this.key = ''});
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -39,7 +41,8 @@ abstract class AcanthisType<O> {
         newValue = operation(newValue);
       }
     }
-    return AcanthisParseResult(value: newValue, metadata: MetadataRegistry().get(key));
+    return AcanthisParseResult(
+        value: newValue, metadata: MetadataRegistry().get(key));
   }
 
   /// The tryParse method to try to parse the value
@@ -66,7 +69,10 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue, errors: errors, success: errors.isEmpty, metadata: MetadataRegistry().get(key));
+        value: newValue,
+        errors: errors,
+        success: errors.isEmpty,
+        metadata: MetadataRegistry().get(key));
   }
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
@@ -88,7 +94,8 @@ abstract class AcanthisType<O> {
         newValue = operation(newValue);
       }
     }
-    return AcanthisParseResult<O>(value: newValue, metadata: MetadataRegistry().get(key));
+    return AcanthisParseResult<O>(
+        value: newValue, metadata: MetadataRegistry().get(key));
   }
 
   /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
@@ -116,7 +123,10 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue, errors: errors, success: errors.isEmpty, metadata: MetadataRegistry().get(key)); 
+        value: newValue,
+        errors: errors,
+        success: errors.isEmpty,
+        metadata: MetadataRegistry().get(key));
   }
 
   /// Add a check to the type
@@ -174,7 +184,6 @@ abstract class AcanthisType<O> {
     final json = toJsonSchema();
     return encoder.convert(json);
   }
-
 }
 
 /// A class that represents a check operation
@@ -333,6 +342,16 @@ class AcanthisPipeline<O, T> {
   }
 }
 
+class ExactCheck<T> extends AcanthisCheck<T> {
+  final T value;
+
+  ExactCheck({required this.value})
+      : super(
+            onCheck: (v) => v == value,
+            error: 'Value must be exactly $value',
+            name: 'exact');
+}
+
 /// A class to represent the result of a parse operation
 @immutable
 class AcanthisParseResult<O> {
@@ -350,7 +369,10 @@ class AcanthisParseResult<O> {
 
   /// The constructor of the class
   const AcanthisParseResult(
-      {required this.value, this.errors = const {}, this.success = true, this.metadata});
+      {required this.value,
+      this.errors = const {},
+      this.success = true,
+      this.metadata});
 
   @override
   String toString() {

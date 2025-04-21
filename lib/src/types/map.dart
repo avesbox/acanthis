@@ -18,19 +18,20 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   Map<String, AcanthisType> get fields => UnmodifiableMapView(_fields.unlock);
 
   final bool _passthrough;
+  final AcanthisType? _passthroughType;
   final IList<_Dependency> _dependencies;
   final IList<String> _optionalFields;
 
-  const AcanthisMap(
-    this._fields,
-    {super.key}
-  )   : _passthrough = false,
+  const AcanthisMap(this._fields, {super.key})
+      : _passthrough = false,
+        _passthroughType = null,
         _dependencies = const IList.empty(),
         _optionalFields = const IList.empty();
 
   AcanthisMap._({
     required IMap<String, AcanthisType<dynamic>> fields,
     required bool passthrough,
+    required AcanthisType? passthroughType,
     required IList<_Dependency> dependencies,
     required IList<String> optionalFields,
     super.isAsync,
@@ -38,6 +39,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.key,
   })  : _fields = fields,
         _passthrough = passthrough,
+        _passthroughType = passthroughType,
         _dependencies = dependencies,
         _optionalFields = optionalFields;
 
@@ -54,7 +56,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     for (var obj in value.entries) {
       if (!_fields.containsKey(obj.key)) {
         if (_passthrough) {
-          parsed[obj.key] = obj.value;
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = _passthroughType.parse(obj.value);
+              parsed[key] = parsedValue.value;
+            } on TypeError catch (_) {
+              throw ValidationError(
+                  '$key expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
+            }
+          } else {
+            parsed[key] = obj.value;
+          }
           continue;
         }
         throw ValidationError('Field ${obj.key} is not allowed in this object');
@@ -89,7 +101,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     return result.value;
   }
 
-  Future<Map<String, V>> _asyncParse(Map<String, V> value) async {
+  Future<Map<String, V>> _parseAsync(Map<String, V> value) async {
     final parsed = <String, V>{};
     final optionalFieldsSet = _optionalFields.toSet();
 
@@ -107,7 +119,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
       if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[key] = fieldValue;
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = await _passthroughType.parseAsync(fieldValue);
+              parsed[key] = parsedValue.value;
+            } on TypeError catch (_) {
+              throw ValidationError(
+                  '$key expose a value of type ${fieldValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
+            }
+          } else {
+            parsed[key] = fieldValue;
+          }
           continue;
         }
         throw ValidationError('Field $key is not allowed in this object');
@@ -163,7 +185,20 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
       if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[key] = fieldValue;
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = _passthroughType.tryParse(fieldValue);
+              parsed[key] = parsedValue.value;
+              errors[key] = parsedValue.errors;
+            } on TypeError catch (_) {
+              errors[key] = {
+                'error':
+                    '$key expose a value of type ${fieldValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+              };
+            }
+          } else {
+            parsed[key] = fieldValue;
+          }
         } else {
           errors[key] = {'notAllowed': 'Field is not allowed in this object'};
         }
@@ -175,8 +210,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (fieldType is LazyEntry) {
         final resolvedType = fieldType.call(this);
         if (fieldValue is List) {
-          parsedValue = resolvedType.tryParse(
-              List<Map<String, dynamic>>.from(fieldValue as List));
+          parsedValue = resolvedType
+              .tryParse(List<Map<String, dynamic>>.from(fieldValue as List));
         } else {
           parsedValue = resolvedType.tryParse(fieldValue);
         }
@@ -231,7 +266,21 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
       if (!_fields.containsKey(key)) {
         if (_passthrough) {
-          parsed[key] = fieldValue;
+          if (_passthroughType != null) {
+            try {
+              final parsedValue =
+                  await _passthroughType.tryParseAsync(fieldValue);
+              parsed[key] = parsedValue.value;
+              errors[key] = parsedValue.errors;
+            } on TypeError catch (_) {
+              errors[key] = {
+                'error':
+                    '$key expose a value of type ${fieldValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+              };
+            }
+          } else {
+            parsed[key] = fieldValue;
+          }
         } else {
           errors[key] = {'notAllowed': 'Field is not allowed in this object'};
         }
@@ -292,7 +341,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         } else {
           return null;
         }
-      } else if(result is List) {
+      } else if (result is List) {
         final kIndex = int.tryParse(k.replaceAll('[', '').replaceAll(']', ''));
         if (kIndex != null && kIndex < result.length) {
           result = result[kIndex];
@@ -311,14 +360,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   /// The optionals are valid only for the current layer of the object
   AcanthisMap<V> optionals(List<String> fields) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields.addAll(fields),
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields,
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields.addAll(fields),
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   /// Override of [parse] from [AcanthisType]
@@ -329,14 +378,16 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           'Cannot use tryParse with async operations');
     }
     final parsed = _parse(value);
-    return AcanthisParseResult(value: parsed, metadata: MetadataRegistry().get(key));
+    return AcanthisParseResult(
+        value: parsed, metadata: MetadataRegistry().get(key));
   }
 
   @override
   Future<AcanthisParseResult<Map<String, V>>> parseAsync(
       Map<String, V> value) async {
-    final parsed = await _asyncParse(value);
-    return AcanthisParseResult(value: parsed, metadata: MetadataRegistry().get(key));
+    final parsed = await _parseAsync(value);
+    return AcanthisParseResult(
+        value: parsed, metadata: MetadataRegistry().get(key));
   }
 
   @override
@@ -346,7 +397,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     return AcanthisParseResult(
         value: parsed.values,
         errors: parsed.errors,
-        success: _recursiveSuccess(parsed.errors), metadata: MetadataRegistry().get(key));
+        success: _recursiveSuccess(parsed.errors),
+        metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -358,7 +410,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     final (parsed, errors) = _tryParse(value);
     return AcanthisParseResult(
-        value: parsed, errors: errors, success: _recursiveSuccess(errors), metadata: MetadataRegistry().get(key));
+        value: parsed,
+        errors: errors,
+        success: _recursiveSuccess(errors),
+        metadata: MetadataRegistry().get(key));
   }
 
   /// Create a list of maps
@@ -374,15 +429,15 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     required bool Function(dynamic, dynamic) dependency,
   }) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: _passthrough,
-      dependencies:
-          _dependencies.add(_Dependency(dependent, dependendsOn, dependency)),
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields,
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies:
+            _dependencies.add(_Dependency(dependent, dependendsOn, dependency)),
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   bool _recursiveSuccess(Map<String, dynamic> errors) {
@@ -405,28 +460,28 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
     }
     return AcanthisMap<V>._(
-      fields: _fields.addAll(newFields.toIMap()),
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields.addAll(newFields.toIMap()),
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   /// Merge field(s) to the map
   /// if a field already exists, it will be overwritten
   AcanthisMap<V> merge(Map<String, AcanthisType> fields) {
     return AcanthisMap<V>._(
-      fields: _fields.addAll(fields.toIMap()),
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields.addAll(fields.toIMap()),
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   /// Pick field(s) from the map
@@ -438,14 +493,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
     }
     return AcanthisMap<V>._(
-      fields: newFields.toIMap(),
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: newFields.toIMap(),
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   /// Omit field(s) from the map
@@ -457,27 +512,27 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
     }
     return AcanthisMap<V>._(
-      fields: newFields.toIMap(),
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: newFields.toIMap(),
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   /// Allow unknown keys in the map
-  AcanthisMap<V> passthrough() {
+  AcanthisMap<V> passthrough({AcanthisType? type}) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: true,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations,
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields,
+        passthrough: true,
+        passthroughType: type,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key);
   }
 
   AcanthisMap<V?> partial({bool deep = false}) {
@@ -496,56 +551,65 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         _fields.map((key, value) => MapEntry(key, value.nullable())));
   }
 
+  AcanthisMap<V> maxProperties(int constraint) {
+    return withCheck(ContraintsPropertiesNumber.maxProperties(constraint));
+  }
+
+  AcanthisMap<V> minProperties(int constraint) {
+    return withCheck(ContraintsPropertiesNumber.minProperties(constraint));
+  }
+
   @override
   AcanthisMap<V> withAsyncCheck(AcanthisAsyncCheck<Map<String, V>> check) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations.add(check),
-      isAsync: true,
-      key: key
-    );
+        fields: _fields,
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations.add(check),
+        isAsync: true,
+        key: key);
   }
 
   @override
   AcanthisMap<V> withCheck(AcanthisCheck<Map<String, V>> check) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations.add(check),
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields,
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations.add(check),
+        isAsync: isAsync,
+        key: key);
   }
 
   @override
   AcanthisMap<V> withTransformation(
       AcanthisTransformation<Map<String, V>> transformation) {
     return AcanthisMap<V>._(
-      fields: _fields,
-      passthrough: _passthrough,
-      dependencies: _dependencies,
-      optionalFields: _optionalFields,
-      operations: operations.add(transformation),
-      isAsync: isAsync,
-      key: key
-    );
+        fields: _fields,
+        passthrough: _passthrough,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations.add(transformation),
+        isAsync: isAsync,
+        key: key);
   }
 
   @override
   AcanthisMap<V> meta(MetadataEntry<Map<String, V>> metadata) {
     String objectKey = key;
-    if(objectKey.isEmpty) {
+    if (objectKey.isEmpty) {
       objectKey = nanoid();
     }
     MetadataRegistry().add(objectKey, metadata);
     return AcanthisMap<V>._(
       fields: _fields,
       passthrough: _passthrough,
+      passthroughType: _passthroughType,
       dependencies: _dependencies,
       optionalFields: _optionalFields,
       operations: operations,
@@ -553,17 +617,16 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       key: objectKey,
     );
   }
-  
+
   @override
   Map<String, dynamic> toJsonSchema() {
     final schema = <String, dynamic>{};
-    final lazyEntries = _fields.entries.where((entry) => entry.value is LazyEntry).toList();
+    final lazyEntries =
+        _fields.entries.where((entry) => entry.value is LazyEntry).toList();
     for (var entry in _fields.entries) {
-      if(entry.value is LazyEntry) {
+      if (entry.value is LazyEntry) {
         final entryKey = '${entry.key}-lazy';
-        schema[entry.key] = {
-          r'$ref': '#/\$defs/$entryKey'
-        };
+        schema[entry.key] = {r'$ref': '#/\$defs/$entryKey'};
       } else {
         schema[entry.key] = entry.value.toJsonSchema();
       }
@@ -573,24 +636,72 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     for (var entry in lazyEntries) {
       final entryKey = '${entry.key}-lazy';
       final lazyEntry = lazyObjectMapper.get(entryKey);
-      if(lazyEntry == false) {
-        defsMap[entryKey] = (entry.value as LazyEntry).toJsonSchema(parent: this, defs: true, defKey: entryKey);
+      if (lazyEntry == false) {
+        defsMap[entryKey] = (entry.value as LazyEntry)
+            .toJsonSchema(parent: this, defs: true, defKey: entryKey);
       }
     }
     final metadata = MetadataRegistry().get<Map<String, dynamic>>(key);
-    for(final key in defsMap.keys) {
+    for (final key in defsMap.keys) {
       lazyObjectMapper.remove(key);
     }
+    final constraints = _getConstraints();
     return {
-      if(defsMap.isNotEmpty) r'$defs': defsMap,
+      if (defsMap.isNotEmpty) r'$defs': defsMap,
       'type': 'object',
-      if(metadata != null) ...metadata.toJson(),
+      if (metadata != null) ...metadata.toJson(),
       'properties': schema,
-      'additionalProperties': _passthrough,
-      'required': _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+      'additionalProperties': _passthrough == false
+          ? false
+          : _passthroughType?.toJsonSchema() ?? true,
+      'required':
+          _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+      if (constraints.isNotEmpty) ...constraints,
     };
   }
 
+  Map<String, dynamic> _getConstraints() {
+    final constraints = <String, dynamic>{};
+    for (var operation in operations) {
+      if (operation is ContraintsPropertiesNumber) {
+        constraints[operation.name] = operation.constraintValue;
+      }
+    }
+    return constraints;
+  }
+}
+
+class ContraintsPropertiesNumber<V> extends AcanthisCheck<Map<String, V>> {
+  final int constraintValue;
+
+  const ContraintsPropertiesNumber({
+    required this.constraintValue,
+    required super.name,
+    required super.error,
+    required super.onCheck,
+  });
+
+  static ContraintsPropertiesNumber<V> maxProperties<V>(
+    int constraint,
+  ) {
+    return ContraintsPropertiesNumber<V>(
+      constraintValue: constraint,
+      name: 'maxProperties',
+      error: 'The map has more than $constraint fields',
+      onCheck: (value) => value.length <= constraint,
+    );
+  }
+
+  static ContraintsPropertiesNumber<V> minProperties<V>(
+    int constraint,
+  ) {
+    return ContraintsPropertiesNumber<V>(
+      constraintValue: constraint,
+      name: 'minProperties',
+      error: 'The map has less than $constraint fields',
+      onCheck: (value) => value.length >= constraint,
+    );
+  }
 }
 
 /// Create a map of [fields]
@@ -653,15 +764,16 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
       operations: operations.add(transformation),
     );
   }
-  
+
   @override
-  Map<String, dynamic> toJsonSchema({AcanthisMap<dynamic>? parent, bool defs = false, String defKey = ''}) {
+  Map<String, dynamic> toJsonSchema(
+      {AcanthisMap<dynamic>? parent, bool defs = false, String defKey = ''}) {
     final lazyObjectMapper = LazyObjectMapper();
     final type = _type(parent!);
     if (type is LazyEntry) {
       throw StateError('Circular dependency detected');
     }
-    if(defs) {
+    if (defs) {
       lazyObjectMapper.add(defKey);
     }
     final schema = type.toJsonSchema();
@@ -674,5 +786,6 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
   }
 }
 
-LazyEntry<O> lazy<O>(AcanthisType<O> Function(AcanthisMap<dynamic> parent) type) =>
+LazyEntry<O> lazy<O>(
+        AcanthisType<O> Function(AcanthisMap<dynamic> parent) type) =>
     LazyEntry<O>(type);

@@ -1143,6 +1143,129 @@ void main() {
           ));
     },
   );
+
+  test(
+    'when creating an exact string validator, and the string is not exactly the value passed, then the result should be unsuccessful',
+    () {
+      final string = acanthis.string().exact('test');
+      final result = string.tryParse('test1');
+
+      expect(result.success, false);
+
+      expect(
+          () => string.parse('test1'),
+          throwsA(
+            TypeMatcher<ValidationError>(),
+          ));
+    },
+  );
+
+  test(
+    'when creating an exact string validator, and the string is exactly the value passed, then the result should be successful',
+    () {
+      final string = acanthis.string().exact('test');
+      final result = string.tryParse('test');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('test');
+
+      expect(resultParse.success, true);
+    },
+  );
+
+  test(
+    'when creating an string validator,'
+    'and use the toJsonSchema method and the constraint checks are used, '
+    'then the result should be a valid json schema with the constraints',
+    () {
+      final string = acanthis.string().max(10).min(5);
+      final result = string.toJsonSchema();
+
+      final expected = {
+        'type': 'string',
+        'maxLength': 10,
+        'minLength': 5,
+      };
+      expect(result, expected);
+
+      final string2 = acanthis.string().length(10);
+      final result2 = string2.toJsonSchema();
+      final expected2 = {
+        'type': 'string',
+        'maxLength': 10,
+        'minLength': 10,
+      };
+      expect(result2, expected2);
+    },
+  );
+
+  test(
+    'when creating an string validator,'
+    'and use the toJsonSchema method and the metadata, '
+    'then the result should be a valid json schema with the metadata',
+    () {
+      final string = acanthis.string().meta(MetadataEntry(
+            description: 'test',
+            title: 'test',
+          ));
+      final result = string.toJsonSchema();
+
+      final expected = {
+        'type': 'string',
+        'description': 'test',
+        'title': 'test',
+      };
+      expect(result, expected);
+    },
+  );
+
+  test(
+    'when creating an string validator,'
+    'and use the toJsonSchema method and the validator has pattern checks, '
+    'then the result should be a valid json schema with the pattern',
+    () {
+      final string = acanthis.string().pattern(RegExp(r'^[a-z]+$'));
+      final result = string.toJsonSchema();
+
+      final expected = {
+        'type': 'string',
+        'pattern': r'^[a-z]+$',
+      };
+      expect(result, expected);
+    },
+  );
+
+  test(
+    'when creating an enumerated string validator,'
+    'and use the toJsonSchema method, '
+    'then the result should be a valid json schema',
+    () {
+      final string =
+          acanthis.string().max(10).min(5).enumerated(TestEnum.values);
+      final result = string.toJsonSchema();
+
+      final expected = {
+        'enum': ['test', 'test2'],
+      };
+      expect(result, expected);
+    },
+  );
+
+  test(
+    'when creating an exact string validator,'
+    'and use the toJsonSchema method, '
+    'then the result should be a valid json schema',
+    () {
+      final string = acanthis.string().exact('test');
+      final result = string.toJsonSchema();
+
+      final expected = {
+        'const': 'test',
+      };
+      expect(result, expected);
+    },
+  );
 }
 
 enum TestEnum { test, test2 }

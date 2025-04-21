@@ -2,9 +2,7 @@ import 'package:benchmarks/shared/acanthis_benchmark.dart';
 import 'package:luthor/luthor.dart';
 
 class LuthorNestedObjectValidator extends AcanthisBenchmark {
-  
-  LuthorNestedObjectValidator()
-      : super(name: 'LuthorNestedObjectValidator');
+  LuthorNestedObjectValidator() : super(name: 'LuthorNestedObjectValidator');
 
   static void main() {
     LuthorNestedObjectValidator().report();
@@ -30,15 +28,10 @@ class LuthorNestedObjectValidator extends AcanthisBenchmark {
     };
     validator.validateSchema(payload);
   }
-
 }
 
-
-
 class LuthorFlatObjectValidator extends AcanthisBenchmark {
-  
-  LuthorFlatObjectValidator()
-      : super(name: 'LuthorFlatObjectValidator');
+  LuthorFlatObjectValidator() : super(name: 'LuthorFlatObjectValidator');
 
   static void main() {
     LuthorFlatObjectValidator().report();
@@ -57,13 +50,10 @@ class LuthorFlatObjectValidator extends AcanthisBenchmark {
     };
     validator.validateSchema(payload);
   }
-
 }
 
 class LuthorArrayObjectValidator extends AcanthisBenchmark {
-
-  LuthorArrayObjectValidator()
-      : super(name: 'LuthorArrayObjectValidator');
+  LuthorArrayObjectValidator() : super(name: 'LuthorArrayObjectValidator');
 
   static void main() {
     LuthorArrayObjectValidator().report();
@@ -88,5 +78,4 @@ class LuthorArrayObjectValidator extends AcanthisBenchmark {
     };
     validator.validateSchema(payload);
   }
-
 }

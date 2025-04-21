@@ -194,5 +194,44 @@ void main() {
             throwsA(TypeMatcher<ValidationError>()));
       },
     );
+
+    test(
+      'when creating a date validator,'
+      'and use the toJsonSchema method, '
+      'then the result should be a valid json schema',
+      () {
+        final date = acanthis.date().differsFromNow(Duration(days: 1));
+        final result = date.toJsonSchema();
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['type'], 'string');
+        expect(result['format'], 'date-time');
+      },
+    );
+
+    test(
+      'when creating a date validator,'
+      'and use the toJsonSchema method and the meta method, '
+      'then the result should be a valid json schema with the metadata',
+      () {
+        final date = acanthis.date().differsFromNow(Duration(days: 1)).meta(
+              MetadataEntry(
+                description: 'A date in the future',
+                id: 'date-future',
+                title: 'Future Date',
+                examples: [DateTime(2023, 10, 1)],
+              ),
+            );
+        final result = date.toJsonSchema();
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['type'], 'string');
+        expect(result['format'], 'date-time');
+        expect(result['description'], 'A date in the future');
+        expect(result['id'], 'date-future');
+        expect(result['title'], 'Future Date');
+        expect(result['examples'], ['2023-10-01T00:00:00.000']);
+      },
+    );
   });
 }

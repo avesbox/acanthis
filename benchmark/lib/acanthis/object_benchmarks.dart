@@ -2,9 +2,7 @@ import 'package:acanthis/acanthis.dart';
 import 'package:benchmarks/shared/acanthis_benchmark.dart';
 
 class NestedObjectValidator extends AcanthisBenchmark {
-  
-  NestedObjectValidator()
-      : super(name: 'NestedObjectValidator');
+  NestedObjectValidator() : super(name: 'NestedObjectValidator');
 
   static void main() {
     NestedObjectValidator().report();
@@ -30,15 +28,10 @@ class NestedObjectValidator extends AcanthisBenchmark {
     };
     validator.parse(payload);
   }
-
 }
 
-
-
 class FlatObjectValidator extends AcanthisBenchmark {
-  
-  FlatObjectValidator()
-      : super(name: 'FlatObjectValidator');
+  FlatObjectValidator() : super(name: 'FlatObjectValidator');
 
   static void main() {
     FlatObjectValidator().report();
@@ -57,13 +50,10 @@ class FlatObjectValidator extends AcanthisBenchmark {
     };
     validator.parse(payload);
   }
-
 }
 
 class ArrayObjectValidator extends AcanthisBenchmark {
-
-  ArrayObjectValidator()
-      : super(name: 'ArrayObjectValidator');
+  ArrayObjectValidator() : super(name: 'ArrayObjectValidator');
 
   static void main() {
     ArrayObjectValidator().report();
@@ -86,5 +76,4 @@ class ArrayObjectValidator extends AcanthisBenchmark {
     };
     validator.parse(payload);
   }
-
 }

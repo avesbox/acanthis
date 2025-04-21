@@ -250,4 +250,75 @@ void main() {
           throwsA(TypeMatcher<ValidationError>()));
     },
   );
+
+  test(
+    'when creating a list validator,'
+    'and use the toJsonSchema method, '
+    'then the result should be a valid json schema',
+    () {
+      final schema = acanthis.string().list();
+      final result = schema.toJsonSchema();
+
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['type'], 'array');
+      expect(result['items'], isA<Map<String, dynamic>>());
+    },
+  );
+
+  test(
+      'when creating a list validator,'
+      'and use the toJsonSchema method and the meta method, '
+      'then the result should be a valid json schema with the metadata', () {
+    final schema = acanthis.string().list().meta(MetadataEntry(
+          description: 'description',
+          title: 'title',
+          examples: [
+            ['example1', 'example2']
+          ],
+        ));
+    final result = schema.toJsonSchema();
+    expect(result, isA<Map<String, dynamic>>());
+    expect(result['type'], 'array');
+    expect(result['items'], isA<Map<String, dynamic>>());
+    expect(result['description'], 'description');
+    expect(result['title'], 'title');
+    expect(result['examples'], [
+      ['example1', 'example2']
+    ]);
+    expect(result['items']['type'], 'string');
+  });
+
+  test(
+      'when creating a list validator,'
+      'and use the toJsonSchema method and length checks are used, '
+      'then the result should be a valid json schema with the constraints', () {
+    final schema = acanthis.string().list().min(2).max(5);
+    final result = schema.toJsonSchema();
+    expect(result, isA<Map<String, dynamic>>());
+    expect(result['type'], 'array');
+    expect(result['items'], isA<Map<String, dynamic>>());
+    expect(result['minItems'], 2);
+    expect(result['maxItems'], 5);
+
+    final schema2 = acanthis.string().list().length(3);
+    final result2 = schema2.toJsonSchema();
+    expect(result2, isA<Map<String, dynamic>>());
+    expect(result2['type'], 'array');
+    expect(result2['items'], isA<Map<String, dynamic>>());
+    expect(result2['minItems'], 3);
+    expect(result2['maxItems'], 3);
+  });
+
+  test(
+      'when creating a list validator,'
+      'and use the toJsonSchema method and the unique check, '
+      'then the result should be a valid json schema with uniqueItems true',
+      () {
+    final schema = acanthis.string().list().unique();
+    final result = schema.toJsonSchema();
+    expect(result, isA<Map<String, dynamic>>());
+    expect(result['type'], 'array');
+    expect(result['items'], isA<Map<String, dynamic>>());
+    expect(result['uniqueItems'], true);
+  });
 }

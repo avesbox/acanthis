@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:acanthis/src/types/tuple.dart';
 import 'package:crypto/crypto.dart';
 import 'package:nanoid2/nanoid2.dart' as n;
 import 'package:email_validator/email_validator.dart';
@@ -50,7 +51,7 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if its length is at least [length]
   AcanthisString min(int length) {
-    return withCheck(LengthCheck.length(length));
+    return withCheck(LengthCheck.min(length));
   }
 
   /// Add a check to the string to check if its length is at most [length]
@@ -60,72 +61,37 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if follows the pattern [pattern]
   AcanthisString pattern(RegExp pattern) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => pattern.hasMatch(value),
-        error: 'Value does not match the pattern',
-        name: 'pattern'));
+    return withCheck(PatternChecks.pattern(pattern));
   }
 
   /// Add a check to the string to check if it contains letters
   AcanthisString letters({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => (strict ? RegExp(_lettersStrict) : RegExp(_letters))
-            .hasMatch(value),
-        error: 'Value must contain ${strict ? 'only ' : ''}letters',
-        name: 'letters'));
+    return withCheck(PatternChecks.letters(strict: strict));
   }
 
   /// Add a check to the string to check if it contains digits
   AcanthisString digits({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            (strict ? RegExp(_digitsStrict) : RegExp(_digits)).hasMatch(value),
-        error: 'Value must contain ${strict ? 'only ' : ''}digits',
-        name: 'digits'));
+    return withCheck(PatternChecks.digits(strict: strict));
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters
   AcanthisString alphanumeric({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            (strict ? RegExp(_alphanumericStrict) : RegExp(_alphanumeric))
-                .hasMatch(value),
-        error:
-            'Value must contain ${strict ? 'only ' : ''}alphanumeric characters',
-        name: 'alphanumeric'));
+    return withCheck(PatternChecks.alphanumeric(strict: strict));
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters and spaces
   AcanthisString alphanumericWithSpaces({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => (strict
-                ? RegExp(_alphanumericWithSpacesStrict)
-                : RegExp(_alphanumericWithSpaces))
-            .hasMatch(value),
-        error:
-            'Value must contain ${strict ? 'only ' : ''}alphanumeric or spaces characters',
-        name: 'alphanumericWithSpaces'));
+    return withCheck(PatternChecks.alphanumericWithSpaces(strict: strict));
   }
 
   /// Add a check to the string to check if it contains special characters
   AcanthisString specialCharacters({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) => (strict
-                ? RegExp(_specialCharactersStrict)
-                : RegExp(_specialCharacters))
-            .hasMatch(value),
-        error: 'Value must contain ${strict ? 'only ' : ''}special characters',
-        name: 'specialCharacters'));
+    return withCheck(PatternChecks.specialCharacters(strict: strict));
   }
 
   /// Add a check to the string to check if it contains all characters
   AcanthisString allCharacters({bool strict = true}) {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            (strict ? RegExp(_allCharactersStrict) : RegExp(_allCharacters))
-                .hasMatch(value),
-        error: 'Value must contain ${strict ? 'only ' : ''} characters',
-        name: 'specialCharacters'));
+    return withCheck(PatternChecks.allCharacters(strict: strict));
   }
 
   /// Add a check to the string to check if it is in uppercase
@@ -169,14 +135,7 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   AcanthisString hexColor() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) {
-          if (value.length != 7) return false;
-          if (value[0] != '#') return false;
-          return RegExp(r'^[0-9a-fA-F]+$').hasMatch(value.substring(1));
-        },
-        error: 'Value must be a valid hex color',
-        name: 'hexColor'));
+    return withCheck(PatternChecks.hexColor());
   }
 
   /// Add a check to the string to check if it is a valid uri
@@ -291,59 +250,35 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   AcanthisString cuid() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_cuidRegex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid cuid',
-        name: 'cuid'));
+    return withCheck(PatternChecks.cuid());
   }
 
   AcanthisString cuid2() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_cuid2Regex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid cuid2',
-        name: 'cuid2'));
+    return withCheck(PatternChecks.cuid2());
   }
 
   AcanthisString ulid() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_ulidRegex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid ulid',
-        name: 'ulid'));
+    return withCheck(PatternChecks.ulid());
   }
 
   AcanthisString uuid() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_uuidRegex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid uuid',
-        name: 'uuid'));
+    return withCheck(PatternChecks.uuid());
   }
 
   AcanthisString nanoid() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_nanoidRegex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid nanoid',
-        name: 'nanoid'));
+    return withCheck(PatternChecks.nanoid());
   }
 
   AcanthisString jwt() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_jwtRegex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid jwt',
-        name: 'jwt'));
+    return withCheck(PatternChecks.jwt());
   }
 
   AcanthisString base64() {
-    return withCheck(AcanthisCheck<String>(
-        onCheck: (value) =>
-            RegExp(_base64Regex, caseSensitive: false).hasMatch(value),
-        error: 'Value must be a valid base64',
-        name: 'base64'));
+    return withCheck(PatternChecks.base64());
+  }
+
+  AcanthisString exact(String value) {
+    return withCheck(ExactCheck(value: value));
   }
 
   /// Create a list of strings
@@ -381,6 +316,11 @@ class AcanthisString extends AcanthisType<String> {
     return AcanthisUnion([this, ...elements]);
   }
 
+  /// Create a tuple from the string
+  AcanthisTuple and(List<AcanthisType> elements) {
+    return AcanthisTuple([this, ...elements]);
+  }
+
   // AcanthisDate date() {
   //   addTransformation(AcanthisTransformation(transformation: (value) => DateTime.parse(value)));
   //   return AcanthisDate();
@@ -388,24 +328,72 @@ class AcanthisString extends AcanthisType<String> {
 
   @override
   AcanthisString withAsyncCheck(AcanthisAsyncCheck<String> check) {
-    return AcanthisString(operations: operations.add(check), isAsync: true, key: key);
+    return AcanthisString(
+        operations: operations.add(check), isAsync: true, key: key);
   }
 
   @override
   AcanthisString withCheck(AcanthisCheck<String> check) {
-    return AcanthisString(operations: operations.add(check), isAsync: isAsync, key: key);
+    return AcanthisString(
+        operations: operations.add(check), isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisString withTransformation(
       AcanthisTransformation<String> transformation) {
-    return AcanthisString(operations: operations.add(transformation), isAsync: isAsync, key: key);
+    return AcanthisString(
+        operations: operations.add(transformation), isAsync: isAsync, key: key);
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
+    final lengthChecksMap = _getConstraints();
+    final patternChecksMap = _getPattern();
+    final enumeratedChecksMap = _getEnumeratedChecks();
+    final metadata = MetadataRegistry().get(key);
+    final exactChecksMap = _getExactChecks();
+    if (exactChecksMap.isNotEmpty) {
+      return {
+        'const': exactChecksMap['const'],
+        if (metadata != null) ...metadata.toJson(),
+      };
+    }
+    if (enumeratedChecksMap.isNotEmpty) {
+      return {
+        'enum': enumeratedChecksMap['enum'],
+        if (metadata != null) ...metadata.toJson(),
+      };
+    }
+    return {
+      'type': 'string',
+      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+      if (metadata != null) ...metadata.toJson(),
+      if (patternChecksMap.isNotEmpty) ...patternChecksMap,
+    };
+  }
+
+  Map<String, dynamic> _getExactChecks() {
+    final exactChecks = operations.whereType<ExactCheck>();
+    final exactChecksMap = <String, dynamic>{};
+    for (var check in exactChecks) {
+      exactChecksMap['const'] = check.value;
+    }
+    return exactChecksMap;
+  }
+
+  Map<String, dynamic> _getEnumeratedChecks() {
+    final enumeratedChecks = operations.whereType<EnumeratedCheck>();
+    final enumeratedChecksMap = <String, dynamic>{};
+    for (var check in enumeratedChecks) {
+      enumeratedChecksMap['enum'] =
+          check.enumValues.map((e) => e.name).toList();
+    }
+    return enumeratedChecksMap;
+  }
+
+  Map<String, dynamic> _getConstraints() {
     final lengthChecks = operations.whereType<LengthCheck>();
-    final lengthChecksMap = {};
+    final lengthChecksMap = <String, dynamic>{};
 
     for (var check in lengthChecks) {
       if (check.name == 'max') {
@@ -417,12 +405,16 @@ class AcanthisString extends AcanthisType<String> {
         lengthChecksMap['minLength'] = check.value;
       }
     }
-    final metadata = MetadataRegistry().get(key);
-    return {
-      'type': 'string',
-      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if(metadata != null) ...metadata.toJson(),
-    };
+    return lengthChecksMap;
+  }
+
+  Map<String, dynamic> _getPattern() {
+    final patternChecks = operations.whereType<PatternChecks>();
+    final patternChecksMap = <String, dynamic>{};
+    for (var check in patternChecks) {
+      patternChecksMap['pattern'] = check.regex.pattern;
+    }
+    return patternChecksMap;
   }
 
   @override
@@ -438,17 +430,17 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
     );
   }
-
 }
 
 class EnumeratedCheck<T extends Enum> extends AcanthisCheck<String> {
   final List<T> enumValues;
 
   EnumeratedCheck({required this.enumValues})
-      : super(onCheck: (value) {
-          final enumValue = enumValues.map((e) => e.name).toList();
-          return enumValue.contains(value);
-        },
+      : super(
+            onCheck: (value) {
+              final enumValue = enumValues.map((e) => e.name).toList();
+              return enumValue.contains(value);
+            },
             error: 'Value must be one of the enumerated values',
             name: 'enumerated');
 }
@@ -456,14 +448,19 @@ class EnumeratedCheck<T extends Enum> extends AcanthisCheck<String> {
 class LengthCheck<T> extends AcanthisCheck<String> {
   final int value;
 
-  LengthCheck({required super.onCheck, required this.value, required super.name, required super.error});
+  LengthCheck(
+      {required super.onCheck,
+      required this.value,
+      required super.name,
+      required super.error});
 
   static LengthCheck<String> max(int length) {
     return LengthCheck<String>(
         onCheck: (value) => value.length <= length,
         value: length,
         name: 'max',
-        error: 'The string must be less than or equal to $length characters long');
+        error:
+            'The string must be less than or equal to $length characters long');
   }
 
   static LengthCheck<String> min(int length) {
@@ -471,7 +468,8 @@ class LengthCheck<T> extends AcanthisCheck<String> {
         onCheck: (value) => value.length >= length,
         value: length,
         name: 'min',
-        error: 'The string must be greater than or equal to $length characters long');
+        error:
+            'The string must be greater than or equal to $length characters long');
   }
 
   static LengthCheck<String> length(int length) {
@@ -481,7 +479,171 @@ class LengthCheck<T> extends AcanthisCheck<String> {
         name: 'length',
         error: 'The string must be exactly $length characters long');
   }
+}
 
+class PatternChecks extends AcanthisCheck<String> {
+  final RegExp regex;
+
+  PatternChecks(
+      {required this.regex,
+      required super.onCheck,
+      required super.name,
+      required super.error});
+
+  static PatternChecks letters({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(strict ? _lettersStrict : _letters),
+        onCheck: (value) => (strict ? RegExp(_lettersStrict) : RegExp(_letters))
+            .hasMatch(value),
+        name: 'letters',
+        error: 'Value must contain ${strict ? 'only ' : ''}letters');
+  }
+
+  static PatternChecks digits({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(strict ? _digitsStrict : _digits),
+        onCheck: (value) =>
+            (strict ? RegExp(_digitsStrict) : RegExp(_digits)).hasMatch(value),
+        name: 'digits',
+        error: 'Value must contain ${strict ? 'only ' : ''}digits');
+  }
+
+  static PatternChecks alphanumeric({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(strict ? _alphanumericStrict : _alphanumeric),
+        onCheck: (value) =>
+            (strict ? RegExp(_alphanumericStrict) : RegExp(_alphanumeric))
+                .hasMatch(value),
+        name: 'alphanumeric',
+        error:
+            'Value must contain ${strict ? 'only ' : ''}alphanumeric characters');
+  }
+
+  static PatternChecks alphanumericWithSpaces({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(
+            strict ? _alphanumericWithSpacesStrict : _alphanumericWithSpaces),
+        onCheck: (value) => (strict
+                ? RegExp(_alphanumericWithSpacesStrict)
+                : RegExp(_alphanumericWithSpaces))
+            .hasMatch(value),
+        name: 'alphanumericWithSpaces',
+        error:
+            'Value must contain ${strict ? 'only ' : ''}alphanumeric or spaces characters');
+  }
+
+  static PatternChecks specialCharacters({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(strict ? _specialCharactersStrict : _specialCharacters),
+        onCheck: (value) => (strict
+                ? RegExp(_specialCharactersStrict)
+                : RegExp(_specialCharacters))
+            .hasMatch(value),
+        name: 'specialCharacters',
+        error: 'Value must contain ${strict ? 'only ' : ''}special characters');
+  }
+
+  static PatternChecks allCharacters({bool strict = true}) {
+    return PatternChecks(
+        regex: RegExp(strict ? _allCharactersStrict : _allCharacters),
+        onCheck: (value) =>
+            (strict ? RegExp(_allCharactersStrict) : RegExp(_allCharacters))
+                .hasMatch(value),
+        name: 'allCharacters',
+        error: 'Value must contain ${strict ? 'only ' : ''} characters');
+  }
+
+  static PatternChecks cuid() {
+    return PatternChecks(
+        regex: RegExp(_cuidRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_cuidRegex, caseSensitive: false).hasMatch(value),
+        name: 'cuid',
+        error: 'Value must be a valid cuid');
+  }
+
+  static PatternChecks cuid2() {
+    return PatternChecks(
+        regex: RegExp(_cuid2Regex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_cuid2Regex, caseSensitive: false).hasMatch(value),
+        name: 'cuid2',
+        error: 'Value must be a valid cuid2');
+  }
+
+  static PatternChecks ulid() {
+    return PatternChecks(
+        regex: RegExp(_ulidRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_ulidRegex, caseSensitive: false).hasMatch(value),
+        name: 'ulid',
+        error: 'Value must be a valid ulid');
+  }
+
+  static PatternChecks uuid() {
+    return PatternChecks(
+        regex: RegExp(_uuidRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_uuidRegex, caseSensitive: false).hasMatch(value),
+        name: 'uuid',
+        error: 'Value must be a valid uuid');
+  }
+
+  static PatternChecks nanoid() {
+    return PatternChecks(
+        regex: RegExp(_nanoidRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_nanoidRegex, caseSensitive: false).hasMatch(value),
+        name: 'nanoid',
+        error: 'Value must be a valid nanoid');
+  }
+
+  static PatternChecks jwt() {
+    return PatternChecks(
+        regex: RegExp(_jwtRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_jwtRegex, caseSensitive: false).hasMatch(value),
+        name: 'jwt',
+        error: 'Value must be a valid jwt');
+  }
+
+  static PatternChecks base64() {
+    return PatternChecks(
+        regex: RegExp(_base64Regex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_base64Regex, caseSensitive: false).hasMatch(value),
+        name: 'base64',
+        error: 'Value must be a valid base64');
+  }
+
+  static PatternChecks time() {
+    return PatternChecks(
+        regex: RegExp(_timeRegex, caseSensitive: false),
+        onCheck: (value) =>
+            RegExp(_timeRegex, caseSensitive: false).hasMatch(value),
+        name: 'time',
+        error: 'Value must be a valid time format');
+  }
+
+  static PatternChecks hexColor() {
+    return PatternChecks(
+        regex: RegExp(r'^[0-9a-fA-F]{6}$'),
+        onCheck: (value) {
+          if (value.length != 7) return false;
+          if (value[0] != '#') return false;
+          return RegExp(r'^[0-9a-fA-F]+$').hasMatch(value.substring(1));
+        },
+        name: 'hexColor',
+        error: 'Value must be a valid hex color');
+  }
+
+  static PatternChecks pattern(RegExp pattern) {
+    return PatternChecks(
+        regex: pattern,
+        onCheck: (value) => pattern.hasMatch(value),
+        name: 'pattern',
+        error: 'Value does not match the pattern');
+  }
 }
 
 /// Create a new AcanthisString instance

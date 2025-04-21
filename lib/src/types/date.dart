@@ -1,4 +1,5 @@
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/types/tuple.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'list.dart';
@@ -50,34 +51,30 @@ class AcanthisDate extends AcanthisType<DateTime> {
     return AcanthisUnion([this, ...elements]);
   }
 
+  /// Create a tuple from the date
+  AcanthisTuple tuple(List<AcanthisType> elements) {
+    return AcanthisTuple([this, ...elements]);
+  }
+
   @override
   AcanthisDate withAsyncCheck(AcanthisAsyncCheck<DateTime> check) {
     return AcanthisDate(
-      operations: operations.add(check),
-      isAsync: true,
-      key: key
-    );
+        operations: operations.add(check), isAsync: true, key: key);
   }
 
   @override
   AcanthisDate withCheck(AcanthisCheck<DateTime> check) {
     return AcanthisDate(
-      operations: operations.add(check),
-      isAsync: isAsync,
-      key: key
-    );
+        operations: operations.add(check), isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisDate withTransformation(
       AcanthisTransformation<DateTime> transformation) {
     return AcanthisDate(
-      operations: operations.add(transformation),
-      isAsync: isAsync,
-      key: key
-    );
+        operations: operations.add(transformation), isAsync: isAsync, key: key);
   }
-  
+
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);
@@ -91,7 +88,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
   @override
   AcanthisDate meta(MetadataEntry<DateTime> metadata) {
     String key = this.key;
-    if(key.isEmpty) {
+    if (key.isEmpty) {
       key = nanoid();
     }
     MetadataRegistry().add(key, metadata);
@@ -101,7 +98,6 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
     );
   }
-
 }
 
 /// Create a new date type

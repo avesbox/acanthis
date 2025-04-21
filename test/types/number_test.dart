@@ -476,5 +476,194 @@ void main() {
         expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
       },
     );
+
+    test(
+      'when creating an enumerated number validator, and the number is in the list of valid values, then the result should be successful',
+      () {
+        final number = acanthis.number().enumerated([1, 2, 3]);
+        final result = number.tryParse(1);
+
+        expect(result.success, true);
+
+        final resultParse = number.parse(1);
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating an enumerated number validator, and the number is not in the list of valid values, then the result should be unsuccessful',
+      () {
+        final number = acanthis.number().enumerated([1, 2, 3]);
+        final result = number.tryParse(4);
+
+        expect(result.success, false);
+
+        expect(
+            () => number.parse(4),
+            throwsA(
+              TypeMatcher<ValidationError>(),
+            ));
+      },
+    );
+
+    test(
+      'when creating an exact number validator, and the number is not exactly the value passed, then the result should be unsuccessful',
+      () {
+        final number = acanthis.number().exact(1);
+        final result = number.tryParse(2);
+
+        expect(result.success, false);
+
+        expect(
+            () => number.parse(2),
+            throwsA(
+              TypeMatcher<ValidationError>(),
+            ));
+      },
+    );
+
+    test(
+      'when creating an exact number validator, and the number is exactly the value passed, then the result should be successful',
+      () {
+        final number = acanthis.number().exact(1);
+        final result = number.tryParse(1);
+
+        expect(result.success, true);
+
+        final resultParse = number.parse(1);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating an number validator,'
+      'and use the toJsonSchema method and the validator has constraint checks, '
+      'then the result should be a valid json schema with the constraints',
+      () {
+        final number = acanthis.number().gte(1).lte(3);
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'type': 'number',
+          'minimum': 1,
+          'maximum': 3,
+        };
+        expect(result, expected);
+
+        final number2 = acanthis.number().gt(1).lt(3);
+        final result2 = number2.toJsonSchema();
+
+        final expected2 = {
+          'type': 'number',
+          'exclusiveMinimum': 1,
+          'exclusiveMaximum': 3,
+        };
+
+        expect(result2, expected2);
+
+        final number3 = acanthis.number().positive().negative();
+        final result3 = number3.toJsonSchema();
+
+        final expected3 = {
+          'type': 'number',
+          'exclusiveMinimum': 0,
+          'exclusiveMaximum': 0,
+        };
+
+        expect(result3, expected3);
+
+        final number4 = acanthis.number().between(10, 30);
+        final result4 = number4.toJsonSchema();
+
+        final expected4 = {
+          'type': 'number',
+          'minimum': 10,
+          'maximum': 30,
+        };
+        expect(result4, expected4);
+      },
+    );
+
+    test(
+      'when creating a number validator,'
+      'and use the toJsonSchema method and the validator has a multipleOf check, '
+      'then the result should be a valid json schema with the multipleOf',
+      () {
+        final number = acanthis.number().multipleOf(2);
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'type': 'number',
+          'multipleOf': 2,
+        };
+        expect(result, expected);
+      },
+    );
+
+    test(
+      'when creating an number validator,'
+      'and use the toJsonSchema method and the metadata, '
+      'then the result should be a valid json schema with the metadata',
+      () {
+        final number = acanthis.number().meta(MetadataEntry(
+              description: 'test',
+              title: 'test',
+            ));
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'type': 'number',
+          'description': 'test',
+          'title': 'test',
+        };
+        expect(result, expected);
+      },
+    );
+
+    test(
+      'when creating an number validator,'
+      'and use the toJsonSchema method and the integer validator, '
+      'then the result should be a valid json schema type "integer"',
+      () {
+        final number = acanthis.number().integer();
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'type': 'integer',
+        };
+        expect(result, expected);
+      },
+    );
+
+    test(
+      'when creating an enumerated number validator,'
+      'and use the toJsonSchema method, '
+      'then the result should be a valid json schema',
+      () {
+        final number = acanthis.number().enumerated([1, 2]);
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'enum': [1, 2],
+        };
+        expect(result, expected);
+      },
+    );
+
+    test(
+      'when creating an exact number validator,'
+      'and use the toJsonSchema method, '
+      'then the result should be a valid json schema',
+      () {
+        final number = acanthis.number().exact(1);
+        final result = number.toJsonSchema();
+
+        final expected = {
+          'const': 1,
+        };
+        expect(result, expected);
+      },
+    );
   });
 }

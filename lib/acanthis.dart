@@ -7,7 +7,9 @@ export 'src/types/date.dart';
 export 'src/types/nullable.dart';
 export 'src/types/union.dart';
 export 'src/types/boolean.dart';
+export 'src/types/tuple.dart';
 
 export 'src/exceptions/validation_error.dart';
 export 'src/exceptions/async_exception.dart';
 export 'src/exceptions/build_validator_exception.dart';
+export 'src/registries/metadata_registry.dart';

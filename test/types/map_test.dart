@@ -625,11 +625,17 @@ void main() {
         final schema = object({
           'name': string().min(5).max(10).encode(),
         }).and([string()]);
-        final result = schema.tryParse([{'name': 'James'}, 'World']);
+        final result = schema.tryParse([
+          {'name': 'James'},
+          'World'
+        ]);
 
         expect(result.success, true);
 
-        final resultParse = schema.parse([{'name': 'James'}, 'World']);
+        final resultParse = schema.parse([
+          {'name': 'James'},
+          'World'
+        ]);
 
         expect(resultParse.success, true);
       },
@@ -647,8 +653,7 @@ void main() {
 
         expect(result.success, false);
 
-        expect(() => schema.parse(5),
-            throwsA(TypeMatcher<ValidationError>()));
+        expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
       },
     );
 

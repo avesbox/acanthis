@@ -9,7 +9,6 @@ import 'package:meta/meta.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import '../exceptions/validation_error.dart';
-import 'list.dart';
 import 'types.dart';
 
 /// A class to validate map types
@@ -414,11 +413,6 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         errors: errors,
         success: _recursiveSuccess(errors),
         metadata: MetadataRegistry().get(key));
-  }
-
-  /// Create a list of maps
-  AcanthisList<Map<String, V>> list() {
-    return AcanthisList<Map<String, V>>(this);
   }
 
   /// Add a field dependency to the map to validate the map based on the [condition]

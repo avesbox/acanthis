@@ -121,7 +121,7 @@ void main() {
             throwsA(TypeMatcher<ValidationError>()));
       },
     );
-    
+
     test(
       'when creating a tuple validator from a date validator,'
       'and the date is valid, '

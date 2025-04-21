@@ -1,10 +1,5 @@
 import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:acanthis/src/types/nullable.dart';
 import 'package:nanoid2/nanoid2.dart';
-
-import 'types.dart';
-import '../exceptions/validation_error.dart';
 
 /// A class to validate union types that can be one of the elements in the list
 class AcanthisUnion extends AcanthisType<dynamic> {

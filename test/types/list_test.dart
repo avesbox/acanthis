@@ -161,11 +161,19 @@ void main() {
       'then the result should be successful',
       () {
         final schema = string().list().and([string()]);
-        final result = schema.tryParse([['Hello'], 'World'],);
+        final result = schema.tryParse(
+          [
+            ['Hello'],
+            'World'
+          ],
+        );
 
         expect(result.success, true);
 
-        final resultParse = schema.parse([['Hello'], 'World']);
+        final resultParse = schema.parse([
+          ['Hello'],
+          'World'
+        ]);
 
         expect(resultParse.success, true);
       },
@@ -181,8 +189,7 @@ void main() {
 
         expect(result.success, false);
 
-        expect(() => schema.parse(5),
-            throwsA(TypeMatcher<ValidationError>()));
+        expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
       },
     );
 

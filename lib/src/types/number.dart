@@ -1,12 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:acanthis/src/types/tuple.dart';
 import 'package:nanoid2/nanoid2.dart';
 
-import 'list.dart';
 import 'types.dart';
-import 'union.dart';
 
 /// A class to validate number types
 class AcanthisNumber extends AcanthisType<num> {
@@ -108,25 +105,10 @@ class AcanthisNumber extends AcanthisType<num> {
     return withCheck(ExactCheck<num>(value: value));
   }
 
-  /// Create a list of numbers
-  AcanthisList<num> list() {
-    return AcanthisList<num>(this);
-  }
-
   /// Transform the number to a power of [value]
   AcanthisNumber pow(int value) {
     return withTransformation(AcanthisTransformation<num>(
         transformation: (toTransform) => math.pow(toTransform, value)));
-  }
-
-  /// Create a union from the number
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
-  /// Create a tuple from the number
-  AcanthisTuple and(List<AcanthisType> elements) {
-    return AcanthisTuple([this, ...elements]);
   }
 
   @override

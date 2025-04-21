@@ -1,10 +1,7 @@
 import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:acanthis/src/types/tuple.dart';
 import 'package:nanoid2/nanoid2.dart';
 
-import 'list.dart';
 import 'types.dart';
-import 'union.dart';
 
 /// A class to validate date types
 class AcanthisDate extends AcanthisType<DateTime> {
@@ -39,21 +36,6 @@ class AcanthisDate extends AcanthisType<DateTime> {
             toTest.isBefore(value) || toTest.isAtSameMomentAs(value),
         error: 'The date must be less than or equal to $value',
         name: 'max'));
-  }
-
-  /// Create a list of dates
-  AcanthisList<DateTime> list() {
-    return AcanthisList<DateTime>(this);
-  }
-
-  /// Create a union from the string
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
-  /// Create a tuple from the date
-  AcanthisTuple tuple(List<AcanthisType> elements) {
-    return AcanthisTuple([this, ...elements]);
   }
 
   @override

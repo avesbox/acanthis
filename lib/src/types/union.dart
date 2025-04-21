@@ -1,3 +1,4 @@
+import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:acanthis/src/types/nullable.dart';
 import 'package:nanoid2/nanoid2.dart';

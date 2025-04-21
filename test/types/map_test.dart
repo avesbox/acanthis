@@ -601,6 +601,76 @@ void main() {
     });
 
     test(
+      'when creating a tuple validator from a map validator,'
+      'and the object is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final schema = object({
+          'name': string().min(5).max(10).encode(),
+        }).and([string()]);
+        final result = schema.tryParse([5, 'Hello']);
+
+        expect(result.success, false);
+
+        expect(() => schema.parse([5, 'Hello']),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a tuple validator from a map validator,'
+      'and the object is valid, '
+      'then the result should be successful',
+      () {
+        final schema = object({
+          'name': string().min(5).max(10).encode(),
+        }).and([string()]);
+        final result = schema.tryParse([{'name': 'James'}, 'World']);
+
+        expect(result.success, true);
+
+        final resultParse = schema.parse([{'name': 'James'}, 'World']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a union validator from a map validator,'
+      'and the object is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final schema = object({
+          'name': string().min(5).max(10).encode(),
+        }).or([string()]);
+        final result = schema.tryParse(5);
+
+        expect(result.success, false);
+
+        expect(() => schema.parse(5),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a union validator from a map validator,'
+      'and the object is valid, '
+      'then the result should be successful',
+      () {
+        final schema = object({
+          'name': string().min(5).max(10).encode(),
+        }).or([string()]);
+        final result = schema.tryParse({'name': 'James'});
+
+        expect(result.success, true);
+
+        final resultParse = schema.parse({'name': 'James'});
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
         'when the method toJsonSchema is called, then the result should be a valid json schema',
         () {
       final object = acanthis.object({

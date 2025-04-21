@@ -78,21 +78,6 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     );
   }
 
-  /// Make a list of nullable elements
-  AcanthisList<T?> list() {
-    return AcanthisList(this);
-  }
-
-  /// Create a union from the nullable
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
-  /// Create a tuple from the nullable
-  AcanthisTuple tuple(List<AcanthisType> elements) {
-    return AcanthisTuple([this, ...elements]);
-  }
-
   @override
   AcanthisNullable nullable({T? defaultValue}) {
     return this;

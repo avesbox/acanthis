@@ -1,10 +1,7 @@
 import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:acanthis/src/types/tuple.dart';
 import 'package:nanoid2/nanoid2.dart';
 
-import 'list.dart';
 import 'types.dart';
-import 'union.dart';
 
 class AcanthisBoolean extends AcanthisType<bool> {
   const AcanthisBoolean({
@@ -27,21 +24,6 @@ class AcanthisBoolean extends AcanthisType<bool> {
         onCheck: (value) => !value,
         error: 'Value must be false',
         name: 'isFalse'));
-  }
-
-  /// Create a list of booleans
-  AcanthisList<bool> list() {
-    return AcanthisList(this);
-  }
-
-  /// Create a union from the nullable
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
-  /// Create a tuple from the nullable
-  AcanthisTuple tuple(List<AcanthisType> elements) {
-    return AcanthisTuple([this, ...elements]);
   }
 
   @override

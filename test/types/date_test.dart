@@ -92,6 +92,83 @@ void main() {
     });
 
     test(
+      'when creating a tuple validator from a date validator,'
+      'and the date is valid, '
+      'then the result should be successful',
+      () {
+        final date = acanthis.date().and([acanthis.string()]);
+        final result = date.tryParse([DateTime(2020, 1, 1), 'Hello']);
+
+        expect(result.success, true);
+
+        final resultParse = date.parse([DateTime(2020, 1, 1), 'Hello']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a tuple validator from a date validator,'
+      'and the date is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final date = acanthis.date().and([acanthis.string()]);
+        final result = date.tryParse([DateTime(2020, 1, 1), 5]);
+
+        expect(result.success, false);
+
+        expect(() => date.parse([DateTime(2020, 1, 1), 5]),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+    
+    test(
+      'when creating a tuple validator from a date validator,'
+      'and the date is valid, '
+      'then the result should be successful',
+      () {
+        final date = acanthis.date().and([acanthis.string()]);
+        final result = date.tryParse([DateTime(2020, 1, 1), 'Hello']);
+
+        expect(result.success, true);
+
+        final resultParse = date.parse([DateTime(2020, 1, 1), 'Hello']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a union validator from a date validator,'
+      'and the date is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final date = acanthis.date().or([acanthis.string()]);
+        final result = date.tryParse(5);
+
+        expect(result.success, false);
+
+        expect(() => date.parse(5), throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a union validator from a date validator,'
+      'and the date is valid, '
+      'then the result should be successful',
+      () {
+        final date = acanthis.date().or([acanthis.string()]);
+        final result = date.tryParse(DateTime(2020, 1, 1));
+
+        expect(result.success, true);
+
+        final resultParse = date.parse(DateTime(2020, 1, 1));
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
         'when creating a date validator with a customCheck,'
         'and the date is not valid, '
         'then the result should be unsuccessful', () {

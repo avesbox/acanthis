@@ -141,6 +141,68 @@ void main() {
     });
 
     test(
+      'when creating a tuple validator from a list validator,'
+      'and the list is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final schema = string().list().and([string()]);
+        final result = schema.tryParse([5, 'Hello']);
+
+        expect(result.success, false);
+
+        expect(() => schema.parse([5, 'Hello']),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a tuple validator from a list validator,'
+      'and the list is valid, '
+      'then the result should be successful',
+      () {
+        final schema = string().list().and([string()]);
+        final result = schema.tryParse([['Hello'], 'World'],);
+
+        expect(result.success, true);
+
+        final resultParse = schema.parse([['Hello'], 'World']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a union validator from a list validator,'
+      'and the list is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final schema = string().list().or([string()]);
+        final result = schema.tryParse(5);
+
+        expect(result.success, false);
+
+        expect(() => schema.parse(5),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a union validator from a list validator,'
+      'and the list is valid, '
+      'then the result should be successful',
+      () {
+        final schema = string().list().or([string()]);
+        final result = schema.tryParse(['Hello', 'World']);
+
+        expect(result.success, true);
+
+        final resultParse = schema.parse(['Hello', 'World']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
         'when creating a list validator with the length check,'
         'and the list is valid, '
         'then the result should be successful', () {

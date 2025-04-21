@@ -1,15 +1,12 @@
 import 'dart:io';
 
-import 'package:acanthis/src/types/tuple.dart';
 import 'package:crypto/crypto.dart';
 import 'package:nanoid2/nanoid2.dart' as n;
 import 'package:email_validator/email_validator.dart';
 
 import 'dart:convert' as convert;
 import '../registries/metadata_registry.dart';
-import 'list.dart';
 import 'types.dart';
-import 'union.dart';
 
 const _lettersStrict = r'^[a-zA-Z]+$';
 const _digitsStrict = r'^[0-9]+$';
@@ -281,11 +278,6 @@ class AcanthisString extends AcanthisType<String> {
     return withCheck(ExactCheck(value: value));
   }
 
-  /// Create a list of strings
-  AcanthisList<String> list() {
-    return AcanthisList<String>(this);
-  }
-
   /// Add a transformation to the string to encode it to base64
   AcanthisString encode() {
     return withTransformation(AcanthisTransformation<String>(
@@ -309,16 +301,6 @@ class AcanthisString extends AcanthisType<String> {
   AcanthisString toLowerCase() {
     return withTransformation(AcanthisTransformation<String>(
         transformation: (value) => value.toLowerCase()));
-  }
-
-  /// Create a union from the string
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
-  }
-
-  /// Create a tuple from the string
-  AcanthisTuple and(List<AcanthisType> elements) {
-    return AcanthisTuple([this, ...elements]);
   }
 
   // AcanthisDate date() {

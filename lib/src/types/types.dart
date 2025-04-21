@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/types/list.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:meta/meta.dart';
 import '../exceptions/async_exception.dart';
@@ -138,6 +140,21 @@ abstract class AcanthisType<O> {
   /// Make the type nullable
   AcanthisNullable nullable({O? defaultValue}) {
     return AcanthisNullable(this, defaultValue: defaultValue);
+  }
+
+  /// Make the type a list of the type
+  AcanthisList<O> list() {
+    return AcanthisList<O>(this);
+  }
+
+  /// Make the type a tuple
+  AcanthisTuple and(List<AcanthisType> elements) {
+    return AcanthisTuple([this, ...elements]);
+  }
+
+  /// Make the type a union
+  AcanthisUnion or(List<AcanthisType> elements) {
+    return AcanthisUnion([this, ...elements]);
   }
 
   /// Add a custom check to the number

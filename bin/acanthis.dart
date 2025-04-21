@@ -1,11 +1,10 @@
 import 'package:acanthis/acanthis.dart' as acanthis;
-import 'package:acanthis/src/types/map.dart';
 
 void main(List<String> arguments) async {
   final jsonObject = acanthis
       .object({
         'name': acanthis.string().min(5).max(10).encode(),
-        'names': lazy((element) => element.list())
+        'names': acanthis.lazy((element) => element.list())
       })
       .maxProperties(5)
       .minProperties(1)

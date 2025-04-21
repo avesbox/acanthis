@@ -126,6 +126,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       final values = {...enumerated.values, defaultValue, null};
       return {
         'enum': values.toList(),
+        if (metadata != null) ...metadata.toJson(),
       };
     }
     return {

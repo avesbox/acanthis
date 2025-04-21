@@ -58,13 +58,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           if (_passthroughType != null) {
             try {
               final parsedValue = _passthroughType.parse(obj.value);
-              parsed[key] = parsedValue.value;
+              parsed[obj.key] = parsedValue.value;
             } on TypeError catch (_) {
               throw ValidationError(
-                  '$key expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
+                  '$obj.key expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
             }
           } else {
-            parsed[key] = obj.value;
+            parsed[obj.key] = obj.value;
           }
           continue;
         }
@@ -327,7 +327,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
     // Parse the final result
     final result = await super.tryParseAsync(parsed);
-    return (values: result.value, errors: errors);
+    return (values: result.value, errors: {...errors, ...result.errors});
   }
 
   dynamic _keyQuery(String key, Map<String, V> value) {

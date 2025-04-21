@@ -100,17 +100,6 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  AcanthisNullable nullable({List<dynamic>? defaultValue}) {
-    for (var element in elements) {
-      if (element is AcanthisNullable) {
-        return element;
-      }
-      return element.nullable(defaultValue: defaultValue);
-    }
-    return AcanthisNullable(this, defaultValue: defaultValue);
-  }
-
-  @override
   AcanthisTuple withAsyncCheck(AcanthisAsyncCheck check) {
     return AcanthisTuple(
       elements,

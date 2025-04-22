@@ -1,4 +1,5 @@
 import 'package:acanthis/acanthis.dart';
+import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate nullable types
 class AcanthisNullable<T> extends AcanthisType<T?> {
@@ -9,24 +10,43 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   final AcanthisType<T> element;
 
   const AcanthisNullable(this.element,
-      {this.defaultValue, super.operations, super.isAsync});
+      {this.defaultValue, super.operations, super.isAsync, super.key});
 
   /// override of the [parse] method from [AcanthisType]
   @override
   AcanthisParseResult<T?> parse(T? value) {
+    if (isAsync) {
+      throw ValidationError('Cannot use parse on async type');
+    }
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }
-    return element.parse(value);
+    final elementResult = element.parse(value);
+    final result = super.parse(elementResult.value);
+    return AcanthisParseResult(
+      value: result.value,
+    );
   }
 
   /// override of the [tryParse] method from [AcanthisType]
   @override
   AcanthisParseResult<T?> tryParse(T? value) {
+    if (isAsync) {
+      throw ValidationError('Cannot use tryParse on async type');
+    }
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }
-    return element.tryParse(value);
+    final elementResult = element.tryParse(value);
+    final result = super.tryParse(elementResult.value);
+    return AcanthisParseResult(
+      value: result.value,
+      errors: {
+        ...result.errors,
+        ...elementResult.errors,
+      },
+      success: result.success && elementResult.success,
+    );
   }
 
   @override
@@ -34,7 +54,11 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }
-    return element.parseAsync(value);
+    final elementResult = await element.parseAsync(value);
+    final result = await super.parseAsync(elementResult.value);
+    return AcanthisParseResult(
+      value: result.value,
+    );
   }
 
   @override
@@ -42,17 +66,16 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }
-    return super.tryParseAsync(value);
-  }
-
-  /// Make a list of nullable elements
-  AcanthisList<T?> list() {
-    return AcanthisList(this);
-  }
-
-  /// Create a union from the nullable
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
+    final elementResult = await element.tryParseAsync(value);
+    final result = await super.tryParseAsync(elementResult.value);
+    return AcanthisParseResult(
+      value: result.value,
+      errors: {
+        ...result.errors,
+        ...elementResult.errors,
+      },
+      success: result.success && elementResult.success,
+    );
   }
 
   @override
@@ -65,19 +88,84 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
         operations: operations.add(check),
-        isAsync: true);
+        isAsync: true,
+        key: key);
   }
 
   @override
   AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
     return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(check));
+        defaultValue: defaultValue,
+        operations: operations.add(check),
+        isAsync: isAsync,
+        key: key);
   }
 
   @override
   AcanthisNullable<T> withTransformation(
       AcanthisTransformation<T?> transformation) {
     return AcanthisNullable(element,
-        defaultValue: defaultValue, operations: operations.add(transformation));
+        defaultValue: defaultValue,
+        operations: operations.add(transformation),
+        isAsync: isAsync,
+        key: key);
   }
+
+  AcanthisNullable<T> enumerated(List<T?> values) {
+    final enumeratedValue = {...values, null};
+    return withCheck(EnumeratedWithNullCheck(enumeratedValue.toList()));
+  }
+
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    final metadata = MetadataRegistry().get(key);
+    final enumerated =
+        operations.whereType<EnumeratedWithNullCheck>().firstOrNull;
+    if (enumerated != null) {
+      final values = {...enumerated.values, defaultValue, null};
+      return {
+        'enum': values.toList(),
+        if (metadata != null) ...metadata.toJson(),
+      };
+    }
+    return {
+      'oneOf': [
+        {
+          ...element.toJsonSchema(),
+          if (defaultValue != null) 'default': defaultValue,
+        },
+        {
+          'type': 'null',
+        },
+      ],
+      if (metadata != null) ...metadata.toJson(),
+    };
+  }
+
+  @override
+  AcanthisType<T?> meta(MetadataEntry<T?> metadata) {
+    String key = this.key;
+    if (key.isEmpty) {
+      key = nanoid();
+    }
+    MetadataRegistry().add(key, metadata);
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+    );
+  }
+}
+
+class EnumeratedWithNullCheck<T> extends AcanthisCheck<T?> {
+  final List<T?> values;
+
+  EnumeratedWithNullCheck(this.values)
+      : super(
+          onCheck: (toTest) => values.contains(toTest),
+          error: 'Value must be one of the following: ${values.join(', ')}',
+          name: 'enum',
+        );
 }

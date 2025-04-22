@@ -2,9 +2,7 @@ import 'package:benchmarks/shared/acanthis_benchmark.dart';
 import 'package:vine/vine.dart';
 
 class VineNestedObjectValidator extends AcanthisBenchmark {
-  
-  VineNestedObjectValidator()
-      : super(name: 'VineNestedObjectValidator');
+  VineNestedObjectValidator() : super(name: 'VineNestedObjectValidator');
 
   static void main() {
     VineNestedObjectValidator().report();
@@ -12,16 +10,14 @@ class VineNestedObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final validator = vine.compile(
-      vine.object({
-        'username': vine.string(),
-        'password': vine.string(),
-        'contact': vine.object({
-          'name': vine.string(),
-          'address': vine.string().optional(),
-        }),
-      })
-    );
+    final validator = vine.compile(vine.object({
+      'username': vine.string(),
+      'password': vine.string(),
+      'contact': vine.object({
+        'name': vine.string(),
+        'address': vine.string().optional(),
+      }),
+    }));
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
@@ -32,15 +28,10 @@ class VineNestedObjectValidator extends AcanthisBenchmark {
     };
     validator.validate(payload);
   }
-
 }
 
-
-
 class VineFlatObjectValidator extends AcanthisBenchmark {
-  
-  VineFlatObjectValidator()
-      : super(name: 'VineFlatObjectValidator');
+  VineFlatObjectValidator() : super(name: 'VineFlatObjectValidator');
 
   static void main() {
     VineFlatObjectValidator().report();
@@ -59,13 +50,10 @@ class VineFlatObjectValidator extends AcanthisBenchmark {
     };
     validator.validate(payload);
   }
-
 }
 
 class VineArrayObjectValidator extends AcanthisBenchmark {
-
-  VineArrayObjectValidator()
-      : super(name: 'VineArrayObjectValidator');
+  VineArrayObjectValidator() : super(name: 'VineArrayObjectValidator');
 
   static void main() {
     VineArrayObjectValidator().report();
@@ -88,5 +76,4 @@ class VineArrayObjectValidator extends AcanthisBenchmark {
     };
     validator.validate(payload);
   }
-
 }

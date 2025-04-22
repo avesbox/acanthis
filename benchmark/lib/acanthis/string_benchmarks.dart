@@ -16,7 +16,6 @@ class LongStringValidationBenchmark extends AcanthisBenchmark {
   }
 }
 
-
 class FixedLengthStringValidationBenchmark extends AcanthisBenchmark {
   FixedLengthStringValidationBenchmark()
       : super(name: 'FixedLengthStringValidationBenchmark');
@@ -60,7 +59,6 @@ class EmailStringValidationBenchmark extends AcanthisBenchmark {
 }
 
 class UuidStringValidationBenchmark extends AcanthisBenchmark {
-
   UuidStringValidationBenchmark()
       : super(name: 'UuidStringValidationBenchmark');
 
@@ -72,5 +70,4 @@ class UuidStringValidationBenchmark extends AcanthisBenchmark {
   void run() {
     string().uuid().parse('550e8400-e29b-41d4-a716-446655440000');
   }
-
 }

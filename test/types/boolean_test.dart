@@ -103,5 +103,66 @@ void main() {
 
       expect(resultParse.success, true);
     });
+
+    test(
+      'when creating a tuple validator from a date validator,'
+      'and the date is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final bool = boolean().and([string()]);
+        final result = bool.tryParse([5, 'Hello']);
+
+        expect(result.success, false);
+
+        expect(() => bool.parse([5, 'Hello']),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a tuple validator from a bool validator,'
+      'and the bool is valid, '
+      'then the result should be successful',
+      () {
+        final bool = boolean().and([string()]);
+        final result = bool.tryParse([true, 'Hello']);
+
+        expect(result.success, true);
+
+        final resultParse = bool.parse([true, 'Hello']);
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a union validator from a bool validator,'
+      'and the bool is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final bool = boolean().or([string()]);
+        final result = bool.tryParse(5);
+
+        expect(result.success, false);
+
+        expect(() => bool.parse(5), throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a union validator from a bool validator,'
+      'and the bool is valid, '
+      'then the result should be successful',
+      () {
+        final bool = boolean().or([string()]);
+        final result = bool.tryParse(true);
+
+        expect(result.success, true);
+
+        final resultParse = bool.parse(true);
+
+        expect(resultParse.success, true);
+      },
+    );
   });
 }

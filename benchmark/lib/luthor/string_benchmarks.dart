@@ -16,7 +16,6 @@ class LongLuthorStringValidationBenchmark extends AcanthisBenchmark {
   }
 }
 
-
 class FixedLuthorLengthStringValidationBenchmark extends AcanthisBenchmark {
   FixedLuthorLengthStringValidationBenchmark()
       : super(name: 'FixedLuthorLengthStringValidationBenchmark');
@@ -30,7 +29,6 @@ class FixedLuthorLengthStringValidationBenchmark extends AcanthisBenchmark {
     l.string().max(5).min(1).validateValue('long');
   }
 }
-
 
 class EmptyLuthorStringValidationBenchmark extends AcanthisBenchmark {
   EmptyLuthorStringValidationBenchmark()
@@ -61,7 +59,6 @@ class EmailLuthorStringValidationBenchmark extends AcanthisBenchmark {
 }
 
 class UuidLuthorStringValidationBenchmark extends AcanthisBenchmark {
-
   UuidLuthorStringValidationBenchmark()
       : super(name: 'UuidLuthorStringValidationBenchmark');
 
@@ -73,5 +70,4 @@ class UuidLuthorStringValidationBenchmark extends AcanthisBenchmark {
   void run() {
     l.string().uuid().validateValue('550e8400-e29b-41d4-a716-446655440000');
   }
-
 }

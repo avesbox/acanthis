@@ -128,6 +128,17 @@ void main() {
     });
 
     test(
+        'when creating a list validator and use the unwrap method,'
+        'then the element should be returned', () {
+      final list = acanthis.string().min(5).max(20).list();
+      final result = list.tryParse(['value', 'other', 'another', 'oneee']);
+      expect(result.success, true);
+      final string = list.unwrap();
+      final resultParse = string.parse('value');
+      expect(resultParse.success, true);
+    });
+
+    test(
         'when creating a list validator with a unique check,'
         'and the list is invalid, '
         'then the result should be unsuccessful', () {

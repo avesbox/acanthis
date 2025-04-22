@@ -1,30 +1,28 @@
 ---
 # https://vitepress.dev/reference/default-theme-home-page
-layout: home
+layout: page
+sidebar: false
 
-hero:
-  name: "Acanthis"
-  tagline: A simple, and easy to use validation library powered by Dart
-  image:
-    src: /acanthis-logo.png
-    alt: Acanthis
-  actions:
-    - theme: brand
-      text: Let's Get Started
-      link: /introduction
-    - theme: alt
-      text: Source code
-      link: http://github.com/francescovallone/acanthis
-
-features:
-  - icon: 🛠️
-    title: Easy to use
-    details: Acanthis is designed to be a simple, and easy to use with a gentle learning curve.
-  - icon: ↔️
-    title: Extensible
-    details: Acanthis is designed to be extensible. Create your own custom validators, and use them in your schemas.
-  - icon: ⚡
-    title: Fast
-    details: Acanthis is designed to be fast. It is powered by Dart, and is designed to be as fast as possible.
+head:
+  - - meta
+    - property: 'og:title'
+      content: Acanthis - Your best pal for validating data
+  - - meta
+    - name: 'description'
+      content: Acanthis is a Dart library for validating data structures, ensuring that your data is always in the expected format.
+  - - meta
+    - property: 'og:description'
+      content: Acanthis is a Dart library for validating data structures, ensuring that your data is always in the expected format.
+  - - meta
+    - property: 'og:image'
+      content: https://acanthis.avesbox.com/acanthis-banner.png
+  - - meta
+    - property: 'twitter:image'
+      content: https://acanthis.avesbox.com/acanthis-banner.png
 ---
 
+<script setup>
+  import Home from './components/hero.vue';
+</script>
+
+<Home />

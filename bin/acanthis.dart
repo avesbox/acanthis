@@ -10,7 +10,7 @@ void main(List<String> arguments) async {
       .minProperties(1)
       .passthrough(type: acanthis.string());
   print(jsonObject.toJsonSchema());
-  print(jsonObject.toJsonSchemaString());
+  print(jsonObject.toPrettyJsonSchema());
 
   final tuple = acanthis.tuple([
     acanthis.string().min(5).max(10),
@@ -44,7 +44,7 @@ void main(List<String> arguments) async {
   print(result5.errors);
   print(result5.success);
 
-  print(numberEnumerated.toJsonSchemaString());
+  print(numberEnumerated.toPrettyJsonSchema());
 
   final nullableEnumerated =
       acanthis.string().nullable().enumerated(['Hello', 'World']);
@@ -53,7 +53,7 @@ void main(List<String> arguments) async {
   print(result6.errors);
   print(result6.success);
 
-  print(nullableEnumerated.toJsonSchemaString());
+  print(nullableEnumerated.toPrettyJsonSchema());
 
 //   final list = acanthis
 //       .string()

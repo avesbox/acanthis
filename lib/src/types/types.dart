@@ -191,7 +191,7 @@ abstract class AcanthisType<O> {
 
   AcanthisType<O> meta(MetadataEntry<O> metadata);
 
-  String toJsonSchemaString({int indent = 2}) {
+  String toPrettyJsonSchema({int indent = 2}) {
     final encoder = JsonEncoder.withIndent(' ' * indent);
     final json = toJsonSchema();
     return encoder.convert(json);

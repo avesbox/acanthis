@@ -4,69 +4,27 @@ Acanthis is a Validation library for Dart & Flutter heavily inspired by [Zod](ht
 
 ## Features
 
-Acanthis is designed to be composable. Schemas can be composed together to create more complex schemas.
+- Immutable and chainable API: Every method returns a new instance of the schema ensuring immutability.
+- Concise and readable
+- Built-in JSON schema generation
+- Support for async validation
+- Extensive type support
 
-Also Acanthis doesn't require any runtime dependencies other than [Dart](https://dart.dev).
+## Requirements
 
-## Getting Started
+- [Dart SDK](https://dart.dev/get-dart) 3.6.0 or higher
 
-To get started with Acanthis, you can install it using the following command:
+## Installation
+
+To install Acanthis execute the following command:
 
 ```bash
 dart pub add acanthis
 ```
 
-## Example
+Or add it to your `pubspec.yaml` file:
 
-Here is a simple example of how to use Acanthis:
-
-```dart
-import 'package:acanthis/acanthis.dart';
-
-void main() {
-  final schema = object({
-	  'name': string().min(3),
-	  'age': number().positive(),
-  });
-
-  final result = schema.tryParse({
-	  'name': 'Francesco',
-	  'age': 24,
-  });
-
-  /// The result is a AcanthisParseResult object
-  /// that has the following properties:
-  /// - success: A boolean that indicates if the parsing was successful or not.
-  /// - value: The value of the parsing. If the parsing was successful, this will contain the parsed value.
-  /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
-
-  if (result.success) {
-	  print('The schema is valid!');
-  } else {
-	  print('The schema is invalid!');
-  }
-}
+```yaml
+dependencies:
+  acanthis: ^1.2.0
 ```
-
-As you can see if you come from a Zod background, the API is very similar and should be familiar to you.
-Also all the values are required.
-
-
-## Differences between the parsing methods
-
-Acanthis provide four different methods to parse a value:
-
-| Method | Description |
-| --- | --- |
-| `tryParse` | This method will return a `AcanthisParseResult` object that contains the result of the parsing. |
-| `parse` | This method will return a `AcanthisParseResult` object that contains the result of the parsing. If the parsing was unsuccessful, it will throw an exception. |
-| `tryParseAsync` | This method will return a `Future<AcanthisParseResult>` object that contains the result of the parsing. |
-| `parseAsync` | This method will return a `Future<AcanthisParseResult>` object that contains the result of the parsing. If the parsing was unsuccessful, it will throw an exception. |
-
-### AcanthisParseResult
-
-The `AcanthisParseResult` object contains the result of the parsing. It has the following properties:
-
-- `success`: A boolean that indicates if the parsing was successful or not.
-- `value`: The value of the parsing. If the parsing was successful, this will contain the parsed value.
-- `errors`: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.

@@ -24,20 +24,35 @@ void main() {
 
     test(
         'when creating a date validator with a max check,'
-        'and the date is greater than the check, '
+        'and the date is lower than the check, '
         'then the result should be unsuccessful', () {
       final date = acanthis.date().max(DateTime(2020, 1, 1));
-      final result = date.tryParse(DateTime(2021, 1, 1));
+      final result = date.tryParse(DateTime(2019, 1, 1));
 
-      expect(result.success, false);
+      expect(result.success, true);
 
-      expect(() => date.parse(DateTime(2021, 1, 1)),
-          throwsA(TypeMatcher<ValidationError>()));
+      final resultParse = date.parse(DateTime(2019, 1, 1));
+      
+      expect(resultParse.success, true);
     });
 
     test(
         'when creating a date validator with a min check,'
-        'and the date is less than the check, '
+        'and the date is greater than the check, '
+        'then the result should be unsuccessful', () {
+      final date = acanthis.date().min(DateTime(2020, 1, 1));
+      final result = date.tryParse(DateTime(2021, 1, 1));
+
+      expect(result.success, true);
+
+      final resultParse = date.parse(DateTime(2021, 1, 1));
+
+      expect(resultParse.success, true);
+    });
+
+    test(
+        'when creating a date validator with a min check,'
+        'and the date is lower than the check, '
         'then the result should be unsuccessful', () {
       final date = acanthis.date().min(DateTime(2020, 1, 1));
       final result = date.tryParse(DateTime(2019, 1, 1));
@@ -252,6 +267,41 @@ void main() {
         expect(result.success, false);
 
         expect(() => date.parse(DateTime.now().add(Duration(hours: 12))),
+            throwsA(TypeMatcher<ValidationError>()));
+      },
+    );
+
+    test(
+      'when creating a date validator,'
+      'and use the differenceFrom method, '
+      'and the value is valid, '
+      'then the result should be successful',
+      () {
+        final date = acanthis.date().differsFrom(DateTime(2023, 10, 1),
+            Duration(days: 1));
+        final result = date.tryParse(DateTime(2023, 10, 2));
+
+        expect(result.success, true);
+
+        final resultParse = date.parse(DateTime(2023, 10, 2));
+
+        expect(resultParse.success, true);
+      },
+    );
+
+    test(
+      'when creating a date validator,'
+      'and use the differenceFrom method, '
+      'and the value is not valid, '
+      'then the result should be unsuccessful',
+      () {
+        final date = acanthis.date().differsFrom(DateTime(2023, 10, 1),
+            Duration(days: 2));
+        final result = date.tryParse(DateTime(2023, 10, 0));
+
+        expect(result.success, false);
+
+        expect(() => date.parse(DateTime(2023, 10, 0)),
             throwsA(TypeMatcher<ValidationError>()));
       },
     );

@@ -4,18 +4,26 @@ import 'package:nanoid2/nanoid2.dart';
 class AcanthisTuple extends AcanthisType<List<dynamic>> {
   final List<AcanthisType> elements;
 
+  final bool _variadic;
+
   const AcanthisTuple(this.elements,
-      {super.operations, super.isAsync, super.key});
+      {super.operations, super.isAsync, super.key})
+      : _variadic = false;
+
+  AcanthisTuple._(this.elements, 
+      {super.operations, super.isAsync, super.key, bool variadic = false}) : 
+        _variadic = variadic;
 
   @override
   Future<AcanthisParseResult<List>> parseAsync(List value) async {
-    if (value.length != elements.length) {
+    if (value.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
     }
     final parsed = <dynamic>[];
     for (var i = 0; i < value.length; i++) {
       try {
-        final parsedElement = await elements[i].parseAsync(value[i]);
+        final element = i < elements.length ? elements[i] : elements.last;
+        final parsedElement = await element.parseAsync(value[i]);
         parsed.add(parsedElement.value);
       } on TypeError catch (e) {
         throw ValidationError(e.toString());
@@ -27,7 +35,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   Future<AcanthisParseResult<List>> tryParseAsync(List value) async {
-    if (value.length != elements.length) {
+    if (value.length != elements.length && !_variadic) {
       return AcanthisParseResult(
           value: value,
           errors: {'tuple': 'Value must have ${elements.length} elements'},
@@ -37,7 +45,8 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     final errors = <String, dynamic>{};
     for (var i = 0; i < value.length; i++) {
       try {
-        final parsedElement = await elements[i].tryParseAsync(value[i]);
+        final element = i < elements.length ? elements[i] : elements.last;
+        final parsedElement = await element.tryParseAsync(value[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
           errors[i.toString()] = parsedElement.errors;
@@ -55,13 +64,14 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   AcanthisParseResult<List<dynamic>> parse(List<dynamic> value) {
-    if (value.length != elements.length) {
+    if (value.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
     }
     final parsed = <dynamic>[];
     for (var i = 0; i < value.length; i++) {
       try {
-        final parsedElement = elements[i].parse(value[i]);
+        final element = i < elements.length ? elements[i] : elements.last;
+        final parsedElement = element.parse(value[i]);
         parsed.add(parsedElement.value);
       } on TypeError catch (e) {
         throw ValidationError(e.toString());
@@ -73,7 +83,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   AcanthisParseResult<List<dynamic>> tryParse(List<dynamic> value) {
-    if (value.length != elements.length) {
+    if (value.length != elements.length && !_variadic) {
       return AcanthisParseResult(
           value: value,
           errors: {'tuple': 'Value must have ${elements.length} elements'},
@@ -83,7 +93,8 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     final errors = <String, dynamic>{};
     for (var i = 0; i < value.length; i++) {
       try {
-        final parsedElement = elements[i].tryParse(value[i]);
+        final element = i < elements.length ? elements[i] : elements.last;
+        final parsedElement = element.tryParse(value[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
           errors[i.toString()] = parsedElement.errors;
@@ -126,6 +137,17 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       operations: operations.add(transformation),
       key: key,
       isAsync: isAsync,
+    );
+  }
+
+  /// Returns a new tuple with the last element as variadic
+  AcanthisTuple variadic() {
+    return AcanthisTuple._(
+      elements,
+      operations: operations,
+      key: key,
+      isAsync: isAsync,
+      variadic: true,
     );
   }
 

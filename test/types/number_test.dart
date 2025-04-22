@@ -179,6 +179,58 @@ void main() {
     });
 
     test(
+        'when creating a number validator with a nonNegative check,'
+        'and the number is nonNegative, '
+        'then the result should be successful', () {
+      final number = acanthis.number().nonNegative();
+      final result = number.tryParse(0);
+
+      expect(result.success, true);
+
+      final resultParse = number.parse(0);
+
+      expect(resultParse.success, true);
+    });
+
+    test(
+        'when creating a number validator with a nonNegative check,'
+        'and the number is negative, '
+        'then the result should be unsuccessful', () {
+      final number = acanthis.number().nonNegative();
+      final result = number.tryParse(-1);
+
+      expect(result.success, false);
+
+      expect(() => number.parse(-1), throwsA(TypeMatcher<ValidationError>()));
+    });
+
+    test(
+        'when creating a number validator with a nonPositive check,'
+        'and the number is nonPositive, '
+        'then the result should be successful', () {
+      final number = acanthis.number().nonPositive();
+      final result = number.tryParse(0);
+
+      expect(result.success, true);
+
+      final resultParse = number.parse(0);
+
+      expect(resultParse.success, true);
+    });
+
+    test(
+        'when creating a number validator with a nonPositive check,'
+        'and the number is positive, '
+        'then the result should be unsuccessful', () {
+      final number = acanthis.number().nonPositive();
+      final result = number.tryParse(1);
+
+      expect(result.success, false);
+
+      expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
+    });
+
+    test(
         'when creating a number validator with an integer check,'
         'and the number is an integer, '
         'then the result should be successful', () {

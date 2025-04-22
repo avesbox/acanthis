@@ -3,6 +3,10 @@
  * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
  */
 
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+
  :root {
   --vp-c-brand: #c52233;
   --vp-c-brand-light: #a7333f;
@@ -11,6 +15,16 @@
   --vp-c-brand-dark: #a51c30;
   --vp-c-brand-darker: #74121d;
   --vp-c-brand-dimm: rgba(165, 28, 48, 0.08);
+}
+
+.VPNavBar:not(.home.top) .divider-line, .VPNavBar:not(.has-sidebar):not(.home.top) .divider {
+	background-color: transparent !important;
+}
+.VPNavBar:not(.has-sidebar):not(.home) {
+	background-color: var(--vp-nav-bg-color) !important;
+}
+.VPNavBar:not(.has-sidebar).top {
+	background-color: transparent !important;
 }
 
 /**

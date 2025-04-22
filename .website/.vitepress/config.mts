@@ -3,13 +3,16 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Acanthis",
-  description: "Validation library",
+  description: "Your best pal for validating data",
   lastUpdated: true,
   head: [
     ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/acanthis-icon-32x32.png"}],
     ['link', { rel: "icon", type: "image/png", sizes: "16x16", href: "/acanthis-icon-16x16.png"}],
   ],
   themeConfig: {
+    search: {
+      provider: 'local'
+    },
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       {
@@ -27,18 +30,20 @@ export default defineConfig({
         link: '/introduction',
       },
       {
-        text: 'Types',
-        items: [
-          { text: 'Type', link: '/types' },
-          { text: 'Boolean', link: '/types/boolean' },
-          { text: 'String', link: '/types/string' },
-          { text: 'Number', link: '/types/number' },
-          { text: 'Date', link: '/types/date' },
-          { text: 'List', link: '/types/list' },
-          { text: 'Map', link: '/types/map' },
-          { text: 'Nullable', link: '/types/nullable' },
-          { text: 'Union', link: '/types/union' },
-        ]
+        text: 'Basic usage',
+        link: '/basic-usage',
+      },
+      {
+        text: 'Defining Schemas',
+        link: '/defining-schemas',
+      },
+      {
+        text: 'Metadata',
+        link: '/metadata',
+      },
+      {
+        text: 'JSON Schema',
+        link: '/json-schema',
       }
     ],
     footer: {

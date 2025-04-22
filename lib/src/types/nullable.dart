@@ -119,7 +119,6 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);
-    final type = _getType();
     final enumerated =
         operations.whereType<EnumeratedWithNullCheck>().firstOrNull;
     if (enumerated != null) {
@@ -130,26 +129,17 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       };
     }
     return {
-      'type': type,
+      'oneOf': [
+        {
+          ...element.toJsonSchema(),
+          if (defaultValue != null) 'default': defaultValue,
+        },
+        {
+          'type': 'null',
+        },
+      ],
       if (metadata != null) ...metadata.toJson(),
     };
-  }
-
-  dynamic _getType() {
-    if (element is AcanthisString) {
-      return ['string', 'null'];
-    } else if (element is AcanthisNumber) {
-      return ['number', 'null'];
-    } else if (element is AcanthisBoolean) {
-      return ['boolean', 'null'];
-    } else if (element is AcanthisList) {
-      return ['array', 'null'];
-    } else if (element is AcanthisMap) {
-      return ['object', 'null'];
-    } else if (element is AcanthisDate) {
-      return ['string', 'null'];
-    }
-    return 'null';
   }
 
   @override

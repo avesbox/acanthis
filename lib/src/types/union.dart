@@ -40,17 +40,6 @@ class AcanthisUnion extends AcanthisType<dynamic> {
   }
 
   @override
-  AcanthisNullable nullable({defaultValue}) {
-    for (var element in elements) {
-      if (element is AcanthisNullable) {
-        return element;
-      }
-      return element.nullable(defaultValue: defaultValue);
-    }
-    return AcanthisNullable(this, defaultValue: defaultValue);
-  }
-
-  @override
   AcanthisUnion withAsyncCheck(AcanthisAsyncCheck check) {
     return AcanthisUnion(
       elements,

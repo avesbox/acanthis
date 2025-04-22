@@ -43,6 +43,16 @@ class AcanthisNumber extends AcanthisType<num> {
     return withCheck(ConstraintNumberChecks.negative());
   }
 
+  /// Add a check to the number to check if it is nonpositive
+  AcanthisNumber nonPositive() {
+    return withCheck(ConstraintNumberChecks.nonPositive());
+  }
+
+  /// Add a check to the number to check if it is nonnegative
+  AcanthisNumber nonNegative() {
+    return withCheck(ConstraintNumberChecks.nonNegative());
+  }
+
   /// Add a check to the number to check if it is an integer
   AcanthisNumber integer() {
     return withCheck(AcanthisCheck<num>(
@@ -185,6 +195,10 @@ class AcanthisNumber extends AcanthisType<num> {
         constraintsMap['exclusiveMinimum'] = 0;
       } else if (constraint.name == 'negative') {
         constraintsMap['exclusiveMaximum'] = 0;
+      } else if (constraint.name == 'nonPositive') {
+        constraintsMap['maximum'] = 0;
+      } else if (constraint.name == 'nonNegative') {
+        constraintsMap['minimum'] = 0;
       }
     }
     for (var constraint in constraintsList) {
@@ -309,12 +323,30 @@ class ConstraintNumberChecks extends AcanthisCheck<num> {
     );
   }
 
+  static ConstraintNumberChecks nonPositive() {
+    return ConstraintNumberChecks(
+      value: 0,
+      error: 'Value must be nonpositive',
+      name: 'nonPositive',
+      onCheck: (toTest) => toTest <= 0,
+    );
+  }
+
   static ConstraintNumberChecks negative() {
     return ConstraintNumberChecks(
       value: 0,
       error: 'Value must be negative',
       name: 'negative',
       onCheck: (toTest) => toTest < 0,
+    );
+  }
+
+  static ConstraintNumberChecks nonNegative() {
+    return ConstraintNumberChecks(
+      value: 0,
+      error: 'Value must be nonnegative',
+      name: 'nonNegative',
+      onCheck: (toTest) => toTest >= 0,
     );
   }
 }

@@ -144,6 +144,11 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     return withCheck(LengthChecks.length(value));
   }
 
+  /// Returns the element type of the list
+  AcanthisType<T> unwrap() {
+    return element;
+  }
+
   @override
   AcanthisList<T> withAsyncCheck(AcanthisAsyncCheck<List<T>> check) {
     return AcanthisList(

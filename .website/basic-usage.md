@@ -5,7 +5,7 @@ This page will walk you through the basics of creating and using schemas with Ac
 - Creating a schema
 - Parsing data
 
-For the complete Acanthis schema API, please refer to [Defining schemas](./defining_schemas.md).
+For the complete Acanthis schema API, please refer to [Defining schemas](/defining-schemas).
 
 ## Defining a schema
 
@@ -111,4 +111,4 @@ userSchema.tryParseAsync({
 // => Future<AcanthisParseResult(success: true, value: { name: Francesco, age: 32, email: test@example.com }, errors: {}, metadata: null)>
 ```
 
-Now that the basics are covered, you can now jump to the [Defining schemas](./defining_schemas.md) page to learn more about all the validators usable in your schemas.
+Now that the basics are covered, you can now jump to the [Defining schemas](/defining-schemas) page to learn more about all the validators usable in your schemas.

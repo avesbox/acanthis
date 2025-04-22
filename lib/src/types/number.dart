@@ -108,6 +108,9 @@ class AcanthisNumber extends AcanthisType<num> {
 
   /// Add a check to the number to check if it is one of the [values]
   AcanthisNumber enumerated(List<num> values) {
+    if (values.isEmpty) {
+      throw ArgumentError('Enumeration values cannot be empty');
+    }
     return withCheck(EnumeratedNumberCheck(values));
   }
 

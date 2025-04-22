@@ -200,7 +200,7 @@ object.parse({
 
 ```
 
-Also Acanthis provides some built-in validators for object validation:
+Also, Acanthis provides some built-in validators for object validation:
 
 ```dart
 object({}).maxProperties(5);
@@ -269,7 +269,7 @@ final personWithoutName = person.omit(['name']);
 
 ### `partial()`
 
-To make all properties of the object schema nullabe, you can use the `partial()` method.
+The `partial()` method makes all properties of the object schema nullable.
 
 ```dart
 final person = object({
@@ -280,7 +280,7 @@ final person = object({
 final personPartial = person.partial();
 ```
 
-It also accept the `deep` parameter to make all nested properties nullable.
+It also accepts the `deep` parameter to make all nested properties nullable.
 
 ```dart
 final person = object({
@@ -297,7 +297,7 @@ final personPartial = person.partial(deep: true);
 
 ## Recursive Objects
 
-Some times you need to validate recursive objects. For example, a tree structure or a linked list. Acanthis provides a way to do this using the `lazy()` method.
+Sometimes you need to validate recursive objects. For example, a tree structure or a linked list. Acanthis provides a way to do this using the `lazy()` method.
 
 ```dart
 final tree = object({
@@ -328,7 +328,7 @@ boolean().list();
 ...
 ```
 
-Instead if you want to get the element type from the list type you can use the `unwrap()` method.
+Instead, if you want to get the element type from the list type you can use the `unwrap()` method.
 
 ```dart
 final list = string().list();

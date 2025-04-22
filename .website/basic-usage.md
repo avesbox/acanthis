@@ -40,7 +40,7 @@ userSchema.parse({
 // => { name: Francesco, age: 32, email: test@example.com }
 ```
 
-If the value is invalid a `ValidationError` will be thrown.
+If the value is invalid, a `ValidationError` will be thrown.
 
 ```dart
 userSchema.parse({

@@ -10,9 +10,9 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       {super.operations, super.isAsync, super.key})
       : _variadic = false;
 
-  AcanthisTuple._(this.elements, 
-      {super.operations, super.isAsync, super.key, bool variadic = false}) : 
-        _variadic = variadic;
+  AcanthisTuple._(this.elements,
+      {super.operations, super.isAsync, super.key, bool variadic = false})
+      : _variadic = variadic;
 
   @override
   Future<AcanthisParseResult<List>> parseAsync(List value) async {

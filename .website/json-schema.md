@@ -66,7 +66,7 @@ final schema = object({
 
 ## Recursive Types
 
-During the generation of the schema Acanthis handles recursive types by using the `$ref` keyword. This means that the schema will reference itself when it encounters a recursive type. For example:
+During the generation of the schema, Acanthis handles recursive types by using the `$ref` keyword. This means that the schema will reference itself when it encounters a recursive type. For example:
 
 ```dart
 final schema = object({

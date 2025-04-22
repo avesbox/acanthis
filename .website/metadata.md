@@ -1,6 +1,6 @@
 # Metadata
 
-Sometime you may want to add some metadata to your schema for documentation, AI structured outputs, or other purposes.
+Sometimes you may want to add some metadata to your schema for documentation, AI structured outputs, or other purposes.
 
 ## Metadata Registry
 

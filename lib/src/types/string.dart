@@ -243,6 +243,9 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   AcanthisString enumerated<T extends Enum>(List<T> enumValues) {
+    if (enumValues.isEmpty) {
+      throw ArgumentError('Enumeration values cannot be empty');
+    }
     return withCheck(EnumeratedCheck(enumValues: enumValues));
   }
 

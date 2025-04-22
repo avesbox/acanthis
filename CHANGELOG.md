@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- feat: add `toJsonSchema` method to generate JSON Schema from Acanthis Types. [#10](https://github.com/avesbox/acanthis/pull/10) by [francescovallone](https://github.com/francescovallone)
+- feat: add `tuple` validator to create a tuple schema. [#10](https://github.com/avesbox/acanthis/pull/10) by [francescovallone](https://github.com/francescovallone)
+- feat: add several checks to multiple validators. [#10](https://github.com/avesbox/acanthis/pull/10) by [francescovallone](https://github.com/francescovallone)
+- feat: add Metadata System to allow for adding metadata to schemas. [#10](https://github.com/avesbox/acanthis/pull/10) by [francescovallone](https://github.com/francescovallone)
+
 ## 1.1.0
 
 - fix: `AcanthisMap.extend` method now does not override existing key-value pairs. [#7](https://github.com/avesbox/acanthis/pull/7) by [francescovallone](https://github.com/francescovallone)

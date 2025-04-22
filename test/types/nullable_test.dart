@@ -339,7 +339,7 @@ void main() {
         final result = schema.toJsonSchema();
 
         final expected = {
-          'type': ['string', 'null'],
+          'oneOf': [{'type': 'string'}, {'type': 'null'}],
         };
         expect(result, expected);
       },
@@ -372,7 +372,7 @@ void main() {
         final result = schema.toJsonSchema();
 
         final expected = {
-          'type': ['string', 'null'],
+          'oneOf': [{'type': 'string'}, {'type': 'null'}],
           'title': 'Title',
           'description': 'Description',
         };

@@ -399,7 +399,7 @@ tuple.parse([
 ]); // ✅
 ```
 
-### Union
+## Union
 
 To create a union type, you can use the `union()` method. This method allows you to create a type that can be one of several types.
 

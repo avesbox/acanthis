@@ -1,6 +1,5 @@
 import 'package:acanthis/src/operations/checks.dart';
 
-
 /// Date checks for Min Date
 class MinDateCheck extends AcanthisCheck<DateTime> {
   final DateTime value;

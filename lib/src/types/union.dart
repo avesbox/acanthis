@@ -68,7 +68,8 @@ class AcanthisUnion extends AcanthisType<dynamic> {
   }
 
   @override
-  AcanthisUnion withTransformation(AcanthisTransformation<dynamic> transformation) {
+  AcanthisUnion withTransformation(
+      AcanthisTransformation<dynamic> transformation) {
     return AcanthisUnion(
       elements,
       operations: [

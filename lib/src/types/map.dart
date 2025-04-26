@@ -8,7 +8,6 @@ import 'package:acanthis/src/validators/map.dart';
 import 'package:meta/meta.dart';
 import 'package:nanoid2/nanoid2.dart';
 
-
 /// A class to validate map types
 class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   final Map<String, AcanthisType> _fields;
@@ -54,7 +53,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         throw ValidationError('Field $field is required');
       }
       final fieldValue = field.value;
-      if(fieldValue is LazyEntry) {
+      if (fieldValue is LazyEntry) {
         final type = fieldValue(this);
         if (value[key] is List<Map<String, dynamic>>) {
           parsed[key] = type
@@ -64,13 +63,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           parsed[key] = type.parse(value[key]).value;
         }
       } else {
-        if(isOptional && value[key] == null) {
+        if (isOptional && value[key] == null) {
           continue;
         }
         parsed[key] = _fields[key]!.parse(value[key]).value;
       }
     }
-    if(_passthrough) {
+    if (_passthrough) {
       for (var obj in value.entries) {
         if (!_fields.containsKey(obj.key)) {
           if (_passthroughType != null) {
@@ -127,7 +126,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         parsed[key] = result.value;
       }
     }
-    if(_passthrough) {
+    if (_passthrough) {
       for (var obj in value.entries) {
         if (!_fields.containsKey(obj.key)) {
           if (_passthroughType != null) {
@@ -176,7 +175,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
       final fieldValue = field.value;
       final AcanthisParseResult parsedValue;
-      if(fieldValue is LazyEntry) {
+      if (fieldValue is LazyEntry) {
         final type = fieldValue.call(this);
         if (type is AcanthisList) {
           parsedValue = type
@@ -185,7 +184,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           parsedValue = type.tryParse(value[key]);
         }
       } else {
-        if (value[key] == null && isOptional)  {
+        if (value[key] == null && isOptional) {
           continue;
         }
         parsedValue = fieldValue.tryParse(value[key]);
@@ -195,14 +194,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         errors[key] = parsedValue.errors;
       }
     }
-    if(_passthrough) {
+    if (_passthrough) {
       for (var obj in value.entries) {
         if (!_fields.containsKey(obj.key)) {
           if (_passthroughType != null) {
             try {
               final parsedValue = _passthroughType.tryParse(obj.value);
               parsed[obj.key] = parsedValue.value;
-              if(parsedValue.errors.isNotEmpty) {
+              if (parsedValue.errors.isNotEmpty) {
                 errors[obj.key] = parsedValue.errors;
               }
             } on TypeError catch (_) {
@@ -252,7 +251,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
       final fieldValue = field.value;
       final AcanthisParseResult parsedValue;
-      if(fieldValue is LazyEntry) {
+      if (fieldValue is LazyEntry) {
         final type = fieldValue.call(this);
         if (type is AcanthisList) {
           parsedValue = await type
@@ -271,12 +270,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         errors[key] = parsedValue.errors;
       }
     }
-    if(_passthrough) {
+    if (_passthrough) {
       for (var obj in value.entries) {
         if (!_fields.containsKey(obj.key)) {
           if (_passthroughType != null) {
             try {
-              final parsedValue = await _passthroughType.tryParseAsync(obj.value);
+              final parsedValue =
+                  await _passthroughType.tryParseAsync(obj.value);
               parsed[obj.key] = parsedValue.value;
               errors[obj.key] = parsedValue.errors;
             } on TypeError catch (_) {

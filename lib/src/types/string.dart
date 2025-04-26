@@ -1,4 +1,3 @@
-
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/validators/common.dart';
@@ -50,20 +49,17 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if it contains alphanumeric characters and spaces
   AcanthisString alphanumericWithSpaces({bool strict = true}) {
-    return withCheck(
-        PatternAlphanumericWithSpacesStringChecks(strict: strict));
+    return withCheck(PatternAlphanumericWithSpacesStringChecks(strict: strict));
   }
 
   /// Add a check to the string to check if it contains special characters
   AcanthisString specialCharacters({bool strict = true}) {
-    return withCheck(
-        PatternSpecialCharactersStringChecks(strict: strict));
+    return withCheck(PatternSpecialCharactersStringChecks(strict: strict));
   }
 
   /// Add a check to the string to check if it contains all characters
   AcanthisString allCharacters({bool strict = true}) {
-    return withCheck(
-        PatternAllCharactersStringChecks(strict: strict));
+    return withCheck(PatternAllCharactersStringChecks(strict: strict));
   }
 
   /// Add a check to the string to check if it is in uppercase
@@ -217,30 +213,27 @@ class AcanthisString extends AcanthisType<String> {
 
   @override
   AcanthisString withAsyncCheck(AcanthisAsyncCheck<String> check) {
-    return AcanthisString(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: true, key: key);
+    return AcanthisString(operations: [
+      ...operations,
+      check,
+    ], isAsync: true, key: key);
   }
 
   @override
   AcanthisString withCheck(AcanthisCheck<String> check) {
-    return AcanthisString(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: isAsync, key: key);
+    return AcanthisString(operations: [
+      ...operations,
+      check,
+    ], isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisString withTransformation(
       AcanthisTransformation<String> transformation) {
-    return AcanthisString(
-        operations: [
-          ...operations,
-          transformation,
-        ], isAsync: isAsync, key: key);
+    return AcanthisString(operations: [
+      ...operations,
+      transformation,
+    ], isAsync: isAsync, key: key);
   }
 
   @override
@@ -310,7 +303,7 @@ class AcanthisString extends AcanthisType<String> {
     final patternChecks = operations.whereType<AcanthisCheck>();
     final patternChecksMap = <String, dynamic>{};
     for (var check in patternChecks) {
-      patternChecksMap['pattern'] = switch(check) {
+      patternChecksMap['pattern'] = switch (check) {
         PatternLettersStringChecks() => check.regExp.pattern,
         PatternDigitsStringChecks() => check.regExp.pattern,
         PatternAlphanumericStringChecks() => check.regExp.pattern,

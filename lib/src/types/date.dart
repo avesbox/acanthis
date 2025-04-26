@@ -36,30 +36,27 @@ class AcanthisDate extends AcanthisType<DateTime> {
 
   @override
   AcanthisDate withAsyncCheck(AcanthisAsyncCheck<DateTime> check) {
-    return AcanthisDate(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: true, key: key);
+    return AcanthisDate(operations: [
+      ...operations,
+      check,
+    ], isAsync: true, key: key);
   }
 
   @override
   AcanthisDate withCheck(AcanthisCheck<DateTime> check) {
-    return AcanthisDate(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: isAsync, key: key);
+    return AcanthisDate(operations: [
+      ...operations,
+      check,
+    ], isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisDate withTransformation(
       AcanthisTransformation<DateTime> transformation) {
-    return AcanthisDate(
-        operations: [
-          ...operations,
-          transformation,
-        ], isAsync: isAsync, key: key);
+    return AcanthisDate(operations: [
+      ...operations,
+      transformation,
+    ], isAsync: isAsync, key: key);
   }
 
   @override

@@ -1,4 +1,3 @@
-
 import 'package:acanthis/src/operations/checks.dart';
 
 /// Nullable check for Enumerated values.

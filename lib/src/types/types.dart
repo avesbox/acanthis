@@ -36,8 +36,12 @@ abstract class AcanthisType<O> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    if(operations.isEmpty) {
-      return AcanthisParseResult(value: value, errors: {}, success: true, metadata: MetadataRegistry().get(key));
+    if (operations.isEmpty) {
+      return AcanthisParseResult(
+          value: value,
+          errors: {},
+          success: true,
+          metadata: MetadataRegistry().get(key));
     }
     O newValue = value;
     for (var operation in operations) {
@@ -70,8 +74,12 @@ abstract class AcanthisType<O> {
           'Cannot use tryParse with async operations');
     }
     final errors = <String, String>{};
-    if(operations.isEmpty) {
-      return AcanthisParseResult(value: value, errors: errors, success: true, metadata: MetadataRegistry().get(key));
+    if (operations.isEmpty) {
+      return AcanthisParseResult(
+          value: value,
+          errors: errors,
+          success: true,
+          metadata: MetadataRegistry().get(key));
     }
     O newValue = value;
     for (final operation in operations) {
@@ -98,8 +106,12 @@ abstract class AcanthisType<O> {
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
   Future<AcanthisParseResult<O>> parseAsync(O value) async {
-    if(operations.isEmpty) {
-      return AcanthisParseResult(value: value, errors: {}, success: true, metadata: MetadataRegistry().get(key));
+    if (operations.isEmpty) {
+      return AcanthisParseResult(
+          value: value,
+          errors: {},
+          success: true,
+          metadata: MetadataRegistry().get(key));
     }
     O newValue = value;
     for (var operation in operations) {
@@ -133,8 +145,12 @@ abstract class AcanthisType<O> {
   /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
   Future<AcanthisParseResult<O>> tryParseAsync(O value) async {
     final errors = <String, String>{};
-    if(operations.isEmpty) {
-      return AcanthisParseResult(value: value, errors: errors, success: true, metadata: MetadataRegistry().get(key));
+    if (operations.isEmpty) {
+      return AcanthisParseResult(
+          value: value,
+          errors: errors,
+          success: true,
+          metadata: MetadataRegistry().get(key));
     }
     O newValue = value;
     for (var operation in operations) {
@@ -194,8 +210,7 @@ abstract class AcanthisType<O> {
       {required bool Function(O value) onCheck,
       required String error,
       required String name}) {
-    return withCheck(
-        CustomCheck<O>(onCheck, error: error, name: name));
+    return withCheck(CustomCheck<O>(onCheck, error: error, name: name));
   }
 
   /// Add a custom async check to the number
@@ -239,6 +254,7 @@ abstract class AcanthisType<O> {
 }
 
 @immutable
+
 /// A class to represent a pipeline of transformations
 class AcanthisPipeline<O, T> {
   /// The type of the input value

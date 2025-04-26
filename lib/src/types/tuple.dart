@@ -139,7 +139,8 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  AcanthisTuple withTransformation(AcanthisTransformation<List<dynamic>> transformation) {
+  AcanthisTuple withTransformation(
+      AcanthisTransformation<List<dynamic>> transformation) {
     return AcanthisTuple(
       elements,
       operations: [

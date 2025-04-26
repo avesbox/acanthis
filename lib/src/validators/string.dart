@@ -33,17 +33,13 @@ const _timeRegex = r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9](?::([0-5]\d))?$';
 
 /// String Check for Email validation.
 class EmailStringCheck extends AcanthisCheck<String> {
-
   const EmailStringCheck()
-      : super(
-            error: 'Value must be a valid email address',
-            name: 'email');
+      : super(error: 'Value must be a valid email address', name: 'email');
 
   @override
   bool call(String value) {
     return EmailValidator.validate(value);
   }
-
 }
 
 /// String Check for Maximum String Length validation.
@@ -67,7 +63,8 @@ class MinStringLengthCheck extends AcanthisCheck<String> {
 
   const MinStringLengthCheck(this.value)
       : super(
-            error: 'Value must be greater than or equal to $value characters long',
+            error:
+                'Value must be greater than or equal to $value characters long',
             name: 'minLength');
 
   @override
@@ -94,9 +91,7 @@ class ExactStringLengthCheck extends AcanthisCheck<String> {
 /// String Check for URI validation.
 class UriStringCheck extends AcanthisCheck<String> {
   const UriStringCheck()
-      : super(
-            error: 'Value must be a valid uri',
-            name: 'uri');
+      : super(error: 'Value must be a valid uri', name: 'uri');
 
   @override
   bool call(String value) {
@@ -107,9 +102,7 @@ class UriStringCheck extends AcanthisCheck<String> {
 /// String Check for URL validation.
 class UrlStringCheck extends AcanthisCheck<String> {
   const UrlStringCheck()
-      : super(
-            error: 'Value must be a valid url',
-            name: 'url');
+      : super(error: 'Value must be a valid url', name: 'url');
 
   @override
   bool call(String value) {
@@ -122,11 +115,8 @@ class UrlStringCheck extends AcanthisCheck<String> {
 
 /// Async String Check for Uncompromised String validation.
 class UncompromisedStringCheck extends AcanthisAsyncCheck<String> {
-
   const UncompromisedStringCheck()
-      : super(
-            error: 'Value must not be compromised',
-            name: 'uncompromised');
+      : super(error: 'Value must not be compromised', name: 'uncompromised');
 
   @override
   Future<bool> call(String value) async {
@@ -141,10 +131,8 @@ class UncompromisedStringCheck extends AcanthisAsyncCheck<String> {
     final response = await request.close();
     final body = await response.transform(convert.utf8.decoder).join();
     final lines = body.split('\n');
-    return !lines
-        .any((element) => element.startsWith(hexString.substring(5)));
+    return !lines.any((element) => element.startsWith(hexString.substring(5)));
   }
-
 }
 
 /// String Check for Full Letters String validation.
@@ -181,7 +169,6 @@ class PatternDigitsStringChecks extends AcanthisCheck<String> {
   bool call(String value) {
     return regExp.hasMatch(value);
   }
-
 }
 
 /// String Check for Full Alphanumeric String validation.
@@ -200,7 +187,6 @@ class PatternAlphanumericStringChecks extends AcanthisCheck<String> {
   bool call(String value) {
     return regExp.hasMatch(value);
   }
-
 }
 
 /// String Check for Full Alphanumeric with Spaces String validation.
@@ -214,7 +200,8 @@ class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
             ? RegExp(_alphanumericWithSpacesStrict)
             : RegExp(_alphanumericWithSpaces),
         super(
-            error: 'Value must contain ${strict ? 'only ' : ''}alphanumeric with spaces',
+            error:
+                'Value must contain ${strict ? 'only ' : ''}alphanumeric with spaces',
             name: 'alphanumericWithSpaces');
 
   @override
@@ -230,9 +217,12 @@ class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
   final RegExp regExp;
 
   PatternSpecialCharactersStringChecks({this.strict = true})
-      : regExp = strict ? RegExp(_specialCharactersStrict) : RegExp(_specialCharacters),
+      : regExp = strict
+            ? RegExp(_specialCharactersStrict)
+            : RegExp(_specialCharacters),
         super(
-            error: 'Value must contain ${strict ? 'only ' : ''}special characters',
+            error:
+                'Value must contain ${strict ? 'only ' : ''}special characters',
             name: 'specialCharacters');
 
   @override
@@ -257,18 +247,14 @@ class PatternAllCharactersStringChecks extends AcanthisCheck<String> {
   bool call(String value) {
     return regExp.hasMatch(value);
   }
-
 }
 
 /// String Check for Full CUID String validation.
 class PatternCuidStringChecks extends AcanthisCheck<String> {
-
   final RegExp regExp = RegExp(_cuidRegex, caseSensitive: false);
 
   PatternCuidStringChecks()
-      : super(
-            error: 'Value must be a valid cuid',
-            name: 'cuid');
+      : super(error: 'Value must be a valid cuid', name: 'cuid');
 
   @override
   bool call(String value) {
@@ -281,9 +267,7 @@ class PatternCuid2StringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_cuid2Regex, caseSensitive: false);
 
   PatternCuid2StringChecks()
-      : super(
-            error: 'Value must be a valid cuid2',
-            name: 'cuid2');
+      : super(error: 'Value must be a valid cuid2', name: 'cuid2');
 
   @override
   bool call(String value) {
@@ -296,9 +280,7 @@ class PatternUlidStringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_ulidRegex, caseSensitive: false);
 
   PatternUlidStringChecks()
-      : super(
-            error: 'Value must be a valid ulid',
-            name: 'ulid');
+      : super(error: 'Value must be a valid ulid', name: 'ulid');
 
   @override
   bool call(String value) {
@@ -311,9 +293,7 @@ class PatternUuidStringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_uuidRegex, caseSensitive: false);
 
   PatternUuidStringChecks()
-      : super(
-            error: 'Value must be a valid uuid',
-            name: 'uuid');
+      : super(error: 'Value must be a valid uuid', name: 'uuid');
 
   @override
   bool call(String value) {
@@ -326,9 +306,7 @@ class PatternNanoidStringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_nanoidRegex, caseSensitive: false);
 
   PatternNanoidStringChecks()
-      : super(
-            error: 'Value must be a valid nanoid',
-            name: 'nanoid');
+      : super(error: 'Value must be a valid nanoid', name: 'nanoid');
 
   @override
   bool call(String value) {
@@ -341,9 +319,7 @@ class PatternJwtStringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_jwtRegex, caseSensitive: false);
 
   PatternJwtStringChecks()
-      : super(
-            error: 'Value must be a valid jwt',
-            name: 'jwt');
+      : super(error: 'Value must be a valid jwt', name: 'jwt');
 
   @override
   bool call(String value) {
@@ -356,9 +332,7 @@ class PatternBase64StringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_base64Regex, caseSensitive: false);
 
   PatternBase64StringChecks()
-      : super(
-            error: 'Value must be a valid base64',
-            name: 'base64');
+      : super(error: 'Value must be a valid base64', name: 'base64');
 
   @override
   bool call(String value) {
@@ -371,9 +345,7 @@ class PatternTimeStringChecks extends AcanthisCheck<String> {
   final RegExp regExp = RegExp(_timeRegex, caseSensitive: false);
 
   PatternTimeStringChecks()
-      : super(
-            error: 'Value must be a valid time',
-            name: 'time');
+      : super(error: 'Value must be a valid time', name: 'time');
 
   @override
   bool call(String value) {
@@ -384,9 +356,7 @@ class PatternTimeStringChecks extends AcanthisCheck<String> {
 /// String Check for Full Hex Color String validation.
 class PatternHexColorStringChecks extends AcanthisCheck<String> {
   const PatternHexColorStringChecks()
-      : super(
-            error: 'Value must be a valid hex color',
-            name: 'hexColor');
+      : super(error: 'Value must be a valid hex color', name: 'hexColor');
 
   @override
   bool call(String value) {
@@ -414,77 +384,58 @@ class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
 
 /// String Check for non-empty String validation.
 class RequiredStringCheck extends AcanthisCheck<String> {
-
   const RequiredStringCheck()
-      : super(
-            error: 'Value must not be empty',
-            name: 'required');
+      : super(error: 'Value must not be empty', name: 'required');
 
   @override
   bool call(String value) {
     return value.isNotEmpty;
   }
-
 }
 
 /// String check for containing a specific substring.
 class ContainsStringCheck extends AcanthisCheck<String> {
-  
   final String value;
 
   const ContainsStringCheck(this.value)
-      : super(
-            error: 'Value must contain $value',
-            name: 'contains');
+      : super(error: 'Value must contain $value', name: 'contains');
 
   @override
   bool call(String value) {
     return value.contains(this.value);
   }
-
 }
 
 /// String check for starting with a specific substring.
 class StartsWithStringCheck extends AcanthisCheck<String> {
-
   final String value;
 
   const StartsWithStringCheck(this.value)
-      : super(
-            error: 'Value must start with $value',
-            name: 'startsWith');
+      : super(error: 'Value must start with $value', name: 'startsWith');
 
   @override
   bool call(String value) {
     return value.startsWith(this.value);
   }
-
 }
 
 /// String check for ending with a specific substring.
 class EndsWithStringCheck extends AcanthisCheck<String> {
-
   final String value;
 
   const EndsWithStringCheck(this.value)
-      : super(
-            error: 'Value must end with $value',
-            name: 'endsWith');
+      : super(error: 'Value must end with $value', name: 'endsWith');
 
   @override
   bool call(String value) {
     return value.endsWith(this.value);
   }
-
 }
 
 /// String check for a valid card number using the Luhn algorithm.
 class CardStringCheck extends AcanthisCheck<String> {
-
   const CardStringCheck()
-      : super(
-            error: 'Value must be a valid card number',
-            name: 'card');
+      : super(error: 'Value must be a valid card number', name: 'card');
 
   bool _isValidLuhn(String number) {
     int sum = 0;
@@ -510,68 +461,50 @@ class CardStringCheck extends AcanthisCheck<String> {
     if (!RegExp(r'^\d+$').hasMatch(sanitized)) return false;
     return _isValidLuhn(sanitized);
   }
-
 }
-
 
 /// String check for Uppercase String validation.
 class UpperCaseStringCheck extends AcanthisCheck<String> {
-
   const UpperCaseStringCheck()
-      : super(
-            error: 'Value must be uppercase',
-            name: 'upperCase');
+      : super(error: 'Value must be uppercase', name: 'upperCase');
 
   @override
   bool call(String value) {
     return value == value.toUpperCase();
   }
-
 }
 
 /// String check for Lowercase String validation.
 class LowerCaseStringCheck extends AcanthisCheck<String> {
-
   const LowerCaseStringCheck()
-      : super(
-            error: 'Value must be lowercase',
-            name: 'lowerCase');
+      : super(error: 'Value must be lowercase', name: 'lowerCase');
 
   @override
   bool call(String value) {
     return value == value.toLowerCase();
   }
-
 }
 
 /// String check for Mixed Case String validation.
 class MixedCaseStringCheck extends AcanthisCheck<String> {
-
   const MixedCaseStringCheck()
-      : super(
-            error: 'Value must be mixed case',
-            name: 'mixedCase');
+      : super(error: 'Value must be mixed case', name: 'mixedCase');
 
   @override
   bool call(String value) {
     return value != value.toUpperCase() && value != value.toLowerCase();
   }
-
 }
 
 /// String check for a valid date time format.
 class DateTimeStringCheck extends AcanthisCheck<String> {
-
   const DateTimeStringCheck()
-      : super(
-            error: 'Value must be a valid date time',
-            name: 'dateTime');
+      : super(error: 'Value must be a valid date time', name: 'dateTime');
 
   @override
   bool call(String value) {
     return DateTime.tryParse(value) != null;
   }
-
 }
 
 /// String check fo a generic pattern using a regular expression.
@@ -579,13 +512,10 @@ class PatternStringCheck extends AcanthisCheck<String> {
   final RegExp regExp;
 
   const PatternStringCheck(this.regExp)
-      : super(
-            error: 'Value must match the pattern',
-            name: 'pattern');
+      : super(error: 'Value must match the pattern', name: 'pattern');
 
   @override
   bool call(String value) {
     return regExp.hasMatch(value);
   }
 }
-  

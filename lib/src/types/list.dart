@@ -9,14 +9,12 @@ import 'types.dart';
 
 /// A class to validate list types
 class AcanthisList<T> extends AcanthisType<List<T>> {
-
   /// The element of the list
   final AcanthisType<T> element;
 
   /// Constructor of the list type
   const AcanthisList(this.element,
       {super.operations, super.isAsync, super.key});
-
 
   @override
   Future<AcanthisParseResult<List<T>>> parseAsync(List<T> value) async {
@@ -216,4 +214,3 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     };
   }
 }
-

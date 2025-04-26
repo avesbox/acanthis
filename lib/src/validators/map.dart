@@ -6,7 +6,7 @@ class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 
   const MaxPropertiesCheck({
     required this.constraintValue,
-  }): super(
+  }) : super(
           error: 'The map has more than $constraintValue fields',
           name: 'maxProperties',
         );
@@ -15,7 +15,6 @@ class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
   bool call(Map<String, V> value) {
     return value.length <= constraintValue;
   }
-
 }
 
 /// Map checks for Min Properties
@@ -24,7 +23,7 @@ class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 
   const MinPropertiesCheck({
     required this.constraintValue,
-  }): super(
+  }) : super(
           error: 'The map has less than $constraintValue fields',
           name: 'minProperties',
         );
@@ -41,7 +40,7 @@ class LengthPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 
   const LengthPropertiesCheck({
     required this.constraintValue,
-  }): super(
+  }) : super(
           error: 'The map has not $constraintValue fields',
           name: 'lengthProperties',
         );

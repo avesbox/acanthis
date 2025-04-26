@@ -84,7 +84,7 @@ class AnyOfListCheck<T> extends AcanthisCheck<List<T>> {
           error: 'The list must have at least one of the values in $items',
           name: 'anyOf',
         );
-  
+
   @override
   bool call(List<T> value) {
     return value.any((element) => items.contains(element));
@@ -104,5 +104,4 @@ class EveryOfListCheck<T> extends AcanthisCheck<List<T>> {
   bool call(List<T> value) {
     return value.every((element) => items.contains(element));
   }
-
 }

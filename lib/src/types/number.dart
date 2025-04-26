@@ -113,30 +113,27 @@ class AcanthisNumber extends AcanthisType<num> {
 
   @override
   AcanthisNumber withAsyncCheck(AcanthisAsyncCheck<num> check) {
-    return AcanthisNumber(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: true, key: key);
+    return AcanthisNumber(operations: [
+      ...operations,
+      check,
+    ], isAsync: true, key: key);
   }
 
   @override
   AcanthisNumber withCheck(AcanthisCheck<num> check) {
-    return AcanthisNumber(
-        operations: [
-          ...operations,
-          check,
-        ], isAsync: isAsync, key: key);
+    return AcanthisNumber(operations: [
+      ...operations,
+      check,
+    ], isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisNumber withTransformation(
       AcanthisTransformation<num> transformation) {
-    return AcanthisNumber(
-        operations: [
-          ...operations,
-          transformation,
-        ], isAsync: isAsync, key: key);
+    return AcanthisNumber(operations: [
+      ...operations,
+      transformation,
+    ], isAsync: isAsync, key: key);
   }
 
   @override

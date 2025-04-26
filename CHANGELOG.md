@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- refactor: improve overall code quality and performance.
+- remove 'fast_immutable_collections' dependency.
+
 ## 1.2.0
 
 - feat: add `toJsonSchema` method to generate JSON Schema from Acanthis Types. [#10](https://github.com/avesbox/acanthis/pull/10) by [francescovallone](https://github.com/francescovallone)

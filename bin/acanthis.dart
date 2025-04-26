@@ -1,59 +1,116 @@
-import 'package:acanthis/acanthis.dart' as acanthis;
+import 'package:acanthis/acanthis.dart';
 
 void main(List<String> arguments) async {
-  final jsonObject = acanthis
-      .object({
-        'name': acanthis.string().min(5).max(10).encode(),
-        'names': acanthis.lazy((element) => element.list())
-      })
-      .maxProperties(5)
-      .minProperties(1)
-      .passthrough(type: acanthis.string());
-  print(jsonObject.toJsonSchema());
-  print(jsonObject.toPrettyJsonSchema());
+      object({
+        'number': number(),
+        'negNumber': number(),
+        'infiniteNumber': number(),
+        'string': string(),
+        'longString': string(),
+        'boolean': boolean(),
+        
+        'deeplyNested': object({
+          'foo': string(),
+          'num': number(),
+          'bool': boolean(),
+          'deeplyNested2': object({
+            'foo2': string(),
+            'num2': number(),
+            'bool2': boolean(),
+          }).list(),
+        }).list(),
+      }).list().tryParse([
+  {
+    'number': 123,
+    'negNumber': -123,
+    'infiniteNumber': double.infinity,
+    'string': 'Hello, World!',
+    'longString': 'This is a long string that exceeds the normal length.',
+    'boolean': true,
 
-  final tuple = acanthis.tuple([
-    acanthis.string().min(5).max(10),
-    acanthis.number().gte(5).lt(10),
-    acanthis.boolean(),
-  ]);
+    'deeplyNested': [
+      {
+        'foo': 'bar',
+        'num': 456,
+        'bool': false,
+        'deeplyNested2': [
+          {
+            'foo2': 'baz',
+            'num2': 789,
+            'bool2': true,
+          },
+          {
+            'foo2': 'qux',
+            'num2': 101112,
+            'bool2': false,
+          },
+        ],
+      },
+      {
+        'foo': 'quux',
+        'num': 131415,
+        'bool': true,
+        'deeplyNested2': [
+          {
+            'foo2': 'corge',
+            'num2': 161718,
+            'bool2': false,
+          },
+          {
+            'foo2': 'grault',
+            'num2': 192021,
+            'bool2': true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    'number': 456,
+    'negNumber': -456,
+    'infiniteNumber': double.infinity,
+    'string': 'Goodbye, World!',
+    'longString': 'This is another long string that exceeds the normal length.',
+    'boolean': false,
 
-  final result = tuple.tryParse(['Hello', 5, true]);
-  print(result.value);
-  print(result.errors);
-  print(result.success);
-  final result2 = tuple.tryParse(['Hello', 5, 'true']);
-  print(result2.value);
-  print(result2.errors);
-  print(result2.success);
-
-  final stringTuple = acanthis.string().and([
-    acanthis.string().min(5).max(10),
-    acanthis.number().gte(5).lt(10),
-    acanthis.boolean(),
-  ]);
-
-  final result3 = stringTuple.tryParse(['World', 'Hello', 5, true]);
-  print(result3.value);
-
-  final numberEnumerated = acanthis.number().enumerated([1, 2, 3, 4, 5]);
-  final result4 = numberEnumerated.tryParse(3);
-  print(result4.value);
-  final result5 = numberEnumerated.tryParse(6);
-  print(result5.value);
-  print(result5.errors);
-  print(result5.success);
-
-  print(numberEnumerated.toPrettyJsonSchema());
-
-  final nullableEnumerated =
-      acanthis.string().nullable().enumerated(['Hello', 'World']);
-  final result6 = nullableEnumerated.tryParse(null);
-  print(result6.value);
-  print(result6.errors);
-  print(result6.success);
-
-  print(nullableEnumerated.toPrettyJsonSchema());
+    'deeplyNested': [
+      {
+        'foo': 'qux',
+        'num': 101112,
+        'bool': true,
+        'deeplyNested2': [
+          {
+            'foo2': 'quux',
+            'num2': 131415,
+            'bool2': false,
+          },
+          {
+            'foo2': 'corge',
+            'num2': 161718,
+            'bool2': true,
+          },
+        ],
+      },
+      {
+        'foo': 'grault',
+        'num': 192021,
+        'bool': false,
+        'deeplyNested2': [
+          {
+            'foo2': 'garply',
+            'num2': 222324,
+            'bool2': true,
+          },
+          {
+            'foo2': 'waldo',
+            'num2': 252627,
+            'bool2': false,
+          },
+        ],
+      },
+    ],
+  },
+]);
 
 //   final list = acanthis
 //       .string()

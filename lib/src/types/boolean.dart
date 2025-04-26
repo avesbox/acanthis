@@ -1,4 +1,7 @@
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/validators/boolean.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'types.dart';
@@ -12,24 +15,21 @@ class AcanthisBoolean extends AcanthisType<bool> {
 
   /// Add a check to the boolean to check if it is true
   AcanthisBoolean isTrue() {
-    return withCheck(AcanthisCheck<bool>(
-        onCheck: (value) => value,
-        error: 'Value must be true',
-        name: 'isTrue'));
+    return withCheck(const IsTrueCheck());
   }
 
   /// Add a check to the boolean to check if it is false
   AcanthisBoolean isFalse() {
-    return withCheck(AcanthisCheck<bool>(
-        onCheck: (value) => !value,
-        error: 'Value must be false',
-        name: 'isFalse'));
+    return withCheck(const IsFalseCheck());
   }
 
   @override
   AcanthisBoolean withAsyncCheck(AcanthisAsyncCheck<bool> check) {
     return AcanthisBoolean(
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: true,
       key: key,
     );
@@ -38,7 +38,10 @@ class AcanthisBoolean extends AcanthisType<bool> {
   @override
   AcanthisBoolean withCheck(AcanthisCheck<bool> check) {
     return AcanthisBoolean(
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       key: key,
       isAsync: isAsync,
     );
@@ -48,7 +51,10 @@ class AcanthisBoolean extends AcanthisType<bool> {
   AcanthisBoolean withTransformation(
       AcanthisTransformation<bool> transformation) {
     return AcanthisBoolean(
-      operations: operations.add(transformation),
+      operations: [
+        ...operations,
+        transformation,
+      ],
       key: key,
       isAsync: isAsync,
     );

@@ -1,4 +1,6 @@
 import 'package:acanthis/acanthis.dart';
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 class AcanthisTuple extends AcanthisType<List<dynamic>> {
@@ -111,30 +113,39 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  AcanthisTuple withAsyncCheck(AcanthisAsyncCheck check) {
+  AcanthisTuple withAsyncCheck(AcanthisAsyncCheck<List<dynamic>> check) {
     return AcanthisTuple(
       elements,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: true,
       key: key,
     );
   }
 
   @override
-  AcanthisTuple withCheck(AcanthisCheck check) {
+  AcanthisTuple withCheck(AcanthisCheck<List<dynamic>> check) {
     return AcanthisTuple(
       elements,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       key: key,
       isAsync: isAsync,
     );
   }
 
   @override
-  AcanthisTuple withTransformation(AcanthisTransformation transformation) {
+  AcanthisTuple withTransformation(AcanthisTransformation<List<dynamic>> transformation) {
     return AcanthisTuple(
       elements,
-      operations: operations.add(transformation),
+      operations: [
+        ...operations,
+        transformation,
+      ],
       key: key,
       isAsync: isAsync,
     );
@@ -177,6 +188,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 }
 
+/// Creates a new [AcanthisTuple] with the given elements.
 AcanthisTuple tuple(List<AcanthisType> elements) {
   return AcanthisTuple(elements);
 }

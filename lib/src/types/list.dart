@@ -1,4 +1,7 @@
 import 'package:acanthis/src/exceptions/async_exception.dart';
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
+import 'package:acanthis/src/validators/list.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:nanoid2/nanoid2.dart';
 
@@ -6,34 +9,14 @@ import 'types.dart';
 
 /// A class to validate list types
 class AcanthisList<T> extends AcanthisType<List<T>> {
+
+  /// The element of the list
   final AcanthisType<T> element;
 
+  /// Constructor of the list type
   const AcanthisList(this.element,
       {super.operations, super.isAsync, super.key});
 
-  List<T> _parse(List<T> value) {
-    final parsed = <T>[];
-    for (var i = 0; i < value.length; i++) {
-      final parsedElement = element.parse(value[i]);
-      parsed.add(parsedElement.value);
-    }
-    final result = super.parse(value);
-    return result.value;
-  }
-
-  (List<T> parsed, Map<String, dynamic> errors) _tryParse(List<T> value) {
-    final parsed = <T>[];
-    final errors = <String, dynamic>{};
-    for (var i = 0; i < value.length; i++) {
-      final parsedElement = element.tryParse(value[i]);
-      parsed.add(parsedElement.value);
-      if (parsedElement.errors.isNotEmpty) {
-        errors[i.toString()] = parsedElement.errors;
-      }
-    }
-    final result = super.tryParse(value);
-    return (result.value, errors..addAll(result.errors));
-  }
 
   @override
   Future<AcanthisParseResult<List<T>>> parseAsync(List<T> value) async {
@@ -42,7 +25,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       final parsedElement = await element.parseAsync(value[i]);
       parsed.add(parsedElement.value);
     }
-    final result = await super.parseAsync(value);
+    final result = await super.parseAsync(parsed);
     return AcanthisParseResult(
         value: result.value, metadata: MetadataRegistry().get(key));
   }
@@ -58,7 +41,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
         errors[i.toString()] = parsedElement.errors;
       }
     }
-    final result = await super.tryParseAsync(value);
+    final result = await super.tryParseAsync(parsed);
     return AcanthisParseResult(
         value: result.value,
         errors: result.errors,
@@ -72,9 +55,14 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    final parsed = _parse(value);
+    final parsed = <T>[];
+    for (var i = 0; i < value.length; i++) {
+      final parsedElement = element.parse(value[i]);
+      parsed.add(parsedElement.value);
+    }
+    final result = super.parse(parsed);
     return AcanthisParseResult(
-        value: parsed, metadata: MetadataRegistry().get(key));
+        value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -84,10 +72,19 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    final (parsed, errors) = _tryParse(value);
+    final parsed = <T>[];
+    final errors = <String, dynamic>{};
+    for (var i = 0; i < value.length; i++) {
+      final parsedElement = element.tryParse(value[i]);
+      parsed.add(parsedElement.value);
+      if (parsedElement.errors.isNotEmpty) {
+        errors[i.toString()] = parsedElement.errors;
+      }
+    }
+    final result = super.tryParse(parsed);
     return AcanthisParseResult(
-        value: parsed,
-        errors: errors,
+        value: result.value,
+        errors: errors..addAll(result.errors),
         success: _recursiveSuccess(errors),
         metadata: MetadataRegistry().get(key));
   }
@@ -104,44 +101,34 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Add a check to the list to check if it is at least [length] elements long
   AcanthisList<T> min(int length) {
-    return withCheck(LengthChecks.min(length));
+    return withCheck(MinItemsListCheck(length));
   }
 
   /// Add a check to the list to check if it contains at least one of the [values]
   AcanthisList<T> anyOf(List<T> values) {
-    return withCheck(AcanthisCheck<List<T>>(
-        onCheck: (toTest) => toTest.any((element) => values.contains(element)),
-        error: 'The list must have at least one of the values in $values',
-        name: 'anyOf'));
+    return withCheck(AnyOfListCheck<T>(values));
   }
 
   /// Add a check to the list to check if it contains all of the [values]
   AcanthisList<T> everyOf(List<T> values) {
-    return withCheck(AcanthisCheck<List<T>>(
-        onCheck: (toTest) =>
-            toTest.every((element) => values.contains(element)),
-        error: 'The list must have all of the values in $values',
-        name: 'allOf'));
+    return withCheck(EveryOfListCheck<T>(values));
   }
 
   /// Add a check to the list to check if it is at most [length] elements long
   AcanthisList<T> max(int length) {
-    return withCheck(LengthChecks.max(length));
+    return withCheck(MaxItemsListCheck<T>(length));
   }
 
   /// Add a check to the list to check if all elements are unique
   ///
   /// In Zod is the same as creating a set.
   AcanthisList<T> unique() {
-    return withCheck(AcanthisCheck<List<T>>(
-        onCheck: (toTest) => toTest.toSet().length == toTest.length,
-        error: 'The list must have unique elements',
-        name: 'unique'));
+    return withCheck(UniqueItemsListCheck<T>());
   }
 
   /// Add a check to the list to check if it has exactly [value] elements
   AcanthisList<T> length(int value) {
-    return withCheck(LengthChecks.length(value));
+    return withCheck(LengthListCheck(value));
   }
 
   /// Returns the element type of the list
@@ -153,7 +140,10 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   AcanthisList<T> withAsyncCheck(AcanthisAsyncCheck<List<T>> check) {
     return AcanthisList(
       element,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: true,
       key: key,
     );
@@ -163,7 +153,10 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   AcanthisList<T> withCheck(AcanthisCheck<List<T>> check) {
     return AcanthisList(
       element,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: isAsync,
       key: key,
     );
@@ -174,7 +167,10 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       AcanthisTransformation<List<T>> transformation) {
     return AcanthisList(
       element,
-      operations: operations.add(transformation),
+      operations: [
+        ...operations,
+        transformation,
+      ],
       isAsync: isAsync,
       key: key,
     );
@@ -198,21 +194,19 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);
-    final lengthChecks = operations.whereType<LengthChecks<T>>().toList();
+    final checks = operations.whereType<AcanthisCheck>().toList();
     final lengthChecksMap = {};
-    for (var lengthCheck in lengthChecks) {
-      if (lengthCheck.name == 'min') {
-        lengthChecksMap['minItems'] = lengthCheck.constraint;
-      } else if (lengthCheck.name == 'max') {
-        lengthChecksMap['maxItems'] = lengthCheck.constraint;
-      } else if (lengthCheck.name == 'length') {
-        lengthChecksMap['minItems'] = lengthCheck.constraint;
-        lengthChecksMap['maxItems'] = lengthCheck.constraint;
+    for (var lengthCheck in checks) {
+      if (lengthCheck is MinItemsListCheck) {
+        lengthChecksMap['minItems'] = lengthCheck.minItems;
+      } else if (lengthCheck is MaxItemsListCheck) {
+        lengthChecksMap['maxItems'] = lengthCheck.maxItems;
+      } else if (lengthCheck is LengthListCheck) {
+        lengthChecksMap['minItems'] = lengthCheck.length;
+        lengthChecksMap['maxItems'] = lengthCheck.length;
       }
     }
-    final uniqueItems = operations
-        .where((o) => o is AcanthisCheck && o.name == 'unique')
-        .isNotEmpty;
+    final uniqueItems = checks.whereType<UniqueItemsListCheck>().isNotEmpty;
     return {
       'type': 'array',
       if (metadata != null) ...metadata.toJson(),
@@ -223,39 +217,3 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 }
 
-class LengthChecks<T> extends AcanthisCheck<List<T>> {
-  final int constraint;
-
-  LengthChecks(
-      {required this.constraint,
-      required super.error,
-      required super.name,
-      required super.onCheck});
-
-  static LengthChecks<T> min<T>(int value) {
-    return LengthChecks<T>(
-      constraint: value,
-      error: 'The list must have at least $value elements',
-      name: 'min',
-      onCheck: (toTest) => toTest.length >= value,
-    );
-  }
-
-  static LengthChecks<T> max<T>(int value) {
-    return LengthChecks<T>(
-      constraint: value,
-      error: 'The list must have at most $value elements',
-      name: 'max',
-      onCheck: (toTest) => toTest.length <= value,
-    );
-  }
-
-  static LengthChecks<T> length<T>(int value) {
-    return LengthChecks<T>(
-      constraint: value,
-      error: 'The list must have exactly $value elements',
-      name: 'length',
-      onCheck: (toTest) => toTest.length == value,
-    );
-  }
-}

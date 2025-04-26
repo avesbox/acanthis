@@ -1,4 +1,6 @@
 import 'package:acanthis/acanthis.dart';
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate union types that can be one of the elements in the list
@@ -40,30 +42,39 @@ class AcanthisUnion extends AcanthisType<dynamic> {
   }
 
   @override
-  AcanthisUnion withAsyncCheck(AcanthisAsyncCheck check) {
+  AcanthisUnion withAsyncCheck(AcanthisAsyncCheck<dynamic> check) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: true,
       key: key,
     );
   }
 
   @override
-  AcanthisUnion withCheck(AcanthisCheck check) {
+  AcanthisUnion withCheck(AcanthisCheck<dynamic> check) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(check),
+      operations: [
+        ...operations,
+        check,
+      ],
       isAsync: isAsync,
       key: key,
     );
   }
 
   @override
-  AcanthisUnion withTransformation(AcanthisTransformation transformation) {
+  AcanthisUnion withTransformation(AcanthisTransformation<dynamic> transformation) {
     return AcanthisUnion(
       elements,
-      operations: operations.add(transformation),
+      operations: [
+        ...operations,
+        transformation,
+      ],
       isAsync: isAsync,
       key: key,
     );

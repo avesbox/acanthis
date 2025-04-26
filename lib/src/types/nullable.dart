@@ -1,4 +1,7 @@
 import 'package:acanthis/acanthis.dart';
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
+import 'package:acanthis/src/validators/nullable.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate nullable types
@@ -87,7 +90,10 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   AcanthisNullable<T> withAsyncCheck(AcanthisAsyncCheck<T?> check) {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
-        operations: operations.add(check),
+        operations: [
+          ...operations,
+          check,
+        ],
         isAsync: true,
         key: key);
   }
@@ -96,7 +102,10 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
-        operations: operations.add(check),
+        operations: [
+          ...operations,
+          check,
+        ],
         isAsync: isAsync,
         key: key);
   }
@@ -106,21 +115,25 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       AcanthisTransformation<T?> transformation) {
     return AcanthisNullable(element,
         defaultValue: defaultValue,
-        operations: operations.add(transformation),
+        operations: [
+          ...operations,
+          transformation,
+        ],
         isAsync: isAsync,
         key: key);
   }
 
+  /// Check if the value is part of the enumerated values
   AcanthisNullable<T> enumerated(List<T?> values) {
     final enumeratedValue = {...values, null};
-    return withCheck(EnumeratedWithNullCheck(enumeratedValue.toList()));
+    return withCheck(EnumeratedNullableCheck(enumeratedValue.toList()));
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
     final metadata = MetadataRegistry().get(key);
     final enumerated =
-        operations.whereType<EnumeratedWithNullCheck>().firstOrNull;
+        operations.whereType<EnumeratedNullableCheck>().firstOrNull;
     if (enumerated != null) {
       final values = {...enumerated.values, defaultValue, null};
       return {
@@ -157,15 +170,4 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       key: key,
     );
   }
-}
-
-class EnumeratedWithNullCheck<T> extends AcanthisCheck<T?> {
-  final List<T?> values;
-
-  EnumeratedWithNullCheck(this.values)
-      : super(
-          onCheck: (toTest) => values.contains(toTest),
-          error: 'Value must be one of the following: ${values.join(', ')}',
-          name: 'enum',
-        );
 }

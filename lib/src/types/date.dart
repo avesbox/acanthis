@@ -1,4 +1,7 @@
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/validators/date.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'types.dart';
@@ -13,56 +16,50 @@ class AcanthisDate extends AcanthisType<DateTime> {
 
   /// Add a check to the date to check if it is before or equal to [value]
   AcanthisDate min(DateTime value) {
-    return withCheck(AcanthisCheck<DateTime>(
-        onCheck: (toTest) =>
-            toTest.isAfter(value) || toTest.isAtSameMomentAs(value),
-        error: 'The date must be greater than or equal to $value',
-        name: 'min'));
+    return withCheck(MinDateCheck(value));
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
   AcanthisDate differsFromNow(Duration difference) {
-    return withCheck(AcanthisCheck<DateTime>(
-        onCheck: (toTest) =>
-            toTest.difference(DateTime.now()).abs() >= difference,
-        error: 'The date must differ from now by $difference or more',
-        name: 'differsFromNow'));
+    return withCheck(DiffersFromNowCheck(difference));
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
   AcanthisDate differsFrom(DateTime fromDate, Duration difference) {
-    return withCheck(AcanthisCheck<DateTime>(
-        onCheck: (toTest) => toTest.difference(fromDate).abs() >= difference,
-        error: 'The date must differ from now by $difference or more',
-        name: 'differsFrom'));
+    return withCheck(DiffersFromCheck(fromDate, difference));
   }
 
   /// Add a check to the date to check if it is less than or equal to [value]
   AcanthisDate max(DateTime value) {
-    return withCheck(AcanthisCheck<DateTime>(
-        onCheck: (toTest) =>
-            toTest.isBefore(value) || toTest.isAtSameMomentAs(value),
-        error: 'The date must be less than or equal to $value',
-        name: 'max'));
+    return withCheck(MaxDateCheck(value));
   }
 
   @override
   AcanthisDate withAsyncCheck(AcanthisAsyncCheck<DateTime> check) {
     return AcanthisDate(
-        operations: operations.add(check), isAsync: true, key: key);
+        operations: [
+          ...operations,
+          check,
+        ], isAsync: true, key: key);
   }
 
   @override
   AcanthisDate withCheck(AcanthisCheck<DateTime> check) {
     return AcanthisDate(
-        operations: operations.add(check), isAsync: isAsync, key: key);
+        operations: [
+          ...operations,
+          check,
+        ], isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisDate withTransformation(
       AcanthisTransformation<DateTime> transformation) {
     return AcanthisDate(
-        operations: operations.add(transformation), isAsync: isAsync, key: key);
+        operations: [
+          ...operations,
+          transformation,
+        ], isAsync: isAsync, key: key);
   }
 
   @override

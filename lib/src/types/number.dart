@@ -1,6 +1,10 @@
 import 'dart:math' as math;
 
+import 'package:acanthis/src/operations/checks.dart';
+import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:acanthis/src/validators/common.dart';
+import 'package:acanthis/src/validators/number.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'types.dart';
@@ -11,62 +15,56 @@ class AcanthisNumber extends AcanthisType<num> {
 
   /// Add a check to the number to check if it is less than or equal to [value]
   AcanthisNumber lte(num value) {
-    return withCheck(ConstraintNumberChecks.lte(value));
+    return withCheck(LteNumberCheck(value));
   }
 
   /// Add a check to the number to check if it is greater than or equal to [value]
   AcanthisNumber gte(num value) {
-    return withCheck(ConstraintNumberChecks.gte(value));
+    return withCheck(GteNumberCheck(value));
   }
 
   AcanthisNumber between(num min, num max) {
-    return withCheck(ConstraintsNumberChecks.between(min, max));
+    return withCheck(BetweenNumberCheck(min, max));
   }
 
   /// Add a check to the number to check if it is greater than [value]
   AcanthisNumber gt(num value) {
-    return withCheck(ConstraintNumberChecks.gt(value));
+    return withCheck(GtNumberCheck(value));
   }
 
   /// Add a check to the number to check if it is less than [value]
   AcanthisNumber lt(num value) {
-    return withCheck(ConstraintNumberChecks.lt(value));
+    return withCheck(LtNumberCheck(value));
   }
 
   /// Add a check to the number to check if it is positive
   AcanthisNumber positive() {
-    return withCheck(ConstraintNumberChecks.positive());
+    return withCheck(PositiveNumberCheck());
   }
 
   /// Add a check to the number to check if it is negative
   AcanthisNumber negative() {
-    return withCheck(ConstraintNumberChecks.negative());
+    return withCheck(NegativeNumberCheck());
   }
 
   /// Add a check to the number to check if it is nonpositive
   AcanthisNumber nonPositive() {
-    return withCheck(ConstraintNumberChecks.nonPositive());
+    return withCheck(NonPositiveNumberCheck());
   }
 
   /// Add a check to the number to check if it is nonnegative
   AcanthisNumber nonNegative() {
-    return withCheck(ConstraintNumberChecks.nonNegative());
+    return withCheck(NonNegativeNumberCheck());
   }
 
   /// Add a check to the number to check if it is an integer
   AcanthisNumber integer() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => toTest is int,
-        error: 'Value must be an integer',
-        name: 'integer'));
+    return withCheck(IntegerNumberCheck());
   }
 
   /// Add a check to the number to check if it is a double
   AcanthisNumber double() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => toTest is! int,
-        error: 'Value must be a double',
-        name: 'double'));
+    return withCheck(DoubleNumberCheck());
   }
 
   /// Add a check to the number to check if it is a multiple of [value]
@@ -76,34 +74,22 @@ class AcanthisNumber extends AcanthisType<num> {
 
   /// Add a check to the number to check if it is finite
   AcanthisNumber finite() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => toTest.isFinite,
-        error: 'Value is not finite',
-        name: 'finite'));
+    return withCheck(FiniteNumberCheck());
   }
 
   /// Add a check to the number to check if it is infinite
   AcanthisNumber infinite() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => toTest.isInfinite,
-        error: 'Value is not infinite',
-        name: 'infinite'));
+    return withCheck(InfiniteNumberCheck());
   }
 
   /// Add a check to the number to check if it is "not a number"
   AcanthisNumber nan() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => toTest.isNaN,
-        error: 'Value is not NaN',
-        name: 'nan'));
+    return withCheck(NaNNumberCheck());
   }
 
   /// Add a check to the number to check if it is not "not a number"
   AcanthisNumber notNaN() {
-    return withCheck(AcanthisCheck<num>(
-        onCheck: (toTest) => !toTest.isNaN,
-        error: 'Value is NaN',
-        name: 'notNaN'));
+    return withCheck(NotNaNNumberCheck());
   }
 
   /// Add a check to the number to check if it is one of the [values]
@@ -114,6 +100,7 @@ class AcanthisNumber extends AcanthisType<num> {
     return withCheck(EnumeratedNumberCheck(values));
   }
 
+  /// Add a check to the number to ensure it is exactly [value]
   AcanthisNumber exact(num value) {
     return withCheck(ExactCheck<num>(value: value));
   }
@@ -127,20 +114,29 @@ class AcanthisNumber extends AcanthisType<num> {
   @override
   AcanthisNumber withAsyncCheck(AcanthisAsyncCheck<num> check) {
     return AcanthisNumber(
-        operations: operations.add(check), isAsync: true, key: key);
+        operations: [
+          ...operations,
+          check,
+        ], isAsync: true, key: key);
   }
 
   @override
   AcanthisNumber withCheck(AcanthisCheck<num> check) {
     return AcanthisNumber(
-        operations: operations.add(check), isAsync: isAsync, key: key);
+        operations: [
+          ...operations,
+          check,
+        ], isAsync: isAsync, key: key);
   }
 
   @override
   AcanthisNumber withTransformation(
       AcanthisTransformation<num> transformation) {
     return AcanthisNumber(
-        operations: operations.add(transformation), isAsync: isAsync, key: key);
+        operations: [
+          ...operations,
+          transformation,
+        ], isAsync: isAsync, key: key);
   }
 
   @override
@@ -182,32 +178,31 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   Map<String, dynamic> _getConstraints() {
-    final constraints = operations.whereType<ConstraintNumberChecks>();
-    final constraintsList = operations.whereType<ConstraintsNumberChecks>();
+    final constraints = operations.whereType<AcanthisCheck>();
     final constraintsMap = <String, dynamic>{};
     for (var constraint in constraints) {
-      if (constraint.name == 'gte') {
+      if (constraint is GteNumberCheck) {
         constraintsMap['minimum'] = constraint.value;
-      } else if (constraint.name == 'lte') {
+      } else if (constraint is LteNumberCheck) {
         constraintsMap['maximum'] = constraint.value;
-      } else if (constraint.name == 'gt') {
+      } else if (constraint is GtNumberCheck) {
         constraintsMap['exclusiveMinimum'] = constraint.value;
-      } else if (constraint.name == 'lt') {
+      } else if (constraint is LtNumberCheck) {
         constraintsMap['exclusiveMaximum'] = constraint.value;
-      } else if (constraint.name == 'positive') {
+      } else if (constraint is PositiveNumberCheck) {
         constraintsMap['exclusiveMinimum'] = 0;
-      } else if (constraint.name == 'negative') {
+      } else if (constraint is NegativeNumberCheck) {
         constraintsMap['exclusiveMaximum'] = 0;
-      } else if (constraint.name == 'nonPositive') {
+      } else if (constraint is NonPositiveNumberCheck) {
         constraintsMap['maximum'] = 0;
-      } else if (constraint.name == 'nonNegative') {
+      } else if (constraint is NonNegativeNumberCheck) {
         constraintsMap['minimum'] = 0;
       }
     }
-    for (var constraint in constraintsList) {
-      if (constraint.name == 'between') {
-        constraintsMap['minimum'] = constraint.lowerLimit;
-        constraintsMap['maximum'] = constraint.upperLimit;
+    for (var constraint in constraints) {
+      if (constraint is BetweenNumberCheck) {
+        constraintsMap['minimum'] = constraint.min;
+        constraintsMap['maximum'] = constraint.max;
       }
     }
     return constraintsMap;
@@ -224,132 +219,6 @@ class AcanthisNumber extends AcanthisType<num> {
       operations: operations,
       isAsync: isAsync,
       key: key,
-    );
-  }
-}
-
-class EnumeratedNumberCheck extends AcanthisCheck<num> {
-  final List<num> values;
-
-  EnumeratedNumberCheck(this.values)
-      : super(
-          onCheck: (toTest) => values.contains(toTest),
-          error: 'Value must be one of the following: ${values.join(', ')}',
-          name: 'enum',
-        );
-}
-
-class MultipleOfCheck extends AcanthisCheck<num> {
-  final int value;
-
-  MultipleOfCheck(this.value)
-      : super(
-          onCheck: (toTest) => toTest % value == 0,
-          error: 'Value must be a multiple of $value',
-          name: 'multipleOf',
-        );
-}
-
-class ConstraintsNumberChecks extends AcanthisCheck<num> {
-  final num upperLimit;
-  final num lowerLimit;
-
-  ConstraintsNumberChecks(
-      {required this.upperLimit,
-      required this.lowerLimit,
-      required super.name,
-      required super.error,
-      required super.onCheck});
-
-  static ConstraintsNumberChecks between(num min, num max) {
-    return ConstraintsNumberChecks(
-      upperLimit: max,
-      lowerLimit: min,
-      error: 'Value must be between $min and $max',
-      name: 'between',
-      onCheck: (toTest) => toTest >= min && toTest <= max,
-    );
-  }
-}
-
-class ConstraintNumberChecks extends AcanthisCheck<num> {
-  final num value;
-
-  ConstraintNumberChecks(
-      {required this.value,
-      required super.name,
-      required super.error,
-      required super.onCheck});
-
-  static ConstraintNumberChecks gte(num value) {
-    return ConstraintNumberChecks(
-      value: value,
-      error: 'Value must be greater than or equal to $value',
-      name: 'gte',
-      onCheck: (toTest) => toTest >= value,
-    );
-  }
-
-  static ConstraintNumberChecks lte(num value) {
-    return ConstraintNumberChecks(
-      value: value,
-      error: 'Value must be less than or equal to $value',
-      name: 'lte',
-      onCheck: (toTest) => toTest <= value,
-    );
-  }
-
-  static ConstraintNumberChecks gt(num value) {
-    return ConstraintNumberChecks(
-      value: value,
-      error: 'Value must be greater than $value',
-      name: 'gt',
-      onCheck: (toTest) => toTest > value,
-    );
-  }
-
-  static ConstraintNumberChecks lt(num value) {
-    return ConstraintNumberChecks(
-      value: value,
-      error: 'Value must be less than $value',
-      name: 'lt',
-      onCheck: (toTest) => toTest < value,
-    );
-  }
-
-  static ConstraintNumberChecks positive() {
-    return ConstraintNumberChecks(
-      value: 0,
-      error: 'Value must be positive',
-      name: 'positive',
-      onCheck: (toTest) => toTest > 0,
-    );
-  }
-
-  static ConstraintNumberChecks nonPositive() {
-    return ConstraintNumberChecks(
-      value: 0,
-      error: 'Value must be nonpositive',
-      name: 'nonPositive',
-      onCheck: (toTest) => toTest <= 0,
-    );
-  }
-
-  static ConstraintNumberChecks negative() {
-    return ConstraintNumberChecks(
-      value: 0,
-      error: 'Value must be negative',
-      name: 'negative',
-      onCheck: (toTest) => toTest < 0,
-    );
-  }
-
-  static ConstraintNumberChecks nonNegative() {
-    return ConstraintNumberChecks(
-      value: 0,
-      error: 'Value must be nonnegative',
-      name: 'nonNegative',
-      onCheck: (toTest) => toTest >= 0,
     );
   }
 }

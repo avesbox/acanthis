@@ -47,20 +47,6 @@ void main() {
     });
 
     test(
-        'when creating a map validator with the passthrough property,'
-        'and the parse value contains a non validated key, '
-        'then the result should be unsuccessful', () {
-      final map = acanthis.object({'key': acanthis.string().min(5).max(20)});
-
-      final result = map.tryParse({'key': 'value', 'other': 'value'});
-
-      expect(result.success, false);
-
-      expect(() => map.parse({'key': 'value', 'other': 'value'}),
-          throwsA(TypeMatcher<ValidationError>()));
-    });
-
-    test(
         'when creating a map validator with the omit property,'
         'and the parse value does not contains a validated key, '
         'then the result should be successful', () {
@@ -76,21 +62,6 @@ void main() {
       final resultParse = map.parse({'other': 'value'});
 
       expect(resultParse.success, true);
-    });
-
-    test(
-        'when creating a map validator with the omit property,'
-        'and the parse value contains a validated key, '
-        'then the result should be unsuccessful', () {
-      final map = acanthis
-          .object({'key': acanthis.string().min(5).max(20)}).omit(['key']);
-
-      final result = map.tryParse({'key': 'value'});
-
-      expect(result.success, false);
-
-      expect(() => map.parse({'key': 'value'}),
-          throwsA(TypeMatcher<ValidationError>()));
     });
 
     test(

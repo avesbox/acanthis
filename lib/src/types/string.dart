@@ -318,7 +318,9 @@ class AcanthisString extends AcanthisType<String> {
         PatternNanoidStringChecks() => check.regExp.pattern,
         PatternJwtStringChecks() => check.regExp.pattern,
         PatternBase64StringChecks() => check.regExp.pattern,
-        PatternStringCheck() => check.regExp is RegExp ? (check.regExp as RegExp).pattern : check.regExp,
+        PatternStringCheck() => check.regExp is RegExp
+            ? (check.regExp as RegExp).pattern
+            : check.regExp,
         _ => null,
       };
       if (patternChecksMap['pattern'] == null) {

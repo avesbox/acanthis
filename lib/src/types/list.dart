@@ -54,13 +54,12 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
           'Cannot use tryParse with async operations');
     }
     final result = super.parse(List.generate(
-      value.length, (index) => element.parse(value[index]).value,
+      value.length,
+      (index) => element.parse(value[index]).value,
       growable: false,
     ));
     return AcanthisParseResult(
-      value: result.value,
-      metadata: MetadataRegistry().get(key)
-    );
+        value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]

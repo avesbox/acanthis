@@ -99,7 +99,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (!value.containsKey(key) && !isOptional) {
         throw ValidationError('Field $field is required');
       }
-      if (value[key] == null && isOptional && field.value is! AcanthisNullable) {
+      if (value[key] == null &&
+          isOptional &&
+          field.value is! AcanthisNullable) {
         continue;
       }
       final fieldValue = field.value;
@@ -127,7 +129,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         }
       }
     }
-    if(_dependencies.isNotEmpty) {
+    if (_dependencies.isNotEmpty) {
       for (var dependency in _dependencies) {
         final dependFrom = _keyQuery(dependency.dependendsOn, value);
         final dependTo = _keyQuery(dependency.dependent, value);
@@ -159,14 +161,16 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (!value.containsKey(key) && !isOptional) {
         throw ValidationError('Field $key is required');
       }
-      if (value[key] == null && isOptional && entry.value is! AcanthisNullable) {
+      if (value[key] == null &&
+          isOptional &&
+          entry.value is! AcanthisNullable) {
         continue;
       }
       final fieldValue = entry.value;
       if (fieldValue is LazyEntry) {
-        parsed[key] = (await fieldValue.parseAsync(passedValue[key], this)).value;
+        parsed[key] =
+            (await fieldValue.parseAsync(passedValue[key], this)).value;
       } else {
-        
         final result = await fieldValue.parseAsync(passedValue[key]);
         parsed[key] = result.value;
       }
@@ -217,11 +221,15 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     for (var field in _fields.entries) {
       final key = field.key;
       final isOptional = _optionalFields.contains(key);
-      if (!passedValue.containsKey(key) && !isOptional && field.value is! AcanthisNullable) {
+      if (!passedValue.containsKey(key) &&
+          !isOptional &&
+          field.value is! AcanthisNullable) {
         errors[key] = {'required': 'Field is required'};
         continue;
       }
-      if (passedValue[key] == null && isOptional && field.value is! AcanthisNullable) {
+      if (passedValue[key] == null &&
+          isOptional &&
+          field.value is! AcanthisNullable) {
         continue;
       }
       final fieldValue = field.value;
@@ -301,7 +309,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         errors[key] = {'required': 'Field is required'};
         continue;
       }
-      if (value[key] == null && isOptional && field.value is! AcanthisNullable) {
+      if (value[key] == null &&
+          isOptional &&
+          field.value is! AcanthisNullable) {
         continue;
       }
       final fieldValue = field.value;

@@ -11,6 +11,7 @@ string().min(5);
 string().max(10);
 string().length(5);
 string().pattern(RegExp('^[a-zA-Z0-9]+$'));
+// string().pattern('^[a-zA-Z0-9]+$'); equivalent to the previous example
 string().contains('Acanthis');
 string().startsWith('Acanthis');
 string().endsWith('Acanthis');

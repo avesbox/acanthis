@@ -28,7 +28,7 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   /// Add a check to the string to check if follows the pattern [pattern]
-  AcanthisString pattern(RegExp pattern) {
+  AcanthisString pattern(Pattern pattern) {
     return withCheck(PatternStringCheck(pattern));
   }
 
@@ -318,7 +318,7 @@ class AcanthisString extends AcanthisType<String> {
         PatternNanoidStringChecks() => check.regExp.pattern,
         PatternJwtStringChecks() => check.regExp.pattern,
         PatternBase64StringChecks() => check.regExp.pattern,
-        PatternStringCheck() => check.regExp.pattern,
+        PatternStringCheck() => check.regExp is RegExp ? (check.regExp as RegExp).pattern : check.regExp,
         _ => null,
       };
       if (patternChecksMap['pattern'] == null) {

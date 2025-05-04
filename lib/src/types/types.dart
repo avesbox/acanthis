@@ -16,6 +16,8 @@ abstract class AcanthisType<O> {
 
   final List<AcanthisOperation<O>> __operations;
 
+  Type get elementType => O;
+
   /// A boolean that indicates if the type is async or not
   final bool isAsync;
 

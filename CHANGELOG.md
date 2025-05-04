@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2
+
+- refactor: add possiblity to use both String and RegExp for `AcanthisString#pattern` validator.
+- feat: add `AcanthisType#elementType` to get the type of the schema.
+
 ## 1.2.1
 
 - refactor: improve overall code quality and performance.

@@ -42,277 +42,6 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         _dependencies = dependencies,
         _optionalFields = optionalFields;
 
-  Map<String, V> _parse(Map<String, V> value) {
-    final parsed = <String, V>{};
-
-    // Validate required fields
-    for (var field in _fields.entries) {
-      final key = field.key;
-      final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        throw ValidationError('Field $field is required');
-      }
-      final fieldValue = field.value;
-      if (fieldValue is LazyEntry) {
-        final type = fieldValue(this);
-        if (value[key] is List<Map<String, dynamic>>) {
-          parsed[key] = type
-              .parse(List<Map<String, dynamic>>.from(value[key] as List))
-              .value;
-        } else {
-          parsed[key] = type.parse(value[key]).value;
-        }
-      } else {
-        if (isOptional && value[key] == null) {
-          continue;
-        }
-        parsed[key] = _fields[key]!.parse(value[key]).value;
-      }
-    }
-    if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = _passthroughType.parse(obj.value);
-              parsed[obj.key] = parsedValue.value;
-            } on TypeError catch (_) {
-              throw ValidationError(
-                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
-            }
-          } else {
-            parsed[obj.key] = obj.value;
-          }
-        }
-      }
-    }
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          throw ValidationError(
-              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
-        }
-      } else {
-        throw ValidationError(
-            'The dependency or dependFrom field does not exist in the map');
-      }
-    }
-    final result = super.parse(parsed);
-    return result.value;
-  }
-
-  Future<Map<String, V>> _parseAsync(Map<String, V> value) async {
-    final parsed = <String, V>{};
-
-    // Parse each field
-    for (var entry in _fields.entries) {
-      final key = entry.key;
-      final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        throw ValidationError('Field $key is required');
-      }
-      final fieldValue = entry.value;
-      if (fieldValue is LazyEntry) {
-        final type = fieldValue.call(this);
-        final result = await type.parseAsync(fieldValue);
-        parsed[key] = result.value;
-      } else {
-        if (value[key] == null && isOptional) {
-          continue;
-        }
-        final result = await fieldValue.parseAsync(value[key]);
-        parsed[key] = result.value;
-      }
-    }
-    if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = await _passthroughType.parseAsync(obj.value);
-              parsed[obj.key] = parsedValue.value;
-            } on TypeError catch (_) {
-              throw ValidationError(
-                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
-            }
-          } else {
-            parsed[obj.key] = obj.value;
-          }
-        }
-      }
-    }
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          throw ValidationError(
-              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
-        }
-      } else {
-        throw ValidationError(
-            'The dependency or dependFrom field does not exist in the map');
-      }
-    }
-
-    final result = await super.parseAsync(parsed);
-    return result.value;
-  }
-
-  (Map<String, V>, Map<String, dynamic>) _tryParse(Map<String, V> value) {
-    final parsed = <String, V>{};
-    final errors = <String, dynamic>{};
-    for (var field in _fields.entries) {
-      final key = field.key;
-      final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        errors[key] = {'required': 'Field is required'};
-        continue;
-      }
-      final fieldValue = field.value;
-      final AcanthisParseResult parsedValue;
-      if (fieldValue is LazyEntry) {
-        final type = fieldValue.call(this);
-        if (type is AcanthisList) {
-          parsedValue = type
-              .tryParse(List<Map<String, dynamic>>.from(value[key] as List));
-        } else {
-          parsedValue = type.tryParse(value[key]);
-        }
-      } else {
-        if (value[key] == null && isOptional) {
-          continue;
-        }
-        parsedValue = fieldValue.tryParse(value[key]);
-      }
-      parsed[key] = parsedValue.value;
-      if (parsedValue.errors.isNotEmpty) {
-        errors[key] = parsedValue.errors;
-      }
-    }
-    if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = _passthroughType.tryParse(obj.value);
-              parsed[obj.key] = parsedValue.value;
-              if (parsedValue.errors.isNotEmpty) {
-                errors[obj.key] = parsedValue.errors;
-              }
-            } on TypeError catch (_) {
-              errors[obj.key] = {
-                'error':
-                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
-              };
-            }
-          } else {
-            parsed[obj.key] = obj.value;
-          }
-        }
-      }
-    }
-
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
-        }
-      } else {
-        errors[dependency.dependent] = {
-          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
-              'The dependency or dependFrom field does not exist in the map'
-        };
-      }
-    }
-
-    final result = super.tryParse(parsed);
-    return (result.value, errors..addAll(result.errors));
-  }
-
-  Future<({Map<String, V> values, Map<String, dynamic> errors})> _tryParseAsync(
-      Map<String, V> value) async {
-    final parsed = <String, V>{};
-    final errors = <String, dynamic>{};
-    for (var field in _fields.entries) {
-      final key = field.key;
-      final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        errors[key] = {'required': 'Field is required'};
-        continue;
-      }
-      final fieldValue = field.value;
-      final AcanthisParseResult parsedValue;
-      if (fieldValue is LazyEntry) {
-        final type = fieldValue.call(this);
-        if (type is AcanthisList) {
-          parsedValue = await type
-              .tryParseAsync(value[key] as List<Map<String, dynamic>>);
-        } else {
-          parsedValue = await type.tryParseAsync(value[key]);
-        }
-      } else {
-        if (value[key] == null && isOptional) {
-          continue;
-        }
-        parsedValue = await fieldValue.tryParseAsync(value[key]);
-      }
-      parsed[key] = parsedValue.value;
-      if (parsedValue.errors.isNotEmpty) {
-        errors[key] = parsedValue.errors;
-      }
-    }
-    if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue =
-                  await _passthroughType.tryParseAsync(obj.value);
-              parsed[obj.key] = parsedValue.value;
-              errors[obj.key] = parsedValue.errors;
-            } on TypeError catch (_) {
-              errors[obj.key] = {
-                'error':
-                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
-              };
-            }
-          } else {
-            parsed[obj.key] = obj.value;
-          }
-        }
-      }
-    }
-
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
-        }
-      } else {
-        errors[dependency.dependent] = {
-          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
-              'The dependency or dependFrom field does not exist in the map'
-        };
-      }
-    }
-
-    final result = await super.tryParseAsync(parsed);
-    return (values: result.value, errors: errors..addAll(result.errors));
-  }
-
   dynamic _keyQuery(String key, Map<String, V> value) {
     final keys = key.split('.');
     dynamic result = value;
@@ -362,27 +91,197 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    final parsed = _parse(value);
+    final parsed = <String, V>{};
+    // Validate required fields
+    for (var field in _fields.entries) {
+      final key = field.key;
+      final isOptional = _optionalFields.contains(key);
+      if (!value.containsKey(key) && !isOptional) {
+        throw ValidationError('Field $field is required');
+      }
+      if (value[key] == null && isOptional && field.value is! AcanthisNullable) {
+        continue;
+      }
+      final fieldValue = field.value;
+      final passedValue = value[key];
+      if (fieldValue is LazyEntry) {
+        parsed[key] = fieldValue.parse(passedValue, this).value;
+      } else {
+        parsed[key] = _fields[key]!.parse(passedValue).value;
+      }
+    }
+    if (_passthrough) {
+      for (var obj in value.entries) {
+        if (!_fields.containsKey(obj.key)) {
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = _passthroughType.parse(obj.value);
+              parsed[obj.key] = parsedValue.value;
+            } on TypeError catch (_) {
+              throw ValidationError(
+                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
+            }
+          } else {
+            parsed[obj.key] = obj.value;
+          }
+        }
+      }
+    }
+    if(_dependencies.isNotEmpty) {
+      for (var dependency in _dependencies) {
+        final dependFrom = _keyQuery(dependency.dependendsOn, value);
+        final dependTo = _keyQuery(dependency.dependent, value);
+        if (dependFrom != null && dependTo != null) {
+          if (!dependency.dependency(dependFrom, dependTo)) {
+            throw ValidationError(
+                'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
+          }
+        } else {
+          throw ValidationError(
+              'The dependency or dependFrom field does not exist in the map');
+        }
+      }
+    }
+    final result = super.parse(parsed);
     return AcanthisParseResult(
-        value: parsed, metadata: MetadataRegistry().get(key));
+        value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   @override
   Future<AcanthisParseResult<Map<String, V>>> parseAsync(
       Map<String, V> value) async {
-    final parsed = await _parseAsync(value);
+    final parsed = <String, V>{};
+    final passedValue = Map<String, V>.from(value);
+    // Parse each field
+    for (var entry in _fields.entries) {
+      final key = entry.key;
+      final isOptional = _optionalFields.contains(key);
+      if (!value.containsKey(key) && !isOptional) {
+        throw ValidationError('Field $key is required');
+      }
+      if (value[key] == null && isOptional && entry.value is! AcanthisNullable) {
+        continue;
+      }
+      final fieldValue = entry.value;
+      if (fieldValue is LazyEntry) {
+        parsed[key] = (await fieldValue.parseAsync(passedValue[key], this)).value;
+      } else {
+        
+        final result = await fieldValue.parseAsync(passedValue[key]);
+        parsed[key] = result.value;
+      }
+    }
+    if (_passthrough) {
+      for (var obj in value.entries) {
+        if (!_fields.containsKey(obj.key)) {
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = await _passthroughType.parseAsync(obj.value);
+              parsed[obj.key] = parsedValue.value;
+            } on TypeError catch (_) {
+              throw ValidationError(
+                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
+            }
+          } else {
+            parsed[obj.key] = obj.value;
+          }
+        }
+      }
+    }
+    // Validate dependencies
+    for (var dependency in _dependencies) {
+      final dependFrom = _keyQuery(dependency.dependendsOn, value);
+      final dependTo = _keyQuery(dependency.dependent, value);
+
+      if (dependFrom != null && dependTo != null) {
+        if (!dependency.dependency(dependFrom, dependTo)) {
+          throw ValidationError(
+              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
+        }
+      } else {
+        throw ValidationError(
+            'The dependency or dependFrom field does not exist in the map');
+      }
+    }
+    final result = await super.parseAsync(parsed);
     return AcanthisParseResult(
-        value: parsed, metadata: MetadataRegistry().get(key));
+        value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   @override
   Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(
       Map<String, V> value) async {
-    final parsed = await _tryParseAsync(value);
+    final Map<String, V> passedValue = Map.from(value);
+    final parsed = <String, V>{};
+    final errors = <String, dynamic>{};
+    for (var field in _fields.entries) {
+      final key = field.key;
+      final isOptional = _optionalFields.contains(key);
+      if (!passedValue.containsKey(key) && !isOptional && field.value is! AcanthisNullable) {
+        errors[key] = {'required': 'Field is required'};
+        continue;
+      }
+      if (passedValue[key] == null && isOptional && field.value is! AcanthisNullable) {
+        continue;
+      }
+      final fieldValue = field.value;
+      final AcanthisParseResult parsedValue;
+      if (fieldValue is LazyEntry) {
+        parsedValue = await fieldValue.tryParseAsync(passedValue[key], this);
+      } else {
+        parsedValue = await fieldValue.tryParseAsync(passedValue[key]);
+      }
+      parsed[key] = parsedValue.value;
+      if (parsedValue.errors.isNotEmpty) {
+        errors[key] = parsedValue.errors;
+      }
+    }
+    if (_passthrough) {
+      for (var obj in passedValue.entries) {
+        if (!_fields.containsKey(obj.key)) {
+          if (_passthroughType != null) {
+            try {
+              final parsedValue =
+                  await _passthroughType.tryParseAsync(obj.value);
+              parsed[obj.key] = parsedValue.value;
+              errors[obj.key] = parsedValue.errors;
+            } on TypeError catch (_) {
+              errors[obj.key] = {
+                'error':
+                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+              };
+            }
+          } else {
+            parsed[obj.key] = obj.value;
+          }
+        }
+      }
+    }
+
+    // Validate dependencies
+    for (var dependency in _dependencies) {
+      final dependFrom = _keyQuery(dependency.dependendsOn, value);
+      final dependTo = _keyQuery(dependency.dependent, value);
+
+      if (dependFrom != null && dependTo != null) {
+        if (!dependency.dependency(dependFrom, dependTo)) {
+          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+        }
+      } else {
+        errors[dependency.dependent] = {
+          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
+              'The dependency or dependFrom field does not exist in the map'
+        };
+      }
+    }
+    final result = await super.tryParseAsync(parsed);
+    if (result.errors.isNotEmpty) {
+      errors.addAll(result.errors);
+    }
     return AcanthisParseResult(
-        value: parsed.values,
-        errors: parsed.errors,
-        success: parsed.errors.isEmpty,
+        value: result.value,
+        errors: errors,
+        success: errors.isEmpty,
         metadata: MetadataRegistry().get(key));
   }
 
@@ -393,7 +292,73 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    final (parsed, errors) = _tryParse(value);
+    final parsed = <String, V>{};
+    final errors = <String, dynamic>{};
+    for (var field in _fields.entries) {
+      final key = field.key;
+      final isOptional = _optionalFields.contains(key);
+      if (!value.containsKey(key) && !isOptional) {
+        errors[key] = {'required': 'Field is required'};
+        continue;
+      }
+      if (value[key] == null && isOptional && field.value is! AcanthisNullable) {
+        continue;
+      }
+      final fieldValue = field.value;
+      final AcanthisParseResult parsedValue;
+      if (fieldValue is LazyEntry) {
+        parsedValue = fieldValue.tryParse(value[key], this);
+      } else {
+        parsedValue = fieldValue.tryParse(value[key]);
+      }
+      parsed[key] = parsedValue.value;
+      if (parsedValue.errors.isNotEmpty) {
+        errors[key] = parsedValue.errors;
+      }
+    }
+    if (_passthrough) {
+      for (var obj in value.entries) {
+        if (!_fields.containsKey(obj.key)) {
+          if (_passthroughType != null) {
+            try {
+              final parsedValue = _passthroughType.tryParse(obj.value);
+              parsed[obj.key] = parsedValue.value;
+              if (parsedValue.errors.isNotEmpty) {
+                errors[obj.key] = parsedValue.errors;
+              }
+            } on TypeError catch (_) {
+              errors[obj.key] = {
+                'error':
+                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+              };
+            }
+          } else {
+            parsed[obj.key] = obj.value;
+          }
+        }
+      }
+    }
+
+    // Validate dependencies
+    for (var dependency in _dependencies) {
+      final dependFrom = _keyQuery(dependency.dependendsOn, value);
+      final dependTo = _keyQuery(dependency.dependent, value);
+
+      if (dependFrom != null && dependTo != null) {
+        if (!dependency.dependency(dependFrom, dependTo)) {
+          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+        }
+      } else {
+        errors[dependency.dependent] = {
+          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
+              'The dependency or dependFrom field does not exist in the map'
+        };
+      }
+    }
+    final result = super.tryParse(parsed);
+    if (result.errors.isNotEmpty) {
+      errors.addAll(result.errors);
+    }
     return AcanthisParseResult(
         value: parsed,
         errors: errors,
@@ -690,7 +655,7 @@ class _Dependency {
   const _Dependency(this.dependent, this.dependendsOn, this.dependency);
 }
 
-class LazyEntry<O> extends AcanthisType<dynamic> {
+class LazyEntry<O> extends AcanthisType<O> {
   final AcanthisType<O> Function(AcanthisMap parent) _type;
 
   const LazyEntry(
@@ -713,7 +678,43 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withAsyncCheck(AcanthisAsyncCheck check) {
+  AcanthisParseResult<O> parse(O value, [AcanthisMap? parent]) {
+    final type = _type(parent!);
+    if (value is List) {
+      value = List<Map<String, dynamic>>.from(value) as O;
+    }
+    return type.parse(value);
+  }
+
+  @override
+  AcanthisParseResult<O> tryParse(O value, [AcanthisMap? parent]) {
+    final type = _type(parent!);
+    if (value is List) {
+      value = List<Map<String, dynamic>>.from(value) as O;
+    }
+    return type.tryParse(value);
+  }
+
+  @override
+  Future<AcanthisParseResult<O>> parseAsync(O value, [AcanthisMap? parent]) {
+    final type = _type(parent!);
+    if (value is List) {
+      value = List<Map<String, dynamic>>.from(value) as O;
+    }
+    return type.parseAsync(value);
+  }
+
+  @override
+  Future<AcanthisParseResult<O>> tryParseAsync(O value, [AcanthisMap? parent]) {
+    final type = _type(parent!);
+    if (value is List) {
+      value = List<Map<String, dynamic>>.from(value) as O;
+    }
+    return type.tryParseAsync(value);
+  }
+
+  @override
+  LazyEntry<O> withAsyncCheck(AcanthisAsyncCheck<O> check) {
     return LazyEntry(
       _type,
       operations: [
@@ -725,7 +726,7 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withCheck(AcanthisCheck check) {
+  LazyEntry<O> withCheck(AcanthisCheck<O> check) {
     return LazyEntry(
       _type,
       operations: [
@@ -736,7 +737,7 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry withTransformation(AcanthisTransformation transformation) {
+  LazyEntry<O> withTransformation(AcanthisTransformation<O> transformation) {
     return LazyEntry(
       _type,
       operations: [
@@ -762,7 +763,7 @@ class LazyEntry<O> extends AcanthisType<dynamic> {
   }
 
   @override
-  LazyEntry meta(MetadataEntry metadata) {
+  LazyEntry<O> meta(MetadataEntry metadata) {
     throw UnimplementedError('The implementation must be done from the parent');
   }
 }

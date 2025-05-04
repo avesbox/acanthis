@@ -509,13 +509,19 @@ class DateTimeStringCheck extends AcanthisCheck<String> {
 
 /// String check fo a generic pattern using a regular expression.
 class PatternStringCheck extends AcanthisCheck<String> {
-  final RegExp regExp;
+  final Pattern regExp;
 
   const PatternStringCheck(this.regExp)
       : super(error: 'Value must match the pattern', name: 'pattern');
 
   @override
   bool call(String value) {
-    return regExp.hasMatch(value);
+    if (regExp is RegExp) {
+      return (regExp as RegExp).hasMatch(value);
+    } else if (regExp is String) {
+      return RegExp(regExp as String).hasMatch(value);
+    } else {
+      throw ArgumentError('Invalid pattern type: ${regExp.runtimeType}');
+    }
   }
 }

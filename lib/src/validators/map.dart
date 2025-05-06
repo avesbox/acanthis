@@ -4,10 +4,14 @@ import 'package:acanthis/src/operations/checks.dart';
 class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
   final int constraintValue;
 
-  const MaxPropertiesCheck({
+  MaxPropertiesCheck({
     required this.constraintValue,
+    String? message,
+    String Function(int constraintValue)? messageBuilder,
   }) : super(
-          error: 'The map has more than $constraintValue fields',
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has more than $constraintValue fields',
           name: 'maxProperties',
         );
 
@@ -21,10 +25,14 @@ class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
   final int constraintValue;
 
-  const MinPropertiesCheck({
+  MinPropertiesCheck({
     required this.constraintValue,
+    String? message,
+    String Function(int constraintValue)? messageBuilder,
   }) : super(
-          error: 'The map has less than $constraintValue fields',
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has less than $constraintValue fields',
           name: 'minProperties',
         );
 
@@ -38,10 +46,14 @@ class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 class LengthPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
   final int constraintValue;
 
-  const LengthPropertiesCheck({
+  LengthPropertiesCheck({
     required this.constraintValue,
+    String? message,
+    String Function(int constraintValue)? messageBuilder,
   }) : super(
-          error: 'The map has not $constraintValue fields',
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has not $constraintValue fields',
           name: 'lengthProperties',
         );
 

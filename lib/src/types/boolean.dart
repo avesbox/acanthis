@@ -14,13 +14,13 @@ class AcanthisBoolean extends AcanthisType<bool> {
   });
 
   /// Add a check to the boolean to check if it is true
-  AcanthisBoolean isTrue() {
-    return withCheck(const IsTrueCheck());
+  AcanthisBoolean isTrue({String? message}) {
+    return withCheck(IsTrueCheck(message: message));
   }
 
   /// Add a check to the boolean to check if it is false
-  AcanthisBoolean isFalse() {
-    return withCheck(const IsFalseCheck());
+  AcanthisBoolean isFalse({String? message}) {
+    return withCheck(IsFalseCheck(message: message));
   }
 
   @override

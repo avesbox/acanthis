@@ -24,6 +24,38 @@ class AcanthisUnion extends AcanthisType<dynamic> {
     throw ValidationError('Value does not match any of the elements');
   }
 
+  /// override of the [parseAsync] method from [AcanthisType]
+  @override
+  Future<AcanthisParseResult<dynamic>> parseAsync(dynamic value) async {
+    for (var element in elements) {
+      try {
+        final result = await element.tryParseAsync(value);
+        if (result.success) {
+          return result;
+        }
+      } catch (_) {}
+    }
+    throw ValidationError('Value does not match any of the elements');
+  }
+
+  /// override of the [tryParseAsync] method from [AcanthisType]
+  @override
+  Future<AcanthisParseResult<dynamic>> tryParseAsync(dynamic value) async {
+    for (var element in elements) {
+      try {
+        final result = await element.tryParseAsync(value);
+        if (result.success) {
+          return result;
+        }
+      } catch (_) {}
+    }
+    return AcanthisParseResult(
+        value: value,
+        errors: {'union': 'Value does not match any of the elements'},
+        success: false,
+        metadata: MetadataRegistry().get(key));
+  }
+
   /// override of the [tryParse] method from [AcanthisType]
   @override
   AcanthisParseResult<dynamic> tryParse(dynamic value) {
@@ -38,7 +70,8 @@ class AcanthisUnion extends AcanthisType<dynamic> {
     return AcanthisParseResult(
         value: value,
         errors: {'union': 'Value does not match any of the elements'},
-        success: false);
+        success: false,
+        metadata: MetadataRegistry().get(key));
   }
 
   @override

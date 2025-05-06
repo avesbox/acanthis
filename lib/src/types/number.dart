@@ -14,95 +14,111 @@ class AcanthisNumber extends AcanthisType<num> {
   const AcanthisNumber({super.isAsync, super.operations, super.key});
 
   /// Add a check to the number to check if it is less than or equal to [value]
-  AcanthisNumber lte(num value) {
-    return withCheck(LteNumberCheck(value));
+  AcanthisNumber lte(num value,
+      {String? message, String Function(num value)? messageBuilder}) {
+    return withCheck(LteNumberCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to check if it is greater than or equal to [value]
-  AcanthisNumber gte(num value) {
-    return withCheck(GteNumberCheck(value));
+  AcanthisNumber gte(num value,
+      {String? message, String Function(num value)? messageBuilder}) {
+    return withCheck(GteNumberCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
-  AcanthisNumber between(num min, num max) {
-    return withCheck(BetweenNumberCheck(min, max));
+  AcanthisNumber between(num min, num max,
+      {String? message, String Function(num min, num max)? messageBuilder}) {
+    return withCheck(BetweenNumberCheck(min, max,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to check if it is greater than [value]
-  AcanthisNumber gt(num value) {
-    return withCheck(GtNumberCheck(value));
+  AcanthisNumber gt(num value,
+      {String? message, String Function(num value)? messageBuilder}) {
+    return withCheck(
+        GtNumberCheck(value, message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to check if it is less than [value]
-  AcanthisNumber lt(num value) {
-    return withCheck(LtNumberCheck(value));
+  AcanthisNumber lt(num value,
+      {String? message, String Function(num value)? messageBuilder}) {
+    return withCheck(
+        LtNumberCheck(value, message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to check if it is positive
-  AcanthisNumber positive() {
-    return withCheck(PositiveNumberCheck());
+  AcanthisNumber positive({String? message}) {
+    return withCheck(PositiveNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is negative
-  AcanthisNumber negative() {
-    return withCheck(NegativeNumberCheck());
+  AcanthisNumber negative({String? message}) {
+    return withCheck(NegativeNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is nonpositive
-  AcanthisNumber nonPositive() {
-    return withCheck(NonPositiveNumberCheck());
+  AcanthisNumber nonPositive({String? message}) {
+    return withCheck(NonPositiveNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is nonnegative
-  AcanthisNumber nonNegative() {
-    return withCheck(NonNegativeNumberCheck());
+  AcanthisNumber nonNegative({String? message}) {
+    return withCheck(NonNegativeNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is an integer
-  AcanthisNumber integer() {
-    return withCheck(IntegerNumberCheck());
+  AcanthisNumber integer({String? message}) {
+    return withCheck(IntegerNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is a double
-  AcanthisNumber double() {
-    return withCheck(DoubleNumberCheck());
+  AcanthisNumber double({String? message}) {
+    return withCheck(DoubleNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is a multiple of [value]
-  AcanthisNumber multipleOf(int value) {
-    return withCheck(MultipleOfCheck(value));
+  AcanthisNumber multipleOf(int value,
+      {String? message, String Function(int value)? messageBuilder}) {
+    return withCheck(MultipleOfCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to check if it is finite
-  AcanthisNumber finite() {
-    return withCheck(FiniteNumberCheck());
+  AcanthisNumber finite({String? message}) {
+    return withCheck(FiniteNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is infinite
-  AcanthisNumber infinite() {
-    return withCheck(InfiniteNumberCheck());
+  AcanthisNumber infinite({String? message}) {
+    return withCheck(InfiniteNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is "not a number"
-  AcanthisNumber nan() {
-    return withCheck(NaNNumberCheck());
+  AcanthisNumber nan({String? message}) {
+    return withCheck(NaNNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is not "not a number"
-  AcanthisNumber notNaN() {
-    return withCheck(NotNaNNumberCheck());
+  AcanthisNumber notNaN({String? message}) {
+    return withCheck(NotNaNNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is one of the [values]
-  AcanthisNumber enumerated(List<num> values) {
+  AcanthisNumber enumerated(List<num> values,
+      {String? message, String Function(List<num> values)? messageBuilder}) {
     if (values.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
     }
-    return withCheck(EnumeratedNumberCheck(values));
+    return withCheck(EnumeratedNumberCheck(values,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the number to ensure it is exactly [value]
-  AcanthisNumber exact(num value) {
-    return withCheck(ExactCheck<num>(value: value));
+  AcanthisNumber exact(num value,
+      {String? message, String Function(num value)? messageBuilder}) {
+    return withCheck(ExactCheck<num>(
+        value: value, message: message, messageBuilder: messageBuilder));
   }
 
   /// Transform the number to a power of [value]

@@ -2,9 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Boolean checks for True
 class IsTrueCheck extends AcanthisCheck<bool> {
-  const IsTrueCheck()
+  const IsTrueCheck({String? message})
       : super(
-          error: 'Value must be true',
+          error: message ?? 'Value must be true',
           name: 'isTrue',
         );
 
@@ -16,9 +16,9 @@ class IsTrueCheck extends AcanthisCheck<bool> {
 
 /// Boolean checks for False
 class IsFalseCheck extends AcanthisCheck<bool> {
-  const IsFalseCheck()
+  const IsFalseCheck({String? message})
       : super(
-          error: 'Value must be false',
+          error: message ?? 'Value must be false',
           name: 'isFalse',
         );
 

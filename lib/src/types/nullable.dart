@@ -25,10 +25,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       return AcanthisParseResult(value: defaultValue);
     }
     final elementResult = element.parse(value);
-    final result = super.parse(elementResult.value);
-    return AcanthisParseResult(
-      value: result.value,
-    );
+    return super.parse(elementResult.value);
   }
 
   /// override of the [tryParse] method from [AcanthisType]
@@ -49,6 +46,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
         ...elementResult.errors,
       },
       success: result.success && elementResult.success,
+      metadata: result.metadata,
     );
   }
 
@@ -58,10 +56,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       return AcanthisParseResult(value: defaultValue);
     }
     final elementResult = await element.parseAsync(value);
-    final result = await super.parseAsync(elementResult.value);
-    return AcanthisParseResult(
-      value: result.value,
-    );
+    return await super.parseAsync(elementResult.value);
   }
 
   @override
@@ -78,6 +73,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
         ...elementResult.errors,
       },
       success: result.success && elementResult.success,
+      metadata: result.metadata,
     );
   }
 
@@ -124,9 +120,11 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   }
 
   /// Check if the value is part of the enumerated values
-  AcanthisNullable<T> enumerated(List<T?> values) {
+  AcanthisNullable<T> enumerated(List<T?> values,
+      {String? message, String Function(List<T?> value)? messageBuilder}) {
     final enumeratedValue = {...values, null};
-    return withCheck(EnumeratedNullableCheck(enumeratedValue.toList()));
+    return withCheck(EnumeratedNullableCheck(enumeratedValue.toList(),
+        message: message, messageBuilder: messageBuilder));
   }
 
   @override

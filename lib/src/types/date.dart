@@ -15,23 +15,33 @@ class AcanthisDate extends AcanthisType<DateTime> {
   });
 
   /// Add a check to the date to check if it is before or equal to [value]
-  AcanthisDate min(DateTime value) {
-    return withCheck(MinDateCheck(value));
+  AcanthisDate min(DateTime value,
+      {String? message, String Function(DateTime value)? messageBuilder}) {
+    return withCheck(
+        MinDateCheck(value, message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
-  AcanthisDate differsFromNow(Duration difference) {
-    return withCheck(DiffersFromNowCheck(difference));
+  AcanthisDate differsFromNow(Duration difference,
+      {String? message, String Function(Duration difference)? messageBuilder}) {
+    return withCheck(DiffersFromNowCheck(difference,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
-  AcanthisDate differsFrom(DateTime fromDate, Duration difference) {
-    return withCheck(DiffersFromCheck(fromDate, difference));
+  AcanthisDate differsFrom(DateTime fromDate, Duration difference,
+      {String? message,
+      String Function(DateTime fromDate, Duration difference)?
+          messageBuilder}) {
+    return withCheck(DiffersFromCheck(fromDate, difference,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the date to check if it is less than or equal to [value]
-  AcanthisDate max(DateTime value) {
-    return withCheck(MaxDateCheck(value));
+  AcanthisDate max(DateTime value,
+      {String? message, String Function(DateTime value)? messageBuilder}) {
+    return withCheck(
+        MaxDateCheck(value, message: message, messageBuilder: messageBuilder));
   }
 
   @override

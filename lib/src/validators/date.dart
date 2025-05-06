@@ -4,9 +4,12 @@ import 'package:acanthis/src/operations/checks.dart';
 class MinDateCheck extends AcanthisCheck<DateTime> {
   final DateTime value;
 
-  const MinDateCheck(this.value)
+  MinDateCheck(this.value,
+      {String? message, String Function(DateTime value)? messageBuilder})
       : super(
-          error: 'The date must be greater than or equal to $value',
+          error: messageBuilder?.call(value) ??
+              message ??
+              'The date must be greater than or equal to $value',
           name: 'min',
         );
 
@@ -20,9 +23,12 @@ class MinDateCheck extends AcanthisCheck<DateTime> {
 class MaxDateCheck extends AcanthisCheck<DateTime> {
   final DateTime value;
 
-  const MaxDateCheck(this.value)
+  MaxDateCheck(this.value,
+      {String? message, String Function(DateTime value)? messageBuilder})
       : super(
-          error: 'The date must be less than or equal to $value',
+          error: messageBuilder?.call(value) ??
+              message ??
+              'The date must be less than or equal to $value',
           name: 'max',
         );
 
@@ -36,9 +42,12 @@ class MaxDateCheck extends AcanthisCheck<DateTime> {
 class DiffersFromNowCheck extends AcanthisCheck<DateTime> {
   final Duration difference;
 
-  const DiffersFromNowCheck(this.difference)
+  DiffersFromNowCheck(this.difference,
+      {String? message, String Function(Duration difference)? messageBuilder})
       : super(
-          error: 'The date must differ from now by $difference or more',
+          error: messageBuilder?.call(difference) ??
+              message ??
+              'The date must differ from now by $difference or more',
           name: 'differsFromNow',
         );
 
@@ -53,9 +62,13 @@ class DiffersFromCheck extends AcanthisCheck<DateTime> {
   final DateTime fromDate;
   final Duration difference;
 
-  const DiffersFromCheck(this.fromDate, this.difference)
+  DiffersFromCheck(this.fromDate, this.difference,
+      {String? message,
+      String Function(DateTime fromDate, Duration difference)? messageBuilder})
       : super(
-          error: 'The date must differ from $fromDate by $difference or more',
+          error: messageBuilder?.call(fromDate, difference) ??
+              message ??
+              'The date must differ from $fromDate by $difference or more',
           name: 'differsFrom',
         );
 

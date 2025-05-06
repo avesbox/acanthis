@@ -96,16 +96,15 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     for (var field in _fields.entries) {
       final key = field.key;
       final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
+      final isNullable = field.value is AcanthisNullable;
+      final passedValue = value[key];
+      if (passedValue == null && !isOptional && !isNullable) {
         throw ValidationError('Field $field is required');
       }
-      if (value[key] == null &&
-          isOptional &&
-          field.value is! AcanthisNullable) {
+      if (passedValue == null && isOptional && !isNullable) {
         continue;
       }
       final fieldValue = field.value;
-      final passedValue = value[key];
       if (fieldValue is LazyEntry) {
         parsed[key] = fieldValue.parse(passedValue, this).value;
       } else {
@@ -144,9 +143,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         }
       }
     }
-    final result = super.parse(parsed);
-    return AcanthisParseResult(
-        value: result.value, metadata: MetadataRegistry().get(key));
+    return super.parse(parsed);
   }
 
   @override
@@ -207,9 +204,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             'The dependency or dependFrom field does not exist in the map');
       }
     }
-    final result = await super.parseAsync(parsed);
-    return AcanthisParseResult(
-        value: result.value, metadata: MetadataRegistry().get(key));
+    return await super.parseAsync(parsed);
   }
 
   @override
@@ -290,7 +285,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         value: result.value,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key));
+        metadata: result.metadata);
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -373,7 +368,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         value: parsed,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key));
+        metadata: result.metadata);
   }
 
   /// Add a field dependency to the map to validate the map based on the [condition]
@@ -506,18 +501,30 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   /// Add a check to the map to check if it has at least [length] elements
-  AcanthisMap<V> maxProperties(int constraint) {
-    return withCheck(MaxPropertiesCheck(constraintValue: constraint));
+  AcanthisMap<V> maxProperties(int constraint,
+      {String? message, String Function(int constraintValue)? messageBuilder}) {
+    return withCheck(MaxPropertiesCheck(
+        constraintValue: constraint,
+        message: message,
+        messageBuilder: messageBuilder));
   }
 
   /// Add a check to the map to check if it has at most [length] elements
-  AcanthisMap<V> minProperties(int constraint) {
-    return withCheck(MinPropertiesCheck(constraintValue: constraint));
+  AcanthisMap<V> minProperties(int constraint,
+      {String? message, String Function(int constraintValue)? messageBuilder}) {
+    return withCheck(MinPropertiesCheck(
+        constraintValue: constraint,
+        message: message,
+        messageBuilder: messageBuilder));
   }
 
   /// Add a check to the map to check if it has exactly [length] elements
-  AcanthisMap<V> lengthProperties(int constraint) {
-    return withCheck(LengthPropertiesCheck(constraintValue: constraint));
+  AcanthisMap<V> lengthProperties(int constraint,
+      {String? message, String Function(int constraintValue)? messageBuilder}) {
+    return withCheck(LengthPropertiesCheck(
+        constraintValue: constraint,
+        message: message,
+        messageBuilder: messageBuilder));
   }
 
   @override

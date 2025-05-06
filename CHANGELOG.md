@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.3
+
+refactor: improve overall code quality and performance.
+feat: allow custom error message for all validators.
+
 ## 1.2.2
 
 - refactor: add possiblity to use both String and RegExp for `AcanthisString#pattern` validator.

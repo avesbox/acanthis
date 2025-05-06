@@ -24,12 +24,15 @@ abstract class AcanthisType<O> {
   /// A string that indicates the key of the type
   final String key;
 
+  final bool _shouldAddMetadata;
+
   /// The constructor of the class
   const AcanthisType(
       {List<AcanthisOperation<O>> operations = const [],
       this.isAsync = false,
       this.key = ''})
-      : __operations = operations;
+      : __operations = operations,
+        _shouldAddMetadata = key != '';
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -43,7 +46,7 @@ abstract class AcanthisType<O> {
           value: value,
           errors: {},
           success: true,
-          metadata: MetadataRegistry().get(key));
+          metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
     }
     O newValue = value;
     for (var operation in operations) {
@@ -61,7 +64,8 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue, metadata: MetadataRegistry().get(key));
+        value: newValue,
+        metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
   }
 
   /// The tryParse method to try to parse the value
@@ -102,7 +106,7 @@ abstract class AcanthisType<O> {
         value: newValue,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key));
+        metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
   }
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
@@ -113,7 +117,7 @@ abstract class AcanthisType<O> {
           value: value,
           errors: {},
           success: true,
-          metadata: MetadataRegistry().get(key));
+          metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
     }
     O newValue = value;
     for (var operation in operations) {
@@ -136,7 +140,8 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult<O>(
-        value: newValue, metadata: MetadataRegistry().get(key));
+        value: newValue,
+        metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
   }
 
   /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
@@ -178,7 +183,7 @@ abstract class AcanthisType<O> {
         value: newValue,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key));
+        metadata: _shouldAddMetadata ? MetadataRegistry().get(key) : null);
   }
 
   /// Add a check to the type

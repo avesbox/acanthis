@@ -31,8 +31,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
         throw ValidationError(e.toString());
       }
     }
-    return Future.value(AcanthisParseResult(
-        value: parsed, metadata: MetadataRegistry().get(key)));
+    return super.parseAsync(parsed);
   }
 
   @override
@@ -57,11 +56,15 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
         errors[i.toString()] = e.toString();
       }
     }
-    return Future.value(AcanthisParseResult(
-        value: parsed,
+    final result = await super.tryParseAsync(parsed);
+    if (result.errors.isNotEmpty) {
+      errors.addAll(result.errors);
+    }
+    return AcanthisParseResult(
+        value: result.value,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key)));
+        metadata: result.metadata);
   }
 
   @override
@@ -79,8 +82,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
         throw ValidationError(e.toString());
       }
     }
-    return AcanthisParseResult(
-        value: parsed, metadata: MetadataRegistry().get(key));
+    return super.parse(parsed);
   }
 
   @override
@@ -105,11 +107,15 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
         errors[i.toString()] = e.toString();
       }
     }
+    final result = super.tryParse(parsed);
+    if (result.errors.isNotEmpty) {
+      errors.addAll(result.errors);
+    }
     return AcanthisParseResult(
-        value: parsed,
+        value: result.value,
         errors: errors,
         success: errors.isEmpty,
-        metadata: MetadataRegistry().get(key));
+        metadata: result.metadata);
   }
 
   @override

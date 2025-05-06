@@ -38,13 +38,17 @@ export default defineConfig({
         link: '/defining-schemas',
       },
       {
+        text: 'Customizing Errors',
+        link: '/error-customization',
+      },
+      {
         text: 'Metadata',
         link: '/metadata',
       },
       {
         text: 'JSON Schema',
         link: '/json-schema',
-      }
+      },
     ],
     footer: {
       copyright: 'Copyright © 2024 Avesbox',

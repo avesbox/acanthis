@@ -23,9 +23,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       final parsedElement = await element.parseAsync(value[i]);
       parsed.add(parsedElement.value);
     }
-    final result = await super.parseAsync(parsed);
-    return AcanthisParseResult(
-        value: result.value, metadata: MetadataRegistry().get(key));
+    return await super.parseAsync(parsed);
   }
 
   @override
@@ -41,9 +39,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final result = await super.tryParseAsync(parsed);
     return AcanthisParseResult(
-        value: result.value,
-        errors: result.errors,
-        metadata: MetadataRegistry().get(key));
+        value: result.value, errors: result.errors, metadata: result.metadata);
   }
 
   /// Override of [parse] from [AcanthisType]
@@ -53,13 +49,11 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
     }
-    final result = super.parse(List.generate(
+    return super.parse(List.generate(
       value.length,
       (index) => element.parse(value[index]).value,
       growable: false,
     ));
-    return AcanthisParseResult(
-        value: result.value, metadata: MetadataRegistry().get(key));
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -83,7 +77,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
         value: result.value,
         errors: errors..addAll(result.errors),
         success: _recursiveSuccess(errors),
-        metadata: MetadataRegistry().get(key));
+        metadata: result.metadata);
   }
 
   bool _recursiveSuccess(Map<String, dynamic> errors) {
@@ -97,35 +91,45 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   /// Add a check to the list to check if it is at least [length] elements long
-  AcanthisList<T> min(int length) {
-    return withCheck(MinItemsListCheck(length));
+  AcanthisList<T> min(int length,
+      {String? message, String Function(int minItems)? messageBuilder}) {
+    return withCheck(MinItemsListCheck(length,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the list to check if it contains at least one of the [values]
-  AcanthisList<T> anyOf(List<T> values) {
-    return withCheck(AnyOfListCheck<T>(values));
+  AcanthisList<T> anyOf(List<T> values,
+      {String? message, String Function(List<T> items)? messageBuilder}) {
+    return withCheck(AnyOfListCheck<T>(values,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the list to check if it contains all of the [values]
-  AcanthisList<T> everyOf(List<T> values) {
-    return withCheck(EveryOfListCheck<T>(values));
+  AcanthisList<T> everyOf(List<T> values,
+      {String? message, String Function(List<T> items)? messageBuilder}) {
+    return withCheck(EveryOfListCheck<T>(values,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the list to check if it is at most [length] elements long
-  AcanthisList<T> max(int length) {
-    return withCheck(MaxItemsListCheck<T>(length));
+  AcanthisList<T> max(int length,
+      {String? message, String Function(int maxItems)? messageBuilder}) {
+    return withCheck(MaxItemsListCheck<T>(length,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the list to check if all elements are unique
   ///
   /// In Zod is the same as creating a set.
-  AcanthisList<T> unique() {
-    return withCheck(UniqueItemsListCheck<T>());
+  AcanthisList<T> unique({String? message}) {
+    return withCheck(UniqueItemsListCheck<T>(message: message));
   }
 
   /// Add a check to the list to check if it has exactly [value] elements
-  AcanthisList<T> length(int value) {
-    return withCheck(LengthListCheck(value));
+  AcanthisList<T> length(int value,
+      {String? message, String Function(int length)? messageBuilder}) {
+    return withCheck(LengthListCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Returns the element type of the list

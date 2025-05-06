@@ -13,172 +13,194 @@ class AcanthisString extends AcanthisType<String> {
   const AcanthisString({super.isAsync, super.operations, super.key});
 
   /// Add a check to the string to check if it is a valid email
-  AcanthisString email() {
-    return withCheck(EmailStringCheck());
+  AcanthisString email({String? message}) {
+    return withCheck(EmailStringCheck(message: message));
   }
 
   /// Add a check to the string to check if its length is at least [length]
-  AcanthisString min(int length) {
-    return withCheck(MinStringLengthCheck(length));
+  AcanthisString min(int length,
+      {String? message, String Function(int value)? messageBuilder}) {
+    return withCheck(MinStringLengthCheck(length,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if its length is at most [length]
-  AcanthisString max(int length) {
-    return withCheck(MaxStringLengthCheck(length));
+  AcanthisString max(int length,
+      {String? message, String Function(int value)? messageBuilder}) {
+    return withCheck(MaxStringLengthCheck(length,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if follows the pattern [pattern]
-  AcanthisString pattern(Pattern pattern) {
-    return withCheck(PatternStringCheck(pattern));
+  AcanthisString pattern(Pattern pattern, {String? message}) {
+    return withCheck(PatternStringCheck(pattern, message: message));
   }
 
   /// Add a check to the string to check if it contains letters
-  AcanthisString letters({bool strict = true}) {
-    return withCheck(PatternLettersStringChecks(strict: strict));
+  AcanthisString letters({bool strict = true, String? message}) {
+    return withCheck(
+        PatternLettersStringChecks(strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it contains digits
-  AcanthisString digits({bool strict = true}) {
-    return withCheck(PatternDigitsStringChecks(strict: strict));
+  AcanthisString digits({bool strict = true, String? message}) {
+    return withCheck(
+        PatternDigitsStringChecks(strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters
-  AcanthisString alphanumeric({bool strict = true}) {
-    return withCheck(PatternAlphanumericStringChecks(strict: strict));
+  AcanthisString alphanumeric({bool strict = true, String? message}) {
+    return withCheck(
+        PatternAlphanumericStringChecks(strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters and spaces
-  AcanthisString alphanumericWithSpaces({bool strict = true}) {
-    return withCheck(PatternAlphanumericWithSpacesStringChecks(strict: strict));
+  AcanthisString alphanumericWithSpaces({bool strict = true, String? message}) {
+    return withCheck(PatternAlphanumericWithSpacesStringChecks(
+        strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it contains special characters
-  AcanthisString specialCharacters({bool strict = true}) {
-    return withCheck(PatternSpecialCharactersStringChecks(strict: strict));
+  AcanthisString specialCharacters({bool strict = true, String? message}) {
+    return withCheck(
+        PatternSpecialCharactersStringChecks(strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it contains all characters
-  AcanthisString allCharacters({bool strict = true}) {
-    return withCheck(PatternAllCharactersStringChecks(strict: strict));
+  AcanthisString allCharacters({bool strict = true, String? message}) {
+    return withCheck(
+        PatternAllCharactersStringChecks(strict: strict, message: message));
   }
 
   /// Add a check to the string to check if it is in uppercase
-  AcanthisString upperCase() {
-    return withCheck(UpperCaseStringCheck());
+  AcanthisString upperCase({String? message}) {
+    return withCheck(UpperCaseStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it is in lowercase
-  AcanthisString lowerCase() {
-    return withCheck(LowerCaseStringCheck());
+  AcanthisString lowerCase({String? message}) {
+    return withCheck(LowerCaseStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it is in mixed case
-  AcanthisString mixedCase() {
-    return withCheck(MixedCaseStringCheck());
+  AcanthisString mixedCase({String? message}) {
+    return withCheck(MixedCaseStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it is a valid date time
-  AcanthisString dateTime() {
-    return withCheck(DateTimeStringCheck());
+  AcanthisString dateTime({String? message}) {
+    return withCheck(DateTimeStringCheck(message: message));
   }
 
-  AcanthisString time() {
-    return withCheck(PatternTimeStringChecks());
+  AcanthisString time({String? message}) {
+    return withCheck(PatternTimeStringChecks(message: message));
   }
 
-  AcanthisString hexColor() {
-    return withCheck(PatternHexColorStringChecks());
+  AcanthisString hexColor({String? message}) {
+    return withCheck(PatternHexColorStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid uri
-  AcanthisString uri() {
-    return withCheck(UriStringCheck());
+  AcanthisString uri({String? message}) {
+    return withCheck(UriStringCheck(message: message));
   }
 
-  AcanthisString url() {
-    return withCheck(UrlStringCheck());
+  AcanthisString url({String? message}) {
+    return withCheck(UrlStringCheck(message: message));
   }
 
-  AcanthisString uncompromised() {
-    return withAsyncCheck(UncompromisedStringCheck());
+  AcanthisString uncompromised({String? message}) {
+    return withAsyncCheck(UncompromisedStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it is not empty
-  AcanthisString required() {
-    return withCheck(RequiredStringCheck());
+  AcanthisString required({String? message}) {
+    return withCheck(RequiredStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it's length is exactly [length]
-  AcanthisString length(int length) {
-    return withCheck(ExactStringLengthCheck(length));
+  AcanthisString length(int length,
+      {String? message, String Function(int value)? messageBuilder}) {
+    return withCheck(ExactStringLengthCheck(length,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if it contains [value]
-  AcanthisString contains(String value) {
-    return withCheck(ContainsStringCheck(value));
+  AcanthisString contains(String value,
+      {String? message, String Function(String value)? messageBuilder}) {
+    return withCheck(ContainsStringCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if it starts with [value]
-  AcanthisString startsWith(String value) {
-    return withCheck(StartsWithStringCheck(value));
+  AcanthisString startsWith(String value,
+      {String? message, String Function(String value)? messageBuilder}) {
+    return withCheck(StartsWithStringCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if it ends with [value]
-  AcanthisString endsWith(String value) {
-    return withCheck(EndsWithStringCheck(value));
+  AcanthisString endsWith(String value,
+      {String? message, String Function(String value)? messageBuilder}) {
+    return withCheck(EndsWithStringCheck(value,
+        message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a check to the string to check if it is a valid card number
-  AcanthisString card() {
-    return withCheck(CardStringCheck());
+  AcanthisString card({String? message}) {
+    return withCheck(CardStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it is a value in the [enumValues]
-  AcanthisString enumerated<T extends Enum>(List<T> enumValues) {
+  AcanthisString enumerated<T extends Enum>(List<T> enumValues,
+      {String? message}) {
     if (enumValues.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
     }
-    return withCheck(EnumeratedStringCheck(enumValues: enumValues));
+    return withCheck(
+        EnumeratedStringCheck(enumValues: enumValues, message: message));
   }
 
   /// Add a check to the string to check if it is a valid cuid
-  AcanthisString cuid() {
-    return withCheck(PatternCuidStringChecks());
+  AcanthisString cuid({String? message}) {
+    return withCheck(PatternCuidStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid cuid2
-  AcanthisString cuid2() {
-    return withCheck(PatternCuid2StringChecks());
+  AcanthisString cuid2({String? message}) {
+    return withCheck(PatternCuid2StringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid ulid
-  AcanthisString ulid() {
-    return withCheck(PatternUlidStringChecks());
+  AcanthisString ulid({String? message}) {
+    return withCheck(PatternUlidStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid uuid
-  AcanthisString uuid() {
-    return withCheck(PatternUuidStringChecks());
+  AcanthisString uuid({String? message}) {
+    return withCheck(PatternUuidStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid nanoid
-  AcanthisString nanoid() {
-    return withCheck(PatternNanoidStringChecks());
+  AcanthisString nanoid({String? message}) {
+    return withCheck(PatternNanoidStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid jwt
-  AcanthisString jwt() {
-    return withCheck(PatternJwtStringChecks());
+  AcanthisString jwt({String? message}) {
+    return withCheck(PatternJwtStringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid base64 string
-  AcanthisString base64() {
-    return withCheck(PatternBase64StringChecks());
+  AcanthisString base64({String? message}) {
+    return withCheck(PatternBase64StringChecks(message: message));
   }
 
   /// Add a check to the string to check if it is a valid hex color
-  AcanthisString exact(String value) {
-    return withCheck(ExactCheck<String>(value: value));
+  AcanthisString exact(String value,
+      {String? message, String Function(String value)? messageBuilder}) {
+    return withCheck(ExactCheck<String>(
+        value: value, message: message, messageBuilder: messageBuilder));
   }
 
   /// Add a transformation to the string to encode it to base64

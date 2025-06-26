@@ -151,14 +151,24 @@ class AcanthisString extends AcanthisType<String> {
     return withCheck(CardStringCheck(message: message));
   }
 
-  /// Add a check to the string to check if it is a value in the [enumValues]
-  AcanthisString enumerated<T extends Enum>(List<T> enumValues,
-      {String? message}) {
+  /// Add a check to the string to check if it is a value in the [enumValues].
+  /// uses [enumvalues[index].name] for the comparison, but you can provide a [nameTransformer] to transform the name property of any item on the list.
+  ///
+  /// - [nameTransformer] A function to transform the name property of every item on the list.
+  ///                     If not provided, the name property of the item will be used as the name of the enum value.
+  ///                     TIP: use conditional logic on [name] to perform different validations on different enum values.
+  AcanthisString enumerated<T extends Enum>(
+    List<T> enumValues, {
+    String? message,
+    String Function(String name)? nameTransformer,
+  }) {
     if (enumValues.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
     }
-    return withCheck(
-        EnumeratedStringCheck(enumValues: enumValues, message: message));
+    return withCheck(EnumeratedStringCheck(
+        enumValues: enumValues,
+        nameTransformer: nameTransformer,
+        message: message));
   }
 
   /// Add a check to the string to check if it is a valid cuid

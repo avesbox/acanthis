@@ -20,7 +20,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.2.0"
+    version: "1.2.3"
   analyzer:
     dependency: transitive
     description:

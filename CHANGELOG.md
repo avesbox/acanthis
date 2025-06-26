@@ -1,9 +1,14 @@
 # Changelog
 
+## 1.3.0
+
+- feat: add `AcanthisString#contained` to check if the string is one of the contained values.
+- fix: `AcanthisString#enumerated` now accepts a optional parameter `nameTransformer` to transform the name property of the enum values if needed. [#12](https://github.com/avesbox/acanthis/pull/12) by [Hanibachi](https://github.com/Hanibachi)
+
 ## 1.2.3
 
-refactor: improve overall code quality and performance.
-feat: allow custom error message for all validators.
+- refactor: improve overall code quality and performance.
+- feat: allow custom error message for all validators.
 
 ## 1.2.2
 

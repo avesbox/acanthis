@@ -25,7 +25,8 @@ string().alphanumeric();
 string().alphanumericWithSpaces();
 string().specialCharacters();
 string().allCharacters();
-string().enumerated(['Acanthis', 'Dart']);
+string().contained(TestEnum.values);
+string().contained(['Acanthis', 'Dart']);
 string().exact('Acanthis');
 ```
 

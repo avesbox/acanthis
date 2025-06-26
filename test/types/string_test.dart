@@ -1129,6 +1129,19 @@ void main() {
   );
 
   test(
+    'when creating an enumerated string validator with a nameTransformer, and the string is in the list of valid values, then the result should be successful',
+    () {
+      final string = acanthis.string().enumerated(TestEnum.values, nameTransformer: (value) => value.toUpperCase());
+      final result = string.tryParse('TEST');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('TEST');
+      expect(resultParse.success, true);
+    },
+  );
+
+  test(
     'when creating an enumerated string validator, and the string is not in the list of valid values, then the result should be unsuccessful',
     () {
       final string = acanthis.string().enumerated(TestEnum.values);
@@ -1138,6 +1151,35 @@ void main() {
 
       expect(
           () => string.parse('test1'),
+          throwsA(
+            TypeMatcher<ValidationError>(),
+          ));
+    },
+  );
+
+  test(
+    'when creating an contained string validator, and the string is in the list of valid values, then the result should be successful',
+    () {
+      final string = acanthis.string().contained(['test', 'test2']);
+      final result = string.tryParse('test');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('test');
+      expect(resultParse.success, true);
+    },
+  );
+
+  test(
+    'when creating an contained string validator, and the string is not in the list of valid values, then the result should be unsuccessful',
+    () {
+      final string = acanthis.string().contained(['test', 'test2']);
+      final result = string.tryParse('test3');
+
+      expect(result.success, false);
+
+      expect(
+          () => string.parse('test3'),
           throwsA(
             TypeMatcher<ValidationError>(),
           ));

@@ -170,6 +170,16 @@ class AcanthisString extends AcanthisType<String> {
         nameTransformer: nameTransformer,
         message: message));
   }
+  
+  /// Add a check to the string to check if it is a value in the [enumValues]
+  AcanthisString contained(Iterable<String> values,
+      {String? message, String Function(Iterable<String> value)? messageBuilder}) {
+    if (values.isEmpty) {
+      throw ArgumentError('Values cannot be empty');
+    }
+    return withCheck(
+        ContainedStringCheck(values: values, message: message, messageBuilder: messageBuilder));
+  }
 
   /// Add a check to the string to check if it is a valid cuid
   AcanthisString cuid({String? message}) {

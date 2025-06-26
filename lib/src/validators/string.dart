@@ -408,6 +408,26 @@ class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
   }
 }
 
+/// String Check for contained String validation.
+class ContainedStringCheck extends AcanthisCheck<String> {
+  final Iterable<String> values;
+
+  ContainedStringCheck(
+      {required this.values,
+      String? message,
+      String Function(Iterable<String> values)? messageBuilder})
+      : super(
+            error: messageBuilder?.call(values) ??
+                message ??
+                'Value must be one of the enumerated values',
+            name: 'enumerated');
+
+  @override
+  bool call(String value) {
+    return values.contains(value);
+  }
+}
+
 /// String Check for non-empty String validation.
 class RequiredStringCheck extends AcanthisCheck<String> {
   const RequiredStringCheck({String? message})

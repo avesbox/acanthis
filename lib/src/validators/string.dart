@@ -394,7 +394,7 @@ class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
       {required this.enumValues,
       this.nameTransformer,
       String? message,
-      String Function(List<Enum> enumValues)? messageBuilder})
+      String Function(List<T> enumValues)? messageBuilder})
       : super(
             error: messageBuilder?.call(enumValues) ??
                 message ??
@@ -403,12 +403,8 @@ class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
 
   @override
   bool call(String value) {
-    return enumValues.any((enumV) =>
-        value ==
-        switch (nameTransformer != null) {
-          true => nameTransformer!(enumV.name),
-          false => enumV.name,
-        });
+    return enumValues.any(
+        (entry) => value == (nameTransformer?.call(entry.name) ?? entry.name));
   }
 }
 

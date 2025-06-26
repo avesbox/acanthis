@@ -1131,7 +1131,8 @@ void main() {
   test(
     'when creating an enumerated string validator with a nameTransformer, and the string is in the list of valid values, then the result should be successful',
     () {
-      final string = acanthis.string().enumerated(TestEnum.values, nameTransformer: (value) => value.toUpperCase());
+      final string = acanthis.string().enumerated(TestEnum.values,
+          nameTransformer: (value) => value.toUpperCase());
       final result = string.tryParse('TEST');
 
       expect(result.success, true);

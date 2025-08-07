@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1
+
+- fix: wrong error messages for missing keys when parsing maps [#13](https://github.com/avesbox/acanthis/pull/13) by [jesus-gueyp](https://github.com/jesus-gueyp)
+
+>
+
 ## 1.3.0
 
 - feat: add `AcanthisString#contained` to check if the string is one of the contained values.

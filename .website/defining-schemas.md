@@ -4,6 +4,10 @@ To validate data, you need to define a schema. A schema is a blueprint that desc
 
 ## String
 
+::: warning Deprecated
+`string().required()` is deprecated in Acanthis 1.3.1. The validator was ambiguous and has been replaced with `string().notEmpty()`
+:::
+
 Acanthis provides many built-in validators for string validation and transformation. To perform some common validations:
 
 ```dart
@@ -18,7 +22,7 @@ string().endsWith('Acanthis');
 string().upperCase();
 string().lowerCase();
 string().mixedCase();
-string().required();
+string().notEmpty();
 string().digits();
 string().letters();
 string().alphanumeric();

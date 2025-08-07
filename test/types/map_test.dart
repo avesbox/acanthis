@@ -28,7 +28,33 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => map.parse({}), throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        result.errors,
+        equals(
+          {
+            'key': {
+              'required': 'Field is required',
+              'minLength':
+                  'Value must be greater than or equal to 5 characters long',
+              'maxLength':
+                  'Value must be less than or equal to 20 characters long',
+            }
+          },
+        ),
+      );
+
+      expect(
+        () => map.parse({}),
+        throwsA(
+          TypeMatcher<ValidationError>().having(
+            (error) => error.message,
+            'ValidationError message property contains every check error message',
+            equals(
+              'Field key is required.\nValue must be greater than or equal to 5 characters long.\nValue must be less than or equal to 20 characters long.',
+            ),
+          ),
+        ),
+      );
     });
 
     test(

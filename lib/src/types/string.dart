@@ -114,8 +114,15 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   /// Add a check to the string to check if it is not empty
+  @Deprecated(
+      'Use notEmpty() instead; required() will be removed in a future release.')
   AcanthisString required({String? message}) {
     return withCheck(RequiredStringCheck(message: message));
+  }
+
+  /// Add a check to the string to check if it is not empty
+  AcanthisString notEmpty({String? message}) {
+    return withCheck(NotEmptyStringCheck(message: message));
   }
 
   /// Add a check to the string to check if it's length is exactly [length]

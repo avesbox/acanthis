@@ -99,7 +99,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final isNullable = field.value is AcanthisNullable;
       final passedValue = value[key];
       if (passedValue == null && !isOptional && !isNullable) {
-        final checks = field.value.operations.cast<AcanthisCheck>();
+        final checks = field.value.operations.whereType<AcanthisCheck>();
         final validationErrors = [
           'Field $key is required',
           for (final check in checks) check.error,
@@ -163,7 +163,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final key = entry.key;
       final isOptional = _optionalFields.contains(key);
       if (!value.containsKey(key) && !isOptional) {
-        final checks = entry.value.operations.cast<AcanthisCheck>();
+        final checks = entry.value.operations.whereType<AcanthisCheck>();
         final validationErrors = [
           'Field $key is required',
           for (final check in checks) check.error,
@@ -233,7 +233,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (!passedValue.containsKey(key) &&
           !isOptional &&
           field.value is! AcanthisNullable) {
-        final checks = field.value.operations.cast<AcanthisCheck>();
+        final checks = field.value.operations.whereType<AcanthisCheck>();
         final validationErrors = {
           'required': 'Field is required',
           for (final check in checks) check.name: check.error,
@@ -321,7 +321,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final key = field.key;
       final isOptional = _optionalFields.contains(key);
       if (!value.containsKey(key) && !isOptional) {
-        final checks = field.value.operations.cast<AcanthisCheck>();
+        final checks = field.value.operations.whereType<AcanthisCheck>();
         final validationErrors = {
           'required': 'Field is required',
           for (final check in checks) check.name: check.error,

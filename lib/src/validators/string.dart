@@ -439,6 +439,17 @@ class RequiredStringCheck extends AcanthisCheck<String> {
   }
 }
 
+/// String Check for non-empty String validation.
+class NotEmptyStringCheck extends AcanthisCheck<String> {
+  const NotEmptyStringCheck({String? message})
+      : super(error: message ?? 'Value must not be empty', name: 'notEmpty');
+
+  @override
+  bool call(String value) {
+    return value.isNotEmpty;
+  }
+}
+
 /// String check for containing a specific substring.
 class ContainsStringCheck extends AcanthisCheck<String> {
   final String value;

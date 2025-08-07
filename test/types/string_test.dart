@@ -147,6 +147,7 @@ void main() {
         'when creating a string validator with a required check,'
         'and the string is empty, '
         'then the result should be unsuccessful', () {
+      // ignore: deprecated_member_use_from_same_package
       final string = acanthis.string().required();
       final result = string.tryParse('');
 
@@ -159,7 +160,34 @@ void main() {
         'when creating a string validator with a required check,'
         'and the string is not empty, '
         'then the result should be successful', () {
+      // ignore: deprecated_member_use_from_same_package
       final string = acanthis.string().required();
+      final result = string.tryParse('test');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('test');
+
+      expect(resultParse.success, true);
+    });
+
+    test(
+        'when creating a string validator with a notEmpty check,'
+        'and the string is empty, '
+        'then the result should be unsuccessful', () {
+      final string = acanthis.string().notEmpty();
+      final result = string.tryParse('');
+
+      expect(result.success, false);
+
+      expect(() => string.parse(''), throwsA(TypeMatcher<ValidationError>()));
+    });
+
+    test(
+        'when creating a string validator with a notEmpty check,'
+        'and the string is not empty, '
+        'then the result should be successful', () {
+      final string = acanthis.string().notEmpty();
       final result = string.tryParse('test');
 
       expect(result.success, true);

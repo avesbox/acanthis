@@ -99,7 +99,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final isNullable = field.value is AcanthisNullable;
       final passedValue = value[key];
       if (passedValue == null && !isOptional && !isNullable) {
-        throw ValidationError('Field $field is required');
+        final checks = field.value.operations.whereType<AcanthisCheck>();
+        final validationErrors = [
+          'Field $key is required',
+          for (final check in checks) check.error,
+        ];
+        final errorMessage = '${validationErrors.join('.\n')}.';
+
+        throw ValidationError(errorMessage);
       }
       if (passedValue == null && isOptional && !isNullable) {
         continue;
@@ -156,7 +163,14 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final key = entry.key;
       final isOptional = _optionalFields.contains(key);
       if (!value.containsKey(key) && !isOptional) {
-        throw ValidationError('Field $key is required');
+        final checks = entry.value.operations.whereType<AcanthisCheck>();
+        final validationErrors = [
+          'Field $key is required',
+          for (final check in checks) check.error,
+        ];
+        final errorMessage = '${validationErrors.join('.\n')}.';
+
+        throw ValidationError(errorMessage);
       }
       if (value[key] == null &&
           isOptional &&
@@ -219,7 +233,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (!passedValue.containsKey(key) &&
           !isOptional &&
           field.value is! AcanthisNullable) {
-        errors[key] = {'required': 'Field is required'};
+        final checks = field.value.operations.whereType<AcanthisCheck>();
+        final validationErrors = {
+          'required': 'Field is required',
+          for (final check in checks) check.name: check.error,
+        };
+
+        errors[key] = validationErrors;
         continue;
       }
       if (passedValue[key] == null &&
@@ -301,7 +321,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final key = field.key;
       final isOptional = _optionalFields.contains(key);
       if (!value.containsKey(key) && !isOptional) {
-        errors[key] = {'required': 'Field is required'};
+        final checks = field.value.operations.whereType<AcanthisCheck>();
+        final validationErrors = {
+          'required': 'Field is required',
+          for (final check in checks) check.name: check.error,
+        };
+
+        errors[key] = validationErrors;
         continue;
       }
       if (value[key] == null &&

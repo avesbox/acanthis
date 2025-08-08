@@ -17,7 +17,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       {super.operations, super.isAsync, super.key});
 
   @override
-  Future<AcanthisParseResult<List<T>>> parseAsync(List<T> value) async {
+  Future<AcanthisParseResult<List<T>>> parseAsync(List<dynamic> value) async {
     final parsed = <T>[];
     for (var i = 0; i < value.length; i++) {
       final parsedElement = await element.parseAsync(value[i]);
@@ -27,7 +27,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> tryParseAsync(List<T> value) async {
+  Future<AcanthisParseResult<List<T>>> tryParseAsync(List<dynamic> value) async {
     final parsed = <T>[];
     final errors = <String, dynamic>{};
     for (var i = 0; i < value.length; i++) {
@@ -44,7 +44,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Override of [parse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> parse(List<T> value) {
+  AcanthisParseResult<List<T>> parse(List<dynamic> value) {
     if (isAsync) {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
@@ -58,7 +58,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> tryParse(List<T> value) {
+  AcanthisParseResult<List<T>> tryParse(List<dynamic> value) {
     if (isAsync) {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');

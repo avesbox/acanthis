@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+
+- fix(#14): change list parse values to dynamic values [#15](https://github.com/avesbox/acanthis/pull/15) by [francescovallone](https://github.com/francescovallone)
+
 ## 1.3.1
 
 - fix: wrong error messages for missing keys when parsing maps [#13](https://github.com/avesbox/acanthis/pull/13) by [jesus-gueyp](https://github.com/jesus-gueyp)

@@ -17,7 +17,8 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       {super.operations, super.isAsync, super.key});
 
   @override
-  Future<AcanthisParseResult<List<T>>> parseAsync(List<dynamic> value) async {
+  Future<AcanthisParseResult<List<T>>> parseAsync(
+      covariant List<dynamic> value) async {
     final parsed = <T>[];
     for (var i = 0; i < value.length; i++) {
       final parsedElement = await element.parseAsync(value[i]);
@@ -27,7 +28,8 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> tryParseAsync(List<dynamic> value) async {
+  Future<AcanthisParseResult<List<T>>> tryParseAsync(
+      covariant List<dynamic> value) async {
     final parsed = <T>[];
     final errors = <String, dynamic>{};
     for (var i = 0; i < value.length; i++) {
@@ -38,16 +40,19 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       }
     }
     final result = await super.tryParseAsync(parsed);
+    final mergedErrors = {...errors, ...result.errors};
     return AcanthisParseResult(
-        value: result.value, errors: result.errors, metadata: result.metadata);
+        value: result.value,
+        errors: mergedErrors,
+        metadata: result.metadata,
+        success: _recursiveSuccess(mergedErrors));
   }
 
   /// Override of [parse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> parse(List<dynamic> value) {
+  AcanthisParseResult<List<T>> parse(covariant List<dynamic> value) {
     if (isAsync) {
-      throw AsyncValidationException(
-          'Cannot use tryParse with async operations');
+      throw AsyncValidationException('Cannot use parse with async operations');
     }
     return super.parse(List.generate(
       value.length,
@@ -58,7 +63,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> tryParse(List<dynamic> value) {
+  AcanthisParseResult<List<T>> tryParse(covariant List<dynamic> value) {
     if (isAsync) {
       throw AsyncValidationException(
           'Cannot use tryParse with async operations');
@@ -73,10 +78,11 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       }
     }
     final result = super.tryParse(parsed);
+    final mergedErrors = {...errors, ...result.errors};
     return AcanthisParseResult(
         value: result.value,
-        errors: errors..addAll(result.errors),
-        success: _recursiveSuccess(errors),
+        errors: mergedErrors,
+        success: _recursiveSuccess(mergedErrors),
         metadata: result.metadata);
   }
 

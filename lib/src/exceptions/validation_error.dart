@@ -2,10 +2,12 @@
 class ValidationError extends Error {
   final String message;
 
-  ValidationError(this.message);
+  final String key;
+
+  ValidationError(this.message, {this.key = ''});
 
   @override
   String toString() {
-    return "ValidationError: $message";
+    return "ValidationError: $message${key.isNotEmpty ? ' ($key)' : ''}";
   }
 }

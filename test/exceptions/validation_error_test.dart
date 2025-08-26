@@ -7,5 +7,9 @@ void main() {
       final error = ValidationError('This is a test');
       expect(error.toString(), 'ValidationError: This is a test');
     });
+    test('Should return a string with the message and the key', () {
+      final error = ValidationError('This is a test', key: 'test_key');
+      expect(error.toString(), 'ValidationError: This is a test (test_key)');
+    });
   });
 }

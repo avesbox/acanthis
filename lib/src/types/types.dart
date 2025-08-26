@@ -53,7 +53,7 @@ abstract class AcanthisType<O> {
       switch (operation) {
         case AcanthisCheck<O>():
           if (!operation(newValue)) {
-            throw ValidationError(operation.error);
+            throw ValidationError(operation.error, key: operation.name);
           }
           break;
         case AcanthisTransformation<O>():
@@ -124,7 +124,7 @@ abstract class AcanthisType<O> {
       switch (operation) {
         case AcanthisCheck<O>():
           if (!operation(newValue)) {
-            throw ValidationError(operation.error);
+            throw ValidationError(operation.error, key: operation.name);
           }
           break;
         case AcanthisAsyncCheck<O>():
@@ -208,8 +208,8 @@ abstract class AcanthisType<O> {
   }
 
   /// Make the type a union
-  AcanthisUnion or(List<AcanthisType> elements) {
-    return AcanthisUnion([this, ...elements]);
+  AcanthisUnion<T> or<T>(List<dynamic> elements) {
+    return AcanthisUnion<T>([this, ...elements]);
   }
 
   /// Add a custom check to the number
@@ -278,33 +278,34 @@ class AcanthisPipeline<O, T> {
       {required this.inType, required this.outType, required this.transform});
 
   /// The parse method to parse the value
-  AcanthisParseResult parse(O value) {
+  AcanthisParseResult<T> parse(O value) {
     var inResult = inType.parse(value);
     final T newValue;
     try {
       newValue = transform(inResult.value);
     } catch (e) {
-      return AcanthisParseResult(
-          value: inResult.value,
-          errors: {'transform': 'Error transforming the value from $O -> $T'},
-          success: false);
+      throw ValidationError('Error transforming the value from $O -> $T: $e');
     }
     var outResult = outType.parse(newValue);
     return outResult;
   }
 
   /// The tryParse method to try to parse the value
-  AcanthisParseResult tryParse(O value) {
+  AcanthisParseResult<T?> tryParse(dynamic value) {
     var inResult = inType.tryParse(value);
     if (!inResult.success) {
-      return inResult;
+      return AcanthisParseResult(
+        value: null,
+        errors: inResult.errors,
+        success: false,
+      );
     }
     final T newValue;
     try {
       newValue = transform(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
-          value: inResult.value,
+          value: null,
           errors: {'transform': 'Error transforming the value from $O -> $T'},
           success: false);
     }
@@ -313,35 +314,37 @@ class AcanthisPipeline<O, T> {
   }
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
-  Future<AcanthisParseResult> parseAsync(O value) async {
+  Future<AcanthisParseResult<T>> parseAsync(O value) async {
     final inResult = await inType.parseAsync(value);
     final T newValue;
     try {
       newValue = transform(inResult.value);
     } catch (e) {
-      return AcanthisParseResult(
-          value: inResult.value,
-          errors: {'transform': 'Error transforming the value from $O -> $T'},
-          success: false);
+      throw ValidationError('Error transforming the value from $O -> $T: $e');
     }
     final outResult = await outType.parseAsync(newValue);
     return outResult;
   }
 
   /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
-  Future<AcanthisParseResult> tryParseAsync(O value) async {
+  Future<AcanthisParseResult<T?>> tryParseAsync(O value) async {
     var inResult = await inType.tryParseAsync(value);
     if (!inResult.success) {
-      return inResult;
+      return AcanthisParseResult(
+        value: null,
+        errors: inResult.errors,
+        success: false,
+      );
     }
     final T newValue;
     try {
       newValue = transform(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
-          value: inResult.value,
-          errors: {'transform': 'Error transforming the value from $O -> $T'},
-          success: false);
+        value: null,
+        errors: {'transform': 'Error transforming the value from $O -> $T'},
+        success: false,
+      );
     }
     var outResult = await outType.tryParseAsync(newValue);
     return outResult;

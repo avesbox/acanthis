@@ -1,10 +1,12 @@
 import 'package:acanthis/acanthis.dart';
 import 'package:test/test.dart';
 
+import '../test_objects/test_objects.dart';
+
 void main() {
   group('$AcanthisUnion', () {
     test("Can be created using `const`", () {
-      const AcanthisUnion([]);
+      AcanthisUnion([]);
     });
     test(
         'when creating a union validator with a string and a number,'
@@ -147,6 +149,29 @@ void main() {
       final resultParse = u.parse(null);
 
       expect(resultParse.success, true);
+    });
+
+    test(
+        'when creating a typed union validator, '
+        'and use the variant validator to validate subtypes of the main type, '
+        'then the result should be successful', () {
+      final u = union<TestVariant>([
+        variant<TestVariantA>(
+          guard: (v) => v is TestVariantA,
+          schema:
+              instance<TestVariantA>().field('value', (v) => v.value, string()),
+        ),
+        variant<TestVariantB>(
+          guard: (v) => v is TestVariantB,
+          schema: instance<TestVariantB>()
+              .field('value', (v) => v.value, number().integer()),
+        ),
+      ]);
+      final result = u.tryParse(
+        TestVariantA('This is a test'),
+      );
+
+      expect(result.success, true);
     });
   });
 }

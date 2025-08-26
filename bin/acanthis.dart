@@ -1,180 +1,110 @@
 import 'package:acanthis/acanthis.dart';
 
+class User {
+  final String name;
+  final int age;
+  final String email;
+  final DateTime birthDate;
+
+  User({
+    required this.name,
+    required this.age,
+    required this.email,
+    required this.birthDate,
+  });
+
+  @override
+  String toString() {
+    return 'User(name: $name, age: $age, email: $email, birthDate: $birthDate)';
+  }
+}
+
+abstract class Payment {}
+
+class CreditCard extends Payment {
+  final String number;
+
+  CreditCard({
+    required this.number,
+  });
+}
+
+class WireTransfer extends Payment {
+  final String iban;
+
+  WireTransfer({
+    required this.iban,
+  });
+}
+
 void main(List<String> arguments) async {
-  object({
-    'number': number(),
-    'negNumber': number(),
-    'infiniteNumber': number(),
-    'string': string(),
-    'longString': string(),
-    'boolean': boolean(),
-    'deeplyNested': object({
-      'foo': string(),
-      'num': number(),
-      'bool': boolean(),
-      'deeplyNested2': object({
-        'foo2': string(),
-        'num2': number(),
-        'bool2': boolean(),
-      }).list(),
-    }).list(),
-  }).list().tryParse([
+  final userValidator = instance<User>()
+      .field('name', (u) => u.name, string().contains('Doe'))
+      .field('age', (u) => u.age, number())
+      .field('email', (u) => u.email, string().email())
+      .field('birthDate', (u) => u.birthDate, date())
+      .withRefs((refs) =>
+          refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age))
+      .refineWithRefs((u, r) {
+    return (DateTime.now().year - r<int>('age')) ==
+        r<DateTime>('birthDate').year;
+  }, 'User must be at least 18 years old');
+  final user = User(
+      name: 'John Doe',
+      age: 30,
+      email: 'john.doe@example.com',
+      birthDate: DateTime(2015, 1, 1));
+  final result = userValidator.tryParse(user);
+  print(result.errors);
+
+  final usersMapper = classSchema<List, List<User>>()
+      .input(object({
+    'name': string().min(1),
+    'age': number().integer().gte(0),
+    'email': string().email(),
+    'birthDate': date(),
+  }).list())
+      .map((m) {
+    return m.map((item) {
+      return User(
+        name: item['name'],
+        age: item['age'],
+        email: item['email'],
+        birthDate: item['birthDate'],
+      );
+    }).toList();
+  }).build();
+  final usersResult = usersMapper.tryParse([
     {
-      'number': 123,
-      'negNumber': -123,
-      'infiniteNumber': double.infinity,
-      'string': 'Hello, World!',
-      'longString': 'This is a long string that exceeds the normal length.',
-      'boolean': true,
-      'deeplyNested': [
-        {
-          'foo': 'bar',
-          'num': 456,
-          'bool': false,
-          'deeplyNested2': [
-            {
-              'foo2': 'baz',
-              'num2': 789,
-              'bool2': true,
-            },
-            {
-              'foo2': 'qux',
-              'num2': 101112,
-              'bool2': false,
-            },
-          ],
-        },
-        {
-          'foo': 'quux',
-          'num': 131415,
-          'bool': true,
-          'deeplyNested2': [
-            {
-              'foo2': 'corge',
-              'num2': 161718,
-              'bool2': false,
-            },
-            {
-              'foo2': 'grault',
-              'num2': 192021,
-              'bool2': true,
-            },
-          ],
-        },
-      ],
+      'name': 'Jane Doe',
+      'age': 25,
+      'email': 'jane.doe@example.com',
+      'birthDate': DateTime(1995, 5, 15),
     },
     {
-      'number': 456,
-      'negNumber': -456,
-      'infiniteNumber': double.infinity,
-      'string': 'Goodbye, World!',
-      'longString':
-          'This is another long string that exceeds the normal length.',
-      'boolean': false,
-      'deeplyNested': [
-        {
-          'foo': 'qux',
-          'num': 101112,
-          'bool': true,
-          'deeplyNested2': [
-            {
-              'foo2': 'quux',
-              'num2': 131415,
-              'bool2': false,
-            },
-            {
-              'foo2': 'corge',
-              'num2': 161718,
-              'bool2': true,
-            },
-          ],
-        },
-        {
-          'foo': 'grault',
-          'num': 192021,
-          'bool': false,
-          'deeplyNested2': [
-            {
-              'foo2': 'garply',
-              'num2': 222324,
-              'bool2': true,
-            },
-            {
-              'foo2': 'waldo',
-              'num2': 252627,
-              'bool2': false,
-            },
-          ],
-        },
-      ],
+      'name': 'John Smith',
+      'age': 30,
+      'email': 'john.smith@example.com',
+      'birthDate': DateTime(1990, 10, 20),
     },
   ]);
+  print(usersResult.value);
 
-//   final list = acanthis
-//       .string()
-//       .max(5)
-//       .list()
-//       .max(3)
-//       .transform((value) => value.map((e) => e.toUpperCase()).toList());
+  final creditCard = CreditCard(number: '4111111111111111');
+  final wireTransfer = WireTransfer(iban: 'DE89370400440532013000');
 
-//   final parsedList = list.tryParse(['Hello', 'World', 'hello']);
-
-//   final number = acanthis.number().pow(2).gte(5);
-//   print(number.tryParse(3));
-//   print(parsed);
-//   print(parsedList);
-
-//   final union = acanthis.union([
-//     acanthis.number(),
-//     acanthis.string(),
-//   ]);
-
-//   print(union.tryParse(DateTime.now()));
-
-//   // final schema = acanthis.object({
-//   //   'email': acanthis.string().email(),
-//   //   'password': acanthis.string().min(8).allCharacters().mixedCase().uncompromised(),
-//   //   'confirmPassword': acanthis.string().min(8).allCharacters().mixedCase().uncompromised()
-//   // }).addFieldDependency(
-//   //   dependent: 'password',
-//   //   dependendsOn: 'confirmPassword',
-//   //   dependency: (password, confirmPassword) => password == confirmPassword
-//   // );
-
-//   // final result = await schema.tryParseAsync({
-//   //   'email': 'test@example.com',
-//   //   'password': r'Nq;CRa7rZ)%pGm5$MB_j].',
-//   //   'confirmPassword': r'Nq;CRa7rZ)%pGm5$MB_j].'
-//   // });
-
-//   // print(result);
-
-//   final schema = acanthis.object({
-//     'name': acanthis.string().min(5),
-//     'subcategories': lazy((parent) => parent.list().min(1)),
-//   });
-
-//   final r = schema.tryParse({
-//     'name': 'Hello',
-//     'subcategories': [
-//       {
-//         'name': 'World',
-//         'subcategories': [
-//           {'name': '!', 'subcategories': []},
-//           {'name': '!!!!!', 'subcategories': []}
-//         ]
-//       }
-//     ]
-//   });
-//   final encoder = JsonEncoder.withIndent('  ');
-//   print('''value: ${encoder.convert(r.value)}
-// errors: ${encoder.convert(r.errors)}
-//     ''');
-
-//   final stringDate = acanthis.string().pipe(
-//         acanthis.date().min(DateTime.now()),
-//         transform: (value) => DateTime.parse(value),
-//       );
-//   final result = stringDate.tryParse('aaaaa');
-//   print(result);
+  final unionWithVariants = union<Payment>([
+    variant<CreditCard>(
+      guard: (p) => p is CreditCard,
+      schema: instance<CreditCard>()
+          .field('number', (c) => c.number, string().min(13).max(19)),
+    ),
+    variant<WireTransfer>(
+      guard: (p) => p is WireTransfer,
+      schema: instance<WireTransfer>()
+          .field('iban', (w) => w.iban, string().min(15).max(34)),
+    ),
+  ]);
+  print(unionWithVariants.parse(creditCard));
+  print(unionWithVariants.parse(wireTransfer));
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- feat: add support for class schemas with `classSchema<I, T>()`
+- feat: add support for instances validation with `instance<T>()`
+- feat: add support for discriminated union with `union<T>()` and `variant<T>()`
+
 ## 1.3.2
 
 - fix(#14): change list parse values to dynamic values [#15](https://github.com/avesbox/acanthis/pull/15) by [francescovallone](https://github.com/francescovallone)

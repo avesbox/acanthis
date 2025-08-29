@@ -497,6 +497,17 @@ tuple.parse([
 ]); // ✅
 ```
 
+### Literals
+
+Use `literal()` to create a schema that matches a specific literal value.
+
+```dart
+final numeric = literal(1);
+```
+
+The literal validator does not expose any additional check. It simply matches the exact value you provide.
+It can be useful for creating unions of literal values, objects with specific shapes, or when a value can be both a literal and a more complex type.
+
 ## Union
 
 To create a union type, you can use the `union()` method. This method allows you to create a type that can be one of several types.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- feat: add support for `literal` values in objects, unions, tuples, list
+
 ## 1.4.0
 
 - feat: add support for class schemas with `classSchema<I, T>()`

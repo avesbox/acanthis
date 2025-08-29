@@ -33,12 +33,12 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         variants.add(e);
       } else {
         throw ArgumentError(
-            'Unsupported union element type: ${e.runtimeType}. Expected AcanthisType<$T> or AcanthisVariant<$T>.');
+            'Unsupported union element type: ${e.runtimeType}. Expected AcanthisType<$T>, AcanthisVariant<$T> or AcanthisLiteral<$T>.');
       }
     }
     final isAsync = [
       ...types.map((t) => t.isAsync),
-      ...variants.map((v) => v.schema.isAsync)
+      ...variants.map((v) => v.schema.isAsync),
     ].any((b) => b);
     return AcanthisUnion._(
       types: types,
@@ -111,7 +111,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         }
       } catch (_) {}
     }
-    throw ValidationError('Value does not match any union variant');
+    throw ValidationError('Value does not match any union entry');
   }
 
   @override
@@ -187,7 +187,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         }
       } catch (_) {}
     }
-    throw ValidationError('Value does not match any union variant');
+    throw ValidationError('Value does not match any union entry');
   }
 
   @override
@@ -285,7 +285,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       } catch (_) {}
       idx++;
     }
-    errors['union'] = 'Value does not match any union variant';
+    errors['union'] = 'Value does not match any union entry';
     return AcanthisParseResult<T>(
         value: value,
         errors: errors,
@@ -331,7 +331,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       } catch (_) {}
       idx++;
     }
-    errors['union'] = 'Value does not match any union variant';
+    errors['union'] = 'Value does not match any union entry';
     return AcanthisParseResult<T>(
         value: value,
         errors: errors,

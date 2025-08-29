@@ -107,4 +107,38 @@ void main(List<String> arguments) async {
   ]);
   print(unionWithVariants.parse(creditCard));
   print(unionWithVariants.parse(wireTransfer));
+  final literalSchemaVariantUnion = union([
+    literal('credit_card'),
+    literal('wire_transfer'),
+    variant<CreditCard>(
+      guard: (p) => p is CreditCard,
+      schema: instance<CreditCard>()
+          .field('number', (c) => c.number, string().min(13).max(19)),
+    ),
+    object({
+      'type': string().contained(['credit_card', 'wire_transfer']),
+      'data': union([
+        instance<CreditCard>(),
+        instance<WireTransfer>(),
+      ]),
+    })
+  ]);
+  print(literalSchemaVariantUnion
+      .parse({'type': 'credit_card', 'data': creditCard}));
+  print(literalSchemaVariantUnion
+      .parse({'type': 'wire_transfer', 'data': wireTransfer}));
+  print(literalSchemaVariantUnion.parse('credit_card'));
+  print(literalSchemaVariantUnion.parse('wire_transfer'));
+  print(literalSchemaVariantUnion.parse(creditCard));
+
+  final numericInput = union([literal(1), literal(2), string().min(3)]);
+
+  print(numericInput.parse(1)); // passes
+  print(numericInput.parse(2)); // passes
+  print(numericInput.parse('hello')); // passes
+
+  final mapWithLiterals =
+      object({'type': literal('Acanthis'), 'name': string()});
+
+  print(mapWithLiterals.parse({'type': 'Acanthis', 'name': 'Example'}));
 }

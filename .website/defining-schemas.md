@@ -497,7 +497,7 @@ tuple.parse([
 ]); // ✅
 ```
 
-### Literals
+## Literals
 
 Use `literal()` to create a schema that matches a specific literal value.
 

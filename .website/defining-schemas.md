@@ -226,8 +226,8 @@ object({
 });
 ```
 
-::: info
-The `extend()` method will not overwrite the existing properties. It will only add the new properties to the schema.
+::: warning
+The `extend()` method will not overwrite the existing properties. It will only add the new properties to the schema if they do not already exist.
 :::
 
 ### `merge()`
@@ -243,8 +243,8 @@ object({
 });
 ```
 
-::: info
-The `merge()` method will overwrite the existing properties. It will only add the new properties to the schema.
+::: warning
+The `merge()` method will overwrite the existing properties.
 :::
 
 ### `pick()`

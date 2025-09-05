@@ -58,6 +58,7 @@ class InstanceType<T> extends AcanthisType<T> {
     Map<String, Object Function(T)> refs = const {},
     super.isAsync,
     super.key,
+    super.metadataEntry
   })  : _fields = fields,
         _refs = refs;
 
@@ -130,6 +131,7 @@ class InstanceType<T> extends AcanthisType<T> {
       fields: newFields,
       isAsync: anyAsync,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -140,6 +142,7 @@ class InstanceType<T> extends AcanthisType<T> {
       fields: _fields,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -150,6 +153,7 @@ class InstanceType<T> extends AcanthisType<T> {
       fields: _fields,
       isAsync: true,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -161,6 +165,7 @@ class InstanceType<T> extends AcanthisType<T> {
       fields: _fields,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -177,9 +182,8 @@ class InstanceType<T> extends AcanthisType<T> {
       'properties': properties,
       if (required.isNotEmpty) 'required': required,
     };
-    final meta = key.isNotEmpty ? MetadataRegistry().get(key) : null;
-    if (meta != null) {
-      schema.addAll(meta.toJson());
+    if (metadataEntry != null) {
+      schema.addAll(metadataEntry!.toJson());
     }
     return schema;
   }
@@ -196,6 +200,7 @@ class InstanceType<T> extends AcanthisType<T> {
       fields: _fields,
       isAsync: isAsync,
       key: newKey,
+      metadataEntry: metadata,
     );
   }
 

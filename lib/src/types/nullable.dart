@@ -13,7 +13,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   final AcanthisType<T> element;
 
   const AcanthisNullable(this.element,
-      {this.defaultValue, super.operations, super.isAsync, super.key});
+      {this.defaultValue, super.operations, super.isAsync, super.key, super.metadataEntry});
 
   /// override of the [parse] method from [AcanthisType]
   @override
@@ -116,7 +116,8 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
           transformation,
         ],
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Check if the value is part of the enumerated values
@@ -129,14 +130,13 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     final enumerated =
         operations.whereType<EnumeratedNullableCheck>().firstOrNull;
     if (enumerated != null) {
       final values = {...enumerated.values, defaultValue, null};
       return {
         'enum': values.toList(),
-        if (metadata != null) ...metadata.toJson(),
+        if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
     return {
@@ -149,7 +149,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
           'type': 'null',
         },
       ],
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
   }
 
@@ -166,6 +166,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata
     );
   }
 }

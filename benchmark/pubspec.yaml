@@ -9,7 +9,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  luthor: ^0.5.2+1
+  luthor: ^0.13.1
   benchmark_harness: ^2.3.1
   acanthis: 
     path: ../

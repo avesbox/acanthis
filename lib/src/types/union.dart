@@ -20,6 +20,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     super.operations = const [],
     super.isAsync,
     super.key,
+    super.metadataEntry,
   })  : _types = types,
         _variants = variants;
 
@@ -60,7 +61,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
               value: newValue,
               errors: {op.name: op.error},
               success: false,
-              metadata: MetadataRegistry().get(key),
+              metadata: metadataEntry,
             );
           }
           break;
@@ -79,7 +80,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       value: newValue,
       errors: const {},
       success: true,
-      metadata: MetadataRegistry().get(key),
+      metadata: metadataEntry,
     );
   }
 
@@ -96,7 +97,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           final r = v.schema.tryParse(value);
           if (r.success) {
             return _applyOwnOperations(
-                AcanthisParseResult<T>(value: r.value, success: true));
+                AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry));
           }
         } catch (_) {}
       }
@@ -107,7 +108,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         final r = t.parse(value);
         if (r.success) {
           return _applyOwnOperations(
-              AcanthisParseResult<T>(value: r.value, success: true));
+              AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry));
         }
       } catch (_) {}
     }
@@ -124,7 +125,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
               ? await v.schema.tryParseAsync(value)
               : v.schema.tryParse(value);
           if (r.success) {
-            var base = AcanthisParseResult<T>(value: r.value, success: true);
+            var base = AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry);
             // Apply own ops (may include async)
             for (final op in operations) {
               switch (op) {
@@ -135,7 +136,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
                   break;
                 case AcanthisTransformation<T>():
                   base = AcanthisParseResult<T>(
-                      value: (op(base.value)), success: true);
+                      value: (op(base.value)), success: true, metadata: metadataEntry);
                   break;
                 case AcanthisAsyncCheck<T>():
                   if (!(await op(base.value))) {
@@ -149,7 +150,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             return AcanthisParseResult<T>(
                 value: base.value,
                 success: true,
-                metadata: MetadataRegistry().get(key));
+                metadata: metadataEntry);
           }
         } catch (_) {}
       }
@@ -159,7 +160,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       try {
         final r = t.isAsync ? await t.tryParseAsync(value) : t.tryParse(value);
         if (r.success) {
-          var base = AcanthisParseResult<T>(value: r.value, success: true);
+          var base = AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry);
           for (final op in operations) {
             switch (op) {
               case AcanthisCheck<T>():
@@ -169,7 +170,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
                 break;
               case AcanthisTransformation<T>():
                 base = AcanthisParseResult<T>(
-                    value: (op(base.value)), success: true);
+                    value: (op(base.value)), success: true, metadata: metadataEntry);
                 break;
               case AcanthisAsyncCheck<T>():
                 if (!(await op(base.value))) {
@@ -183,7 +184,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           return AcanthisParseResult<T>(
               value: base.value,
               success: true,
-              metadata: MetadataRegistry().get(key));
+              metadata: metadataEntry);
         }
       } catch (_) {}
     }
@@ -227,13 +228,13 @@ class AcanthisUnion<T> extends AcanthisType<T> {
               return AcanthisParseResult<T>(
                   value: newVal,
                   success: true,
-                  metadata: MetadataRegistry().get(key));
+                  metadata: metadataEntry);
             }
             return AcanthisParseResult<T>(
                 value: newVal,
                 success: false,
                 errors: errors,
-                metadata: MetadataRegistry().get(key));
+                metadata: metadataEntry);
           } else {
             errors[v.name.isEmpty ? 'variant[$idx]' : v.name] =
                 'Failed variant schema';
@@ -272,13 +273,13 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             return AcanthisParseResult<T>(
                 value: newVal,
                 success: true,
-                metadata: MetadataRegistry().get(key));
+                metadata: metadataEntry);
           }
           return AcanthisParseResult<T>(
               value: newVal,
               success: false,
               errors: errors,
-              metadata: MetadataRegistry().get(key));
+              metadata: metadataEntry);
         } else {
           errors['type[$idx]'] = 'Failed type schema';
         }
@@ -290,7 +291,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         value: value,
         errors: errors,
         success: false,
-        metadata: MetadataRegistry().get(key));
+        metadata: metadataEntry);
   }
 
   @override
@@ -307,7 +308,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           final r = v.schema.tryParse(value);
           if (r.success) {
             final applied = _applyOwnOperations(
-                AcanthisParseResult<T>(value: r.value, success: true));
+                AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry));
             return applied;
           } else {
             errors[v.name.isEmpty ? 'variant[$idx]' : v.name] =
@@ -323,7 +324,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         final r = t.tryParse(value);
         if (r.success) {
           final applied = _applyOwnOperations(
-              AcanthisParseResult<T>(value: r.value, success: true));
+              AcanthisParseResult<T>(value: r.value, success: true, metadata: metadataEntry));
           return applied;
         } else {
           errors['type[$idx]'] = 'Failed type schema';
@@ -336,7 +337,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         value: value,
         errors: errors,
         success: false,
-        metadata: MetadataRegistry().get(key));
+        metadata: metadataEntry);
   }
 
   @override
@@ -375,14 +376,13 @@ class AcanthisUnion<T> extends AcanthisType<T> {
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     final schemas = [
       ..._variants.map((v) => v.schema.toJsonSchema()),
       ..._types.map((t) => t.toJsonSchema()),
     ];
     return {
       'anyOf': schemas,
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
   }
 
@@ -399,6 +399,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       operations: operations,
       isAsync: isAsync,
       key: k,
+      metadataEntry: metadata,
     );
   }
 }

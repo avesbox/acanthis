@@ -10,7 +10,7 @@ import 'types.dart';
 
 /// A class to validate string types
 class AcanthisString extends AcanthisType<String> {
-  const AcanthisString({super.isAsync, super.operations, super.key});
+  const AcanthisString({super.isAsync, super.operations, super.key, super.metadataEntry});
 
   /// Add a check to the string to check if it is a valid email
   AcanthisString email({String? message}) {
@@ -266,7 +266,7 @@ class AcanthisString extends AcanthisType<String> {
     return AcanthisString(operations: [
       ...operations,
       check,
-    ], isAsync: true, key: key);
+    ], isAsync: true, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -274,7 +274,7 @@ class AcanthisString extends AcanthisType<String> {
     return AcanthisString(operations: [
       ...operations,
       check,
-    ], isAsync: isAsync, key: key);
+    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -283,7 +283,7 @@ class AcanthisString extends AcanthisType<String> {
     return AcanthisString(operations: [
       ...operations,
       transformation,
-    ], isAsync: isAsync, key: key);
+    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -291,24 +291,23 @@ class AcanthisString extends AcanthisType<String> {
     final lengthChecksMap = _getConstraints();
     final patternChecksMap = _getPattern();
     final enumeratedChecksMap = _getEnumeratedChecks();
-    final metadata = MetadataRegistry().get(key);
     final exactChecksMap = _getExactChecks();
     if (exactChecksMap.isNotEmpty) {
       return {
         'const': exactChecksMap['const'],
-        if (metadata != null) ...metadata.toJson(),
+        if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
     if (enumeratedChecksMap.isNotEmpty) {
       return {
         'enum': enumeratedChecksMap['enum'],
-        if (metadata != null) ...metadata.toJson(),
+        if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
     return {
       'type': 'string',
       if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
       if (patternChecksMap.isNotEmpty) ...patternChecksMap,
     };
   }
@@ -391,6 +390,7 @@ class AcanthisString extends AcanthisType<String> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata,
     );
   }
 }

@@ -14,7 +14,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Constructor of the list type
   const AcanthisList(this.element,
-      {super.operations, super.isAsync, super.key});
+      {super.operations, super.isAsync, super.key, super.metadataEntry});
 
   @override
   Future<AcanthisParseResult<List<T>>> parseAsync(
@@ -153,6 +153,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       ],
       isAsync: true,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -166,6 +167,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       ],
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -180,6 +182,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       ],
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -195,12 +198,12 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata,
     );
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     final checks = operations.whereType<AcanthisCheck>().toList();
     final lengthChecksMap = {};
     for (var lengthCheck in checks) {
@@ -216,7 +219,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     final uniqueItems = checks.whereType<UniqueItemsListCheck>().isNotEmpty;
     return {
       'type': 'array',
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
       'items': element.toJsonSchema(),
       if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
       if (uniqueItems) 'uniqueItems': true,

@@ -12,6 +12,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
     super.operations,
     super.isAsync,
     super.key,
+    super.metadataEntry
   });
 
   /// Add a check to the date to check if it is before or equal to [value]
@@ -49,7 +50,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
     return AcanthisDate(operations: [
       ...operations,
       check,
-    ], isAsync: true, key: key);
+    ], isAsync: true, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -57,25 +58,28 @@ class AcanthisDate extends AcanthisType<DateTime> {
     return AcanthisDate(operations: [
       ...operations,
       check,
-    ], isAsync: isAsync, key: key);
+    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
   }
 
   @override
   AcanthisDate withTransformation(
       AcanthisTransformation<DateTime> transformation) {
-    return AcanthisDate(operations: [
+    return AcanthisDate(
+      operations: [
       ...operations,
       transformation,
-    ], isAsync: isAsync, key: key);
+    ], 
+    isAsync: isAsync, 
+    key: key,
+    metadataEntry: metadataEntry,);
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     return {
       'type': 'string',
       'format': 'date-time',
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
   }
 
@@ -90,6 +94,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata,
     );
   }
 }

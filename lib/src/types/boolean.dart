@@ -11,6 +11,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
     super.operations,
     super.isAsync,
     super.key,
+    super.metadataEntry
   });
 
   /// Add a check to the boolean to check if it is true
@@ -32,6 +33,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
       ],
       isAsync: true,
       key: key,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -44,6 +46,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
       ],
       key: key,
       isAsync: isAsync,
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -57,15 +60,15 @@ class AcanthisBoolean extends AcanthisType<bool> {
       ],
       key: key,
       isAsync: isAsync,
+      metadataEntry: metadataEntry,
     );
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     return {
       'type': 'boolean',
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
   }
 
@@ -80,6 +83,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata,
     );
   }
 }

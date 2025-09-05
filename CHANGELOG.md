@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2
+
+- chore: update dependencies
+- perf: improved overall performances
+
 ## 1.4.1
 
 - feat: add support for `literal` values in objects, unions, tuples, list

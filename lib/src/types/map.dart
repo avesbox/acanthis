@@ -21,7 +21,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   final List<String> _optionalFields;
 
   /// Constructor of the map type
-  const AcanthisMap(this._fields, {super.key})
+  const AcanthisMap(this._fields, {super.key, super.metadataEntry})
       : _passthrough = false,
         _passthroughType = null,
         _dependencies = const [],
@@ -36,6 +36,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.isAsync,
     super.operations,
     super.key,
+    super.metadataEntry,
   })  : _fields = fields,
         _passthrough = passthrough,
         _passthroughType = passthroughType,
@@ -88,65 +89,71 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   @override
   AcanthisParseResult<Map<String, V>> parse(Map<String, V> value) {
     if (isAsync) {
-      throw AsyncValidationException(
-          'Cannot use tryParse with async operations');
+      throw AsyncValidationException('Cannot use tryParse with async operations');
     }
     final parsed = <String, V>{};
-    // Validate required fields
-    for (var field in _fields.entries) {
-      final key = field.key;
+    final valueKeys = value.keys.toSet();
+    final fieldKeys = _fields.keys.toSet();
+  
+    // Validate required fields and parse known fields
+    for (final key in fieldKeys) {
+      final fieldType = _fields[key]!;
       final isOptional = _optionalFields.contains(key);
-      final isNullable = field.value is AcanthisNullable;
+      final isNullable = fieldType is AcanthisNullable;
       final passedValue = value[key];
+  
       if (passedValue == null && !isOptional && !isNullable) {
-        final checks = field.value.operations.whereType<AcanthisCheck>();
+        final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = [
           'Field $key is required',
           for (final check in checks) check.error,
         ];
-        final errorMessage = '${validationErrors.join('.\n')}.';
-
-        throw ValidationError(errorMessage);
+        throw ValidationError('${validationErrors.join('.\n')}.');
       }
-      if (passedValue == null && isOptional && !isNullable) {
-        continue;
-      }
-      final fieldValue = field.value;
-      if (fieldValue is LazyEntry) {
-        parsed[key] = fieldValue.parse(passedValue, this).value;
-      } else {
-        parsed[key] = _fields[key]!.parse(passedValue).value;
-      }
+      if (passedValue == null && isOptional && !isNullable) continue;
+  
+      parsed[key] = fieldType is LazyEntry
+        ? fieldType.parse(passedValue, this).value
+        : fieldType.parse(passedValue).value;
     }
+  
+    // Handle passthrough keys in a single pass
     if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = _passthroughType.parse(obj.value);
-              parsed[obj.key] = parsedValue.value;
-            } on TypeError catch (_) {
-              throw ValidationError(
-                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
-            }
-          } else {
-            parsed[obj.key] = obj.value;
+      for (final key in valueKeys.difference(fieldKeys)) {
+        final objValue = value[key];
+        if (_passthroughType != null) {
+          try {
+            final parsedValue = _passthroughType.parse(objValue);
+            parsed[key] = parsedValue.value;
+          } on TypeError catch (_) {
+            throw ValidationError(
+              '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+            );
           }
+        } else {
+          parsed[key] = objValue as V;
         }
       }
     }
+  
+    // Dependencies (consider memoizing _keyQuery if many dependencies)
     if (_dependencies.isNotEmpty) {
+      final queryCache = <String, dynamic>{};
       for (var dependency in _dependencies) {
-        final dependFrom = _keyQuery(dependency.dependendsOn, value);
-        final dependTo = _keyQuery(dependency.dependent, value);
+        queryCache.putIfAbsent(dependency.dependendsOn, () => _keyQuery(dependency.dependendsOn, value));
+        queryCache.putIfAbsent(dependency.dependent, () => _keyQuery(dependency.dependent, value));
+        final dependFrom = queryCache[dependency.dependendsOn];
+        final dependTo = queryCache[dependency.dependent];
         if (dependFrom != null && dependTo != null) {
           if (!dependency.dependency(dependFrom, dependTo)) {
             throw ValidationError(
-                'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
+              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}'
+            );
           }
         } else {
           throw ValidationError(
-              'The dependency or dependFrom field does not exist in the map');
+            'The dependency or dependFrom field does not exist in the map'
+          );
         }
       }
     }
@@ -157,65 +164,66 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   Future<AcanthisParseResult<Map<String, V>>> parseAsync(
       Map<String, V> value) async {
     final parsed = <String, V>{};
-    final passedValue = Map<String, V>.from(value);
+    final valueKeys = value.keys.toSet();
+    final fieldKeys = _fields.keys.toSet();
     // Parse each field
-    for (var entry in _fields.entries) {
-      final key = entry.key;
+    for (var key in fieldKeys) {
+      final fieldType = _fields[key]!;
       final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        final checks = entry.value.operations.whereType<AcanthisCheck>();
+      final isNullable = fieldType is AcanthisNullable;
+      final passedValue = value[key];
+      if (passedValue == null && !isOptional && !isNullable) {
+        final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = [
           'Field $key is required',
           for (final check in checks) check.error,
         ];
-        final errorMessage = '${validationErrors.join('.\n')}.';
-
-        throw ValidationError(errorMessage);
+        throw ValidationError(validationErrors.join('.\n'));
       }
-      if (value[key] == null &&
-          isOptional &&
-          entry.value is! AcanthisNullable) {
-        continue;
-      }
-      final fieldValue = entry.value;
-      if (fieldValue is LazyEntry) {
-        parsed[key] =
-            (await fieldValue.parseAsync(passedValue[key], this)).value;
+      if (passedValue == null && isOptional && !isNullable) continue;
+      if (fieldType is LazyEntry) {
+        parsed[key] = (await fieldType.parseAsync(passedValue, this)).value;
       } else {
-        final result = await fieldValue.parseAsync(passedValue[key]);
-        parsed[key] = result.value;
+        parsed[key] = (await fieldType.parseAsync(passedValue)).value;
       }
     }
+    // Batch passthrough logic
     if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = await _passthroughType.parseAsync(obj.value);
-              parsed[obj.key] = parsedValue.value;
-            } on TypeError catch (_) {
-              throw ValidationError(
-                  '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}');
-            }
-          } else {
-            parsed[obj.key] = obj.value;
+      for (final key in valueKeys.difference(fieldKeys)) {
+        final objValue = value[key];
+        if (_passthroughType != null) {
+          try {
+            final parsedValue = await _passthroughType.parseAsync(objValue);
+            parsed[key] = parsedValue.value;
+          } on TypeError catch (_) {
+            throw ValidationError(
+              '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+            );
           }
+        } else {
+          parsed[key] = objValue as V;
         }
       }
     }
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
+    // Memoized dependency validation
+    if (_dependencies.isNotEmpty) {
+      final queryCache = <String, dynamic>{};
+      for (var dependency in _dependencies) {
+        queryCache.putIfAbsent(dependency.dependendsOn, () => _keyQuery(dependency.dependendsOn, value));
+        queryCache.putIfAbsent(dependency.dependent, () => _keyQuery(dependency.dependent, value));
+        final dependFrom = queryCache[dependency.dependendsOn];
+        final dependTo = queryCache[dependency.dependent];
+        if (dependFrom != null && dependTo != null) {
+          if (!dependency.dependency(dependFrom, dependTo)) {
+            throw ValidationError(
+              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}'
+            );
+          }
+        } else {
           throw ValidationError(
-              'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}');
+            'The dependency or dependFrom field does not exist in the map'
+          );
         }
-      } else {
-        throw ValidationError(
-            'The dependency or dependFrom field does not exist in the map');
       }
     }
     return await super.parseAsync(parsed);
@@ -224,77 +232,74 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   @override
   Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(
       Map<String, V> value) async {
-    final Map<String, V> passedValue = Map.from(value);
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    for (var field in _fields.entries) {
-      final key = field.key;
+    final valueKeys = value.keys.toSet();
+    final fieldKeys = _fields.keys.toSet();
+    for (final key in fieldKeys) {
+      final fieldType = _fields[key]!;
       final isOptional = _optionalFields.contains(key);
-      if (!passedValue.containsKey(key) &&
-          !isOptional &&
-          field.value is! AcanthisNullable) {
-        final checks = field.value.operations.whereType<AcanthisCheck>();
+      final isNullable = fieldType is AcanthisNullable;
+      final passedValue = value[key];
+      if (passedValue == null && !isOptional && !isNullable) {
+        final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
           'required': 'Field is required',
           for (final check in checks) check.name: check.error,
         };
-
         errors[key] = validationErrors;
         continue;
       }
-      if (passedValue[key] == null &&
-          isOptional &&
-          field.value is! AcanthisNullable) {
-        continue;
-      }
-      final fieldValue = field.value;
+      if (passedValue == null && isOptional && !isNullable) continue;
       final AcanthisParseResult parsedValue;
-      if (fieldValue is LazyEntry) {
-        parsedValue = await fieldValue.tryParseAsync(passedValue[key], this);
+      if (fieldType is LazyEntry) {
+        parsedValue = await fieldType.tryParseAsync(passedValue, this);
       } else {
-        parsedValue = await fieldValue.tryParseAsync(passedValue[key]);
+        parsedValue = await fieldType.tryParseAsync(passedValue);
       }
       parsed[key] = parsedValue.value;
       if (parsedValue.errors.isNotEmpty) {
         errors[key] = parsedValue.errors;
       }
     }
+    // Batch passthrough logic
     if (_passthrough) {
-      for (var obj in passedValue.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue =
-                  await _passthroughType.tryParseAsync(obj.value);
-              parsed[obj.key] = parsedValue.value;
-              errors[obj.key] = parsedValue.errors;
-            } on TypeError catch (_) {
-              errors[obj.key] = {
-                'error':
-                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
-              };
-            }
-          } else {
-            parsed[obj.key] = obj.value;
+      for (final key in valueKeys.difference(fieldKeys)) {
+        final objValue = value[key];
+        if (_passthroughType != null) {
+          try {
+            final parsedValue = await _passthroughType.tryParseAsync(objValue);
+            parsed[key] = parsedValue.value;
+            errors[key] = parsedValue.errors;
+          } on TypeError catch (_) {
+            errors[key] = {
+              'error': '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+            };
           }
+        } else {
+          parsed[key] = objValue as V;
         }
       }
     }
 
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+    // Memoized dependency validation
+    if (_dependencies.isNotEmpty) {
+      final queryCache = <String, dynamic>{};
+      for (var dependency in _dependencies) {
+        queryCache.putIfAbsent(dependency.dependendsOn, () => _keyQuery(dependency.dependendsOn, value));
+        queryCache.putIfAbsent(dependency.dependent, () => _keyQuery(dependency.dependent, value));
+        final dependFrom = queryCache[dependency.dependendsOn];
+        final dependTo = queryCache[dependency.dependent];
+        if (dependFrom != null && dependTo != null) {
+          if (!dependency.dependency(dependFrom, dependTo)) {
+            errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+          }
+        } else {
+          errors[dependency.dependent] = {
+            'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
+                'The dependency or dependFrom field does not exist in the map'
+          };
         }
-      } else {
-        errors[dependency.dependent] = {
-          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
-              'The dependency or dependFrom field does not exist in the map'
-        };
       }
     }
     final result = await super.tryParseAsync(parsed);
@@ -317,73 +322,74 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    for (var field in _fields.entries) {
-      final key = field.key;
+    final valueKeys = value.keys.toSet();
+    final fieldKeys = _fields.keys.toSet();
+    for (final key in fieldKeys) {
+      final fieldType = _fields[key]!;
       final isOptional = _optionalFields.contains(key);
-      if (!value.containsKey(key) && !isOptional) {
-        final checks = field.value.operations.whereType<AcanthisCheck>();
+      final isNullable = fieldType is AcanthisNullable;
+      final passedValue = value[key];
+      if (passedValue == null && !isOptional && !isNullable) {
+        final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
           'required': 'Field is required',
           for (final check in checks) check.name: check.error,
         };
-
         errors[key] = validationErrors;
         continue;
       }
-      if (value[key] == null &&
-          isOptional &&
-          field.value is! AcanthisNullable) {
-        continue;
-      }
-      final fieldValue = field.value;
+      if (passedValue == null && isOptional && !isNullable) continue;
       final AcanthisParseResult parsedValue;
-      if (fieldValue is LazyEntry) {
-        parsedValue = fieldValue.tryParse(value[key], this);
+      if (fieldType is LazyEntry) {
+        parsedValue = fieldType.tryParse(passedValue, this);
       } else {
-        parsedValue = fieldValue.tryParse(value[key]);
+        parsedValue = fieldType.tryParse(passedValue);
       }
       parsed[key] = parsedValue.value;
       if (parsedValue.errors.isNotEmpty) {
         errors[key] = parsedValue.errors;
       }
     }
+    // Batch passthrough logic
     if (_passthrough) {
-      for (var obj in value.entries) {
-        if (!_fields.containsKey(obj.key)) {
-          if (_passthroughType != null) {
-            try {
-              final parsedValue = _passthroughType.tryParse(obj.value);
-              parsed[obj.key] = parsedValue.value;
-              if (parsedValue.errors.isNotEmpty) {
-                errors[obj.key] = parsedValue.errors;
-              }
-            } on TypeError catch (_) {
-              errors[obj.key] = {
-                'error':
-                    '${obj.key} expose a value of type ${obj.value.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
-              };
+      for (final key in valueKeys.difference(fieldKeys)) {
+        final objValue = value[key];
+        if (_passthroughType != null) {
+          try {
+            final parsedValue = _passthroughType.tryParse(objValue);
+            parsed[key] = parsedValue.value;
+            if (parsedValue.errors.isNotEmpty) {
+              errors[key] = parsedValue.errors;
             }
-          } else {
-            parsed[obj.key] = obj.value;
+          } on TypeError catch (_) {
+            errors[key] = {
+              'error': '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}'
+            };
           }
+        } else {
+          parsed[key] = objValue as V;
         }
       }
     }
 
-    // Validate dependencies
-    for (var dependency in _dependencies) {
-      final dependFrom = _keyQuery(dependency.dependendsOn, value);
-      final dependTo = _keyQuery(dependency.dependent, value);
-
-      if (dependFrom != null && dependTo != null) {
-        if (!dependency.dependency(dependFrom, dependTo)) {
-          errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+    // Memoized dependency validation
+    if (_dependencies.isNotEmpty) {
+      final queryCache = <String, dynamic>{};
+      for (var dependency in _dependencies) {
+        queryCache.putIfAbsent(dependency.dependendsOn, () => _keyQuery(dependency.dependendsOn, value));
+        queryCache.putIfAbsent(dependency.dependent, () => _keyQuery(dependency.dependent, value));
+        final dependFrom = queryCache[dependency.dependendsOn];
+        final dependTo = queryCache[dependency.dependent];
+        if (dependFrom != null && dependTo != null) {
+          if (!dependency.dependency(dependFrom, dependTo)) {
+            errors[dependency.dependent] = {'dependency': 'Dependency not met'};
+          }
+        } else {
+          errors[dependency.dependent] = {
+            'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
+                'The dependency or dependFrom field does not exist in the map'
+          };
         }
-      } else {
-        errors[dependency.dependent] = {
-          'dependency[${dependency.dependendsOn}->${dependency.dependent}]':
-              'The dependency or dependFrom field does not exist in the map'
-        };
       }
     }
     final result = super.tryParse(parsed);
@@ -415,7 +421,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Add field(s) to the map
@@ -438,7 +445,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Merge field(s) to the map
@@ -455,7 +463,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Pick field(s) from the map
@@ -474,7 +483,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Omit field(s) from the map
@@ -493,7 +503,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Allow unknown keys in the map
@@ -506,7 +517,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         optionalFields: _optionalFields,
         operations: operations,
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   /// Allow for null values in the map
@@ -522,8 +534,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         return MapEntry(key, value.nullable());
       }));
     }
-    return AcanthisMap<V?>(
-        _fields.map((key, value) => MapEntry(key, value.nullable())));
+    return AcanthisMap<V?>._(
+        fields: _fields.map((key, value) => MapEntry(key, value.nullable())),
+        passthrough: true,
+        passthroughType: _passthroughType,
+        dependencies: _dependencies,
+        optionalFields: _optionalFields,
+        operations: operations,
+        isAsync: isAsync,
+        key: key,
+        metadataEntry: metadataEntry
+    );
   }
 
   /// Add a check to the map to check if it has at least [length] elements
@@ -566,7 +587,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           check,
         ],
         isAsync: true,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   @override
@@ -582,7 +604,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           check,
         ],
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   @override
@@ -599,7 +622,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           transformation,
         ],
         isAsync: isAsync,
-        key: key);
+        key: key,
+        metadataEntry: metadataEntry);
   }
 
   @override
@@ -618,6 +642,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       operations: operations,
       isAsync: isAsync,
       key: objectKey,
+      metadataEntry: metadata,
     );
   }
 
@@ -644,7 +669,6 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             .toJsonSchema(parent: this, defs: true, defKey: entryKey);
       }
     }
-    final metadata = MetadataRegistry().get<Map<String, dynamic>>(key);
     for (final key in defsMap.keys) {
       lazyObjectMapper.remove(key);
     }
@@ -652,7 +676,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     return {
       if (defsMap.isNotEmpty) r'$defs': defsMap,
       'type': 'object',
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
       'properties': schema,
       'additionalProperties': _passthrough == false
           ? false

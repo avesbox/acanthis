@@ -5,30 +5,25 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: "03f6da266a27a4538a69295ec142cb5717d7d4e5727b84658b63e1e1509bac9c"
+      sha256: da0d9209ca76bde579f2da330aeb9df62b6319c834fa7baae052021b0462401f
       url: "https://pub.dev"
     source: hosted
-    version: "79.0.0"
-  _macros:
-    dependency: transitive
-    description: dart
-    source: sdk
-    version: "0.3.3"
+    version: "85.0.0"
   acanthis:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "1.1.0"
+    version: "1.4.1"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
-      sha256: c9040fc56483c22a5e04a9f6a251313118b1a3c42423770623128fa484115643
+      sha256: "974859dc0ff5f37bc4313244b3218c791810d03ab3470a579580279ba971a48d"
       url: "https://pub.dev"
     source: hosted
-    version: "7.2.0"
+    version: "7.7.1"
   args:
     dependency: transitive
     description:
@@ -101,14 +96,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  fast_immutable_collections:
-    dependency: transitive
-    description:
-      name: fast_immutable_collections
-      sha256: d1aa3d7788fab06cce7f303f4969c7a16a10c865e1bd2478291a8ebcbee084e5
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.0.4"
   file:
     dependency: transitive
     description:
@@ -185,18 +172,10 @@ packages:
     dependency: "direct main"
     description:
       name: luthor
-      sha256: c9042d3b67ca9bf69ee3000ffbe05722d79525145c5bda26bb48568b27a1a9f2
+      sha256: aeb27426c99330b8aa4ece853835bc656ca41dd16f25802aa6ab74faba497a29
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.2+1"
-  macros:
-    dependency: transitive
-    description:
-      name: macros
-      sha256: "1d9e801cd66f7ea3663c45fc708450db1fa57f988142c64289142c9b7ee80656"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.3-main.0"
+    version: "0.13.1"
   matcher:
     dependency: transitive
     description:
@@ -221,6 +200,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  nanoid2:
+    dependency: transitive
+    description:
+      name: nanoid2
+      sha256: "35b5048f836652a1d711db0d716bdee59fcaaa4c37792db8b3568da4f7feb2f9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   node_preamble:
     dependency: transitive
     description:
@@ -454,4 +441,4 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.6.0 <4.0.0"
+  dart: ">=3.8.0 <4.0.0"

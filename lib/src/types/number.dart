@@ -11,7 +11,7 @@ import 'types.dart';
 
 /// A class to validate number types
 class AcanthisNumber extends AcanthisType<num> {
-  const AcanthisNumber({super.isAsync, super.operations, super.key});
+  const AcanthisNumber({super.isAsync, super.operations, super.key, super.metadataEntry});
 
   /// Add a check to the number to check if it is less than or equal to [value]
   AcanthisNumber lte(num value,
@@ -132,7 +132,7 @@ class AcanthisNumber extends AcanthisType<num> {
     return AcanthisNumber(operations: [
       ...operations,
       check,
-    ], isAsync: true, key: key);
+    ], isAsync: true, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -140,7 +140,7 @@ class AcanthisNumber extends AcanthisType<num> {
     return AcanthisNumber(operations: [
       ...operations,
       check,
-    ], isAsync: isAsync, key: key);
+    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
   }
 
   @override
@@ -149,12 +149,12 @@ class AcanthisNumber extends AcanthisType<num> {
     return AcanthisNumber(operations: [
       ...operations,
       transformation,
-    ], isAsync: isAsync, key: key);
+    ], isAsync: isAsync, key: key,
+    metadataEntry: metadataEntry);
   }
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final metadata = MetadataRegistry().get(key);
     String type = 'number';
     final checks = operations.whereType<AcanthisCheck<num>>();
     if (checks.isNotEmpty) {
@@ -168,7 +168,7 @@ class AcanthisNumber extends AcanthisType<num> {
     if (exactCheck != null) {
       return {
         'const': exactCheck.value,
-        if (metadata != null) ...metadata.toJson(),
+        if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
     final enumeratedCheck =
@@ -176,7 +176,7 @@ class AcanthisNumber extends AcanthisType<num> {
     if (enumeratedCheck != null) {
       return {
         'enum': enumeratedCheck.values,
-        if (metadata != null) ...metadata.toJson(),
+        if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
     final multipleOfCheck = operations.whereType<MultipleOfCheck>().firstOrNull;
@@ -184,7 +184,7 @@ class AcanthisNumber extends AcanthisType<num> {
 
     return {
       'type': type,
-      if (metadata != null) ...metadata.toJson(),
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
       if (multipleOfCheck != null) 'multipleOf': multipleOfCheck.value,
       if (constraints.isNotEmpty) ...constraints,
     };
@@ -232,6 +232,7 @@ class AcanthisNumber extends AcanthisType<num> {
       operations: operations,
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadata,
     );
   }
 }

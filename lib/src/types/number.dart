@@ -11,40 +11,71 @@ import 'types.dart';
 
 /// A class to validate number types
 class AcanthisNumber extends AcanthisType<num> {
-  const AcanthisNumber({super.isAsync, super.operations, super.key, super.metadataEntry});
+  const AcanthisNumber({
+    super.isAsync,
+    super.operations,
+    super.key,
+    super.metadataEntry,
+  });
 
   /// Add a check to the number to check if it is less than or equal to [value]
-  AcanthisNumber lte(num value,
-      {String? message, String Function(num value)? messageBuilder}) {
-    return withCheck(LteNumberCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisNumber lte(
+    num value, {
+    String? message,
+    String Function(num value)? messageBuilder,
+  }) {
+    return withCheck(
+      LteNumberCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Add a check to the number to check if it is greater than or equal to [value]
-  AcanthisNumber gte(num value,
-      {String? message, String Function(num value)? messageBuilder}) {
-    return withCheck(GteNumberCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisNumber gte(
+    num value, {
+    String? message,
+    String Function(num value)? messageBuilder,
+  }) {
+    return withCheck(
+      GteNumberCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
-  AcanthisNumber between(num min, num max,
-      {String? message, String Function(num min, num max)? messageBuilder}) {
-    return withCheck(BetweenNumberCheck(min, max,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisNumber between(
+    num min,
+    num max, {
+    String? message,
+    String Function(num min, num max)? messageBuilder,
+  }) {
+    return withCheck(
+      BetweenNumberCheck(
+        min,
+        max,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the number to check if it is greater than [value]
-  AcanthisNumber gt(num value,
-      {String? message, String Function(num value)? messageBuilder}) {
+  AcanthisNumber gt(
+    num value, {
+    String? message,
+    String Function(num value)? messageBuilder,
+  }) {
     return withCheck(
-        GtNumberCheck(value, message: message, messageBuilder: messageBuilder));
+      GtNumberCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Add a check to the number to check if it is less than [value]
-  AcanthisNumber lt(num value,
-      {String? message, String Function(num value)? messageBuilder}) {
+  AcanthisNumber lt(
+    num value, {
+    String? message,
+    String Function(num value)? messageBuilder,
+  }) {
     return withCheck(
-        LtNumberCheck(value, message: message, messageBuilder: messageBuilder));
+      LtNumberCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Add a check to the number to check if it is positive
@@ -78,10 +109,14 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is a multiple of [value]
-  AcanthisNumber multipleOf(int value,
-      {String? message, String Function(int value)? messageBuilder}) {
-    return withCheck(MultipleOfCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisNumber multipleOf(
+    int value, {
+    String? message,
+    String Function(int value)? messageBuilder,
+  }) {
+    return withCheck(
+      MultipleOfCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Add a check to the number to check if it is finite
@@ -105,52 +140,77 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is one of the [values]
-  AcanthisNumber enumerated(List<num> values,
-      {String? message, String Function(List<num> values)? messageBuilder}) {
+  AcanthisNumber enumerated(
+    List<num> values, {
+    String? message,
+    String Function(List<num> values)? messageBuilder,
+  }) {
     if (values.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
     }
-    return withCheck(EnumeratedNumberCheck(values,
-        message: message, messageBuilder: messageBuilder));
+    return withCheck(
+      EnumeratedNumberCheck(
+        values,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the number to ensure it is exactly [value]
-  AcanthisNumber exact(num value,
-      {String? message, String Function(num value)? messageBuilder}) {
-    return withCheck(ExactCheck<num>(
-        value: value, message: message, messageBuilder: messageBuilder));
+  AcanthisNumber exact(
+    num value, {
+    String? message,
+    String Function(num value)? messageBuilder,
+  }) {
+    return withCheck(
+      ExactCheck<num>(
+        value: value,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Transform the number to a power of [value]
   AcanthisNumber pow(int value) {
-    return withTransformation(AcanthisTransformation<num>(
-        transformation: (toTransform) => math.pow(toTransform, value)));
+    return withTransformation(
+      AcanthisTransformation<num>(
+        transformation: (toTransform) => math.pow(toTransform, value),
+      ),
+    );
   }
 
   @override
   AcanthisNumber withAsyncCheck(AcanthisAsyncCheck<num> check) {
-    return AcanthisNumber(operations: [
-      ...operations,
-      check,
-    ], isAsync: true, key: key, metadataEntry: metadataEntry);
+    return AcanthisNumber(
+      operations: [...operations, check],
+      isAsync: true,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisNumber withCheck(AcanthisCheck<num> check) {
-    return AcanthisNumber(operations: [
-      ...operations,
-      check,
-    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
+    return AcanthisNumber(
+      operations: [...operations, check],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisNumber withTransformation(
-      AcanthisTransformation<num> transformation) {
-    return AcanthisNumber(operations: [
-      ...operations,
-      transformation,
-    ], isAsync: isAsync, key: key,
-    metadataEntry: metadataEntry);
+    AcanthisTransformation<num> transformation,
+  ) {
+    return AcanthisNumber(
+      operations: [...operations, transformation],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override

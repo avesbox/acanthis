@@ -11,7 +11,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
     super.operations,
     super.isAsync,
     super.key,
-    super.metadataEntry
+    super.metadataEntry,
   });
 
   /// Add a check to the boolean to check if it is true
@@ -27,10 +27,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
   @override
   AcanthisBoolean withAsyncCheck(AcanthisAsyncCheck<bool> check) {
     return AcanthisBoolean(
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
@@ -40,10 +37,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
   @override
   AcanthisBoolean withCheck(AcanthisCheck<bool> check) {
     return AcanthisBoolean(
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
@@ -52,12 +46,10 @@ class AcanthisBoolean extends AcanthisType<bool> {
 
   @override
   AcanthisBoolean withTransformation(
-      AcanthisTransformation<bool> transformation) {
+    AcanthisTransformation<bool> transformation,
+  ) {
     return AcanthisBoolean(
-      operations: [
-        ...operations,
-        transformation,
-      ],
+      operations: [...operations, transformation],
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,

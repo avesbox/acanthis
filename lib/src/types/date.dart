@@ -12,66 +12,93 @@ class AcanthisDate extends AcanthisType<DateTime> {
     super.operations,
     super.isAsync,
     super.key,
-    super.metadataEntry
+    super.metadataEntry,
   });
 
   /// Add a check to the date to check if it is before or equal to [value]
-  AcanthisDate min(DateTime value,
-      {String? message, String Function(DateTime value)? messageBuilder}) {
+  AcanthisDate min(
+    DateTime value, {
+    String? message,
+    String Function(DateTime value)? messageBuilder,
+  }) {
     return withCheck(
-        MinDateCheck(value, message: message, messageBuilder: messageBuilder));
+      MinDateCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
-  AcanthisDate differsFromNow(Duration difference,
-      {String? message, String Function(Duration difference)? messageBuilder}) {
-    return withCheck(DiffersFromNowCheck(difference,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisDate differsFromNow(
+    Duration difference, {
+    String? message,
+    String Function(Duration difference)? messageBuilder,
+  }) {
+    return withCheck(
+      DiffersFromNowCheck(
+        difference,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the date to check if it is after or equal to [value]
-  AcanthisDate differsFrom(DateTime fromDate, Duration difference,
-      {String? message,
-      String Function(DateTime fromDate, Duration difference)?
-          messageBuilder}) {
-    return withCheck(DiffersFromCheck(fromDate, difference,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisDate differsFrom(
+    DateTime fromDate,
+    Duration difference, {
+    String? message,
+    String Function(DateTime fromDate, Duration difference)? messageBuilder,
+  }) {
+    return withCheck(
+      DiffersFromCheck(
+        fromDate,
+        difference,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the date to check if it is less than or equal to [value]
-  AcanthisDate max(DateTime value,
-      {String? message, String Function(DateTime value)? messageBuilder}) {
+  AcanthisDate max(
+    DateTime value, {
+    String? message,
+    String Function(DateTime value)? messageBuilder,
+  }) {
     return withCheck(
-        MaxDateCheck(value, message: message, messageBuilder: messageBuilder));
+      MaxDateCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   @override
   AcanthisDate withAsyncCheck(AcanthisAsyncCheck<DateTime> check) {
-    return AcanthisDate(operations: [
-      ...operations,
-      check,
-    ], isAsync: true, key: key, metadataEntry: metadataEntry);
+    return AcanthisDate(
+      operations: [...operations, check],
+      isAsync: true,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisDate withCheck(AcanthisCheck<DateTime> check) {
-    return AcanthisDate(operations: [
-      ...operations,
-      check,
-    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
+    return AcanthisDate(
+      operations: [...operations, check],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisDate withTransformation(
-      AcanthisTransformation<DateTime> transformation) {
+    AcanthisTransformation<DateTime> transformation,
+  ) {
     return AcanthisDate(
-      operations: [
-      ...operations,
-      transformation,
-    ], 
-    isAsync: isAsync, 
-    key: key,
-    metadataEntry: metadataEntry,);
+      operations: [...operations, transformation],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override

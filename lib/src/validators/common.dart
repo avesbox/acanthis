@@ -4,15 +4,17 @@ import 'package:acanthis/src/operations/checks.dart';
 class ExactCheck<T> extends AcanthisCheck<T> {
   final T value;
 
-  ExactCheck(
-      {required this.value,
-      String? message,
-      String Function(T value)? messageBuilder})
-      : super(
-            error: messageBuilder?.call(value) ??
-                message ??
-                'Value must be exactly $value',
-            name: 'exact');
+  ExactCheck({
+    required this.value,
+    String? message,
+    String Function(T value)? messageBuilder,
+  }) : super(
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be exactly $value',
+         name: 'exact',
+       );
 
   @override
   bool call(T value) {

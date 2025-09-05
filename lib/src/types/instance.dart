@@ -23,7 +23,9 @@ class InstanceRefsBuilder<T> {
   final Map<String, Object Function(T)> _refs = {};
 
   InstanceRefsBuilder<T> ref<R extends Object>(
-      String name, R Function(T) getter) {
+    String name,
+    R Function(T) getter,
+  ) {
     _refs[name] = (t) => getter(t);
     return this;
   }
@@ -58,9 +60,9 @@ class InstanceType<T> extends AcanthisType<T> {
     Map<String, Object Function(T)> refs = const {},
     super.isAsync,
     super.key,
-    super.metadataEntry
-  })  : _fields = fields,
-        _refs = refs;
+    super.metadataEntry,
+  }) : _fields = fields,
+       _refs = refs;
 
   /// Create an empty instance validator
   const InstanceType() : this._();
@@ -81,7 +83,7 @@ class InstanceType<T> extends AcanthisType<T> {
         getter: getter,
         validator: validator,
         optional: optional,
-      )
+      ),
     ];
 
     final newOps = <AcanthisOperation<T>>[...operations];

@@ -8,13 +8,22 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   final bool _variadic;
 
-  const AcanthisTuple(this.elements,
-      {super.operations, super.isAsync, super.key, super.metadataEntry})
-      : _variadic = false;
+  const AcanthisTuple(
+    this.elements, {
+    super.operations,
+    super.isAsync,
+    super.key,
+    super.metadataEntry,
+  }) : _variadic = false;
 
-  AcanthisTuple._(this.elements,
-      {super.operations, super.isAsync, super.key, bool variadic = false, super.metadataEntry})
-      : _variadic = variadic;
+  AcanthisTuple._(
+    this.elements, {
+    super.operations,
+    super.isAsync,
+    super.key,
+    bool variadic = false,
+    super.metadataEntry,
+  }) : _variadic = variadic;
 
   @override
   Future<AcanthisParseResult<List>> parseAsync(List value) async {
@@ -38,9 +47,10 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   Future<AcanthisParseResult<List>> tryParseAsync(List value) async {
     if (value.length != elements.length && !_variadic) {
       return AcanthisParseResult(
-          value: value,
-          errors: {'tuple': 'Value must have ${elements.length} elements'},
-          success: false);
+        value: value,
+        errors: {'tuple': 'Value must have ${elements.length} elements'},
+        success: false,
+      );
     }
     final parsed = <dynamic>[];
     final errors = <String, dynamic>{};
@@ -61,10 +71,11 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       errors.addAll(result.errors);
     }
     return AcanthisParseResult(
-        value: result.value,
-        errors: errors,
-        success: errors.isEmpty,
-        metadata: result.metadata);
+      value: result.value,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: result.metadata,
+    );
   }
 
   @override
@@ -89,9 +100,10 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   AcanthisParseResult<List<dynamic>> tryParse(List<dynamic> value) {
     if (value.length != elements.length && !_variadic) {
       return AcanthisParseResult(
-          value: value,
-          errors: {'tuple': 'Value must have ${elements.length} elements'},
-          success: false);
+        value: value,
+        errors: {'tuple': 'Value must have ${elements.length} elements'},
+        success: false,
+      );
     }
     final parsed = <dynamic>[];
     final errors = <String, dynamic>{};
@@ -112,20 +124,18 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       errors.addAll(result.errors);
     }
     return AcanthisParseResult(
-        value: result.value,
-        errors: errors,
-        success: errors.isEmpty,
-        metadata: result.metadata);
+      value: result.value,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: result.metadata,
+    );
   }
 
   @override
   AcanthisTuple withAsyncCheck(AcanthisAsyncCheck<List<dynamic>> check) {
     return AcanthisTuple(
       elements,
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
@@ -136,10 +146,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   AcanthisTuple withCheck(AcanthisCheck<List<dynamic>> check) {
     return AcanthisTuple(
       elements,
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
@@ -148,16 +155,14 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   AcanthisTuple withTransformation(
-      AcanthisTransformation<List<dynamic>> transformation) {
+    AcanthisTransformation<List<dynamic>> transformation,
+  ) {
     return AcanthisTuple(
       elements,
-      operations: [
-        ...operations,
-        transformation,
-      ],
+      operations: [...operations, transformation],
       key: key,
       isAsync: isAsync,
-      metadataEntry: metadataEntry
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -169,7 +174,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       key: key,
       isAsync: isAsync,
       variadic: true,
-      metadataEntry: metadataEntry
+      metadataEntry: metadataEntry,
     );
   }
 

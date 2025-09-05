@@ -12,10 +12,7 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    return {
-      'type': 'literal',
-      'value': value,
-    };
+    return {'type': 'literal', 'value': value};
   }
 
   @override

@@ -12,8 +12,14 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   /// The element of the nullable
   final AcanthisType<T> element;
 
-  const AcanthisNullable(this.element,
-      {this.defaultValue, super.operations, super.isAsync, super.key, super.metadataEntry});
+  const AcanthisNullable(
+    this.element, {
+    this.defaultValue,
+    super.operations,
+    super.isAsync,
+    super.key,
+    super.metadataEntry,
+  });
 
   /// override of the [parse] method from [AcanthisType]
   @override
@@ -41,10 +47,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     final result = super.tryParse(elementResult.value);
     return AcanthisParseResult(
       value: result.value,
-      errors: {
-        ...result.errors,
-        ...elementResult.errors,
-      },
+      errors: {...result.errors, ...elementResult.errors},
       success: result.success && elementResult.success,
       metadata: result.metadata,
     );
@@ -68,10 +71,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     final result = await super.tryParseAsync(elementResult.value);
     return AcanthisParseResult(
       value: result.value,
-      errors: {
-        ...result.errors,
-        ...elementResult.errors,
-      },
+      errors: {...result.errors, ...elementResult.errors},
       success: result.success && elementResult.success,
       metadata: result.metadata,
     );
@@ -84,48 +84,54 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   @override
   AcanthisNullable<T> withAsyncCheck(AcanthisAsyncCheck<T?> check) {
-    return AcanthisNullable(element,
-        defaultValue: defaultValue,
-        operations: [
-          ...operations,
-          check,
-        ],
-        isAsync: true,
-        key: key);
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: [...operations, check],
+      isAsync: true,
+      key: key,
+    );
   }
 
   @override
   AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
-    return AcanthisNullable(element,
-        defaultValue: defaultValue,
-        operations: [
-          ...operations,
-          check,
-        ],
-        isAsync: isAsync,
-        key: key);
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: [...operations, check],
+      isAsync: isAsync,
+      key: key,
+    );
   }
 
   @override
   AcanthisNullable<T> withTransformation(
-      AcanthisTransformation<T?> transformation) {
-    return AcanthisNullable(element,
-        defaultValue: defaultValue,
-        operations: [
-          ...operations,
-          transformation,
-        ],
-        isAsync: isAsync,
-        key: key,
-        metadataEntry: metadataEntry);
+    AcanthisTransformation<T?> transformation,
+  ) {
+    return AcanthisNullable(
+      element,
+      defaultValue: defaultValue,
+      operations: [...operations, transformation],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   /// Check if the value is part of the enumerated values
-  AcanthisNullable<T> enumerated(List<T?> values,
-      {String? message, String Function(List<T?> value)? messageBuilder}) {
+  AcanthisNullable<T> enumerated(
+    List<T?> values, {
+    String? message,
+    String Function(List<T?> value)? messageBuilder,
+  }) {
     final enumeratedValue = {...values, null};
-    return withCheck(EnumeratedNullableCheck(enumeratedValue.toList(),
-        message: message, messageBuilder: messageBuilder));
+    return withCheck(
+      EnumeratedNullableCheck(
+        enumeratedValue.toList(),
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   @override
@@ -145,9 +151,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
           ...element.toJsonSchema(),
           if (defaultValue != null) 'default': defaultValue,
         },
-        {
-          'type': 'null',
-        },
+        {'type': 'null'},
       ],
       if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
@@ -166,7 +170,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: operations,
       isAsync: isAsync,
       key: key,
-      metadataEntry: metadata
+      metadataEntry: metadata,
     );
   }
 }

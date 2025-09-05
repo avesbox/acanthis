@@ -7,7 +7,9 @@ void main() {
 
     expect(result.success, true);
     expect(result.value, 'This is a test');
-    expect(result.toString(),
-        'AcanthisParseResult<String>{value: This is a test, errors: {}, success: true}');
+    expect(
+      result.toString(),
+      'AcanthisParseResult<String>{value: This is a test, errors: {}, success: true}',
+    );
   });
 }

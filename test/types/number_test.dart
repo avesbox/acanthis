@@ -8,8 +8,7 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisNumber();
     });
-    test(
-        'when creating a number validator,'
+    test('when creating a number validator,'
         'and the number is valid, '
         'then the result should be successful', () {
       final number = acanthis.number();
@@ -22,8 +21,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a gte check,'
+    test('when creating a number validator with a gte check,'
         'and the number is greater than the check, '
         'then the result should be successful', () {
       final number = acanthis.number().gte(1);
@@ -36,8 +34,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a lte check,'
+    test('when creating a number validator with a lte check,'
         'and the number is less than the check, '
         'then the result should be successful', () {
       final number = acanthis.number().lte(1);
@@ -50,8 +47,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a gte check,'
+    test('when creating a number validator with a gte check,'
         'and the number is less than the check, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().gte(1);
@@ -62,8 +58,7 @@ void main() {
       expect(() => number.parse(0), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a lte check,'
+    test('when creating a number validator with a lte check,'
         'and the number is greater than the check, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().lte(1);
@@ -74,8 +69,7 @@ void main() {
       expect(() => number.parse(2), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a lt check,'
+    test('when creating a number validator with a lt check,'
         'and the number is less than the check, '
         'then the result should be successful', () {
       final number = acanthis.number().lt(1);
@@ -88,8 +82,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a lt check,'
+    test('when creating a number validator with a lt check,'
         'and the number is greater than the check, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().lt(1);
@@ -100,8 +93,7 @@ void main() {
       expect(() => number.parse(2), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a gt check,'
+    test('when creating a number validator with a gt check,'
         'and the number is greater than the check, '
         'then the result should be successful', () {
       final number = acanthis.number().gt(1);
@@ -114,8 +106,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a gt check,'
+    test('when creating a number validator with a gt check,'
         'and the number is less than the check, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().gt(1);
@@ -126,8 +117,7 @@ void main() {
       expect(() => number.parse(0), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a positive check,'
+    test('when creating a number validator with a positive check,'
         'and the number is positive, '
         'then the result should be successful', () {
       final number = acanthis.number().positive();
@@ -140,8 +130,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a positive check,'
+    test('when creating a number validator with a positive check,'
         'and the number is negative, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().positive();
@@ -152,8 +141,7 @@ void main() {
       expect(() => number.parse(-1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a negative check,'
+    test('when creating a number validator with a negative check,'
         'and the number is negative, '
         'then the result should be successful', () {
       final number = acanthis.number().negative();
@@ -166,8 +154,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a negative check,'
+    test('when creating a number validator with a negative check,'
         'and the number is positive, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().negative();
@@ -178,8 +165,7 @@ void main() {
       expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a nonNegative check,'
+    test('when creating a number validator with a nonNegative check,'
         'and the number is nonNegative, '
         'then the result should be successful', () {
       final number = acanthis.number().nonNegative();
@@ -192,8 +178,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a nonNegative check,'
+    test('when creating a number validator with a nonNegative check,'
         'and the number is negative, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().nonNegative();
@@ -204,8 +189,7 @@ void main() {
       expect(() => number.parse(-1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a nonPositive check,'
+    test('when creating a number validator with a nonPositive check,'
         'and the number is nonPositive, '
         'then the result should be successful', () {
       final number = acanthis.number().nonPositive();
@@ -218,8 +202,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a nonPositive check,'
+    test('when creating a number validator with a nonPositive check,'
         'and the number is positive, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().nonPositive();
@@ -230,8 +213,7 @@ void main() {
       expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with an integer check,'
+    test('when creating a number validator with an integer check,'
         'and the number is an integer, '
         'then the result should be successful', () {
       final number = acanthis.number().integer();
@@ -244,8 +226,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with an integer check,'
+    test('when creating a number validator with an integer check,'
         'and the number is not an integer, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().integer();
@@ -256,8 +237,7 @@ void main() {
       expect(() => number.parse(1.1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a multipleOf check,'
+    test('when creating a number validator with a multipleOf check,'
         'and the number is a multiple of the check value, '
         'then the result should be successful', () {
       final number = acanthis.number().multipleOf(1);
@@ -270,8 +250,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a multipleOf check,'
+    test('when creating a number validator with a multipleOf check,'
         'and the number is not a multiple of the check value, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().multipleOf(2);
@@ -282,8 +261,7 @@ void main() {
       expect(() => number.parse(3), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a finite check,'
+    test('when creating a number validator with a finite check,'
         'and the number is finite, '
         'then the result should be successful', () {
       final number = acanthis.number().finite();
@@ -296,8 +274,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a finite check,'
+    test('when creating a number validator with a finite check,'
         'and the number is not finite, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().finite();
@@ -305,12 +282,13 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => number.parse(double.infinity),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => number.parse(double.infinity),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a number validator with an infinite check,'
+    test('when creating a number validator with an infinite check,'
         'and the number is infinite, '
         'then the result should be successful', () {
       final number = acanthis.number().infinite();
@@ -323,8 +301,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with an infinite check,'
+    test('when creating a number validator with an infinite check,'
         'and the number is not infinite, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().infinite();
@@ -335,8 +312,7 @@ void main() {
       expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a nan check,'
+    test('when creating a number validator with a nan check,'
         'and the number is NaN, '
         'then the result should be successful', () {
       final number = acanthis.number().nan();
@@ -349,8 +325,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a nan check,'
+    test('when creating a number validator with a nan check,'
         'and the number is not NaN, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().nan();
@@ -361,8 +336,7 @@ void main() {
       expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with a notNaN check,'
+    test('when creating a number validator with a notNaN check,'
         'and the number is not NaN, '
         'then the result should be successful', () {
       final number = acanthis.number().notNaN();
@@ -375,8 +349,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a notNaN check,'
+    test('when creating a number validator with a notNaN check,'
         'and the number is NaN, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().notNaN();
@@ -384,18 +357,20 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => number.parse(double.nan),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => number.parse(double.nan),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a number validator with a custom check,'
+    test('when creating a number validator with a custom check,'
         'and the custom check is successful, '
         'then the result should be successful', () {
       final number = acanthis.number().refine(
-          onCheck: (value) => value == 1,
-          error: 'Value must be 1',
-          name: 'custom');
+        onCheck: (value) => value == 1,
+        error: 'Value must be 1',
+        name: 'custom',
+      );
       final result = number.tryParse(1);
 
       expect(result.success, true);
@@ -405,14 +380,14 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a number validator with a custom check,'
+    test('when creating a number validator with a custom check,'
         'and the custom check is unsuccessful, '
         'then the result should be unsuccessful', () {
       final number = acanthis.number().refine(
-          onCheck: (value) => value == 1,
-          error: 'Value must be 1',
-          name: 'custom');
+        onCheck: (value) => value == 1,
+        error: 'Value must be 1',
+        name: 'custom',
+      );
       final result = number.tryParse(2);
 
       expect(result.success, false);
@@ -420,8 +395,7 @@ void main() {
       expect(() => number.parse(2), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a number validator with the pow transformation,'
+    test('when creating a number validator with the pow transformation,'
         'and the number is valid, '
         'then the result should be the transformed value', () {
       final number = acanthis.number().pow(2);
@@ -435,8 +409,7 @@ void main() {
       expect(resultParse.value, 4);
     });
 
-    test(
-        'when creating a number validator with a custom transformation,'
+    test('when creating a number validator with a custom transformation,'
         'and the number is valid, '
         'then the result should be the transformed value', () {
       final number = acanthis.number().transform((value) => value * 3);
@@ -450,8 +423,7 @@ void main() {
       expect(resultParse.value, 6);
     });
 
-    test(
-        'when creating a number validator,'
+    test('when creating a number validator,'
         'and use the list method, '
         'and all the values are valid, '
         'then the result should be successful', () {
@@ -465,69 +437,57 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-      'when creating a number validator,'
-      'and use the between method, '
-      'and the value is between the range, '
-      'then the result should be successful',
-      () {
-        final number = acanthis.number().between(1, 3);
-        final result = number.tryParse(2);
+    test('when creating a number validator,'
+        'and use the between method, '
+        'and the value is between the range, '
+        'then the result should be successful', () {
+      final number = acanthis.number().between(1, 3);
+      final result = number.tryParse(2);
 
-        expect(result.success, true);
+      expect(result.success, true);
 
-        final resultParse = number.parse(2);
+      final resultParse = number.parse(2);
 
-        expect(resultParse.success, true);
-      },
-    );
+      expect(resultParse.success, true);
+    });
 
-    test(
-      'when creating a number validator,'
-      'and use the between method, '
-      'and the value is not between the range, '
-      'then the result should be unsuccessful',
-      () {
-        final number = acanthis.number().between(1, 3);
-        final result = number.tryParse(4);
+    test('when creating a number validator,'
+        'and use the between method, '
+        'and the value is not between the range, '
+        'then the result should be unsuccessful', () {
+      final number = acanthis.number().between(1, 3);
+      final result = number.tryParse(4);
 
-        expect(result.success, false);
+      expect(result.success, false);
 
-        expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
-      },
-    );
+      expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
+    });
 
-    test(
-      'when creating a number validator,'
-      'and use the double method, '
-      'and the value is a double value, '
-      'then the result should be successful',
-      () {
-        final number = acanthis.number().double();
-        final result = number.tryParse(4.5);
+    test('when creating a number validator,'
+        'and use the double method, '
+        'and the value is a double value, '
+        'then the result should be successful', () {
+      final number = acanthis.number().double();
+      final result = number.tryParse(4.5);
 
-        expect(result.success, true);
+      expect(result.success, true);
 
-        final resultParse = number.parse(4.5);
+      final resultParse = number.parse(4.5);
 
-        expect(resultParse.success, true);
-      },
-    );
+      expect(resultParse.success, true);
+    });
 
-    test(
-      'when creating a number validator,'
-      'and use the double method, '
-      'and the value is not a double value, '
-      'then the result should be unsuccessful',
-      () {
-        final number = acanthis.number().double();
-        final result = number.tryParse(4);
+    test('when creating a number validator,'
+        'and use the double method, '
+        'and the value is not a double value, '
+        'then the result should be unsuccessful', () {
+      final number = acanthis.number().double();
+      final result = number.tryParse(4);
 
-        expect(result.success, false);
+      expect(result.success, false);
 
-        expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
-      },
-    );
+      expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
+    });
 
     test(
       'when creating an enumerated number validator, and the number is in the list of valid values, then the result should be successful',
@@ -550,11 +510,7 @@ void main() {
 
         expect(result.success, false);
 
-        expect(
-            () => number.parse(4),
-            throwsA(
-              TypeMatcher<ValidationError>(),
-            ));
+        expect(() => number.parse(4), throwsA(TypeMatcher<ValidationError>()));
       },
     );
 
@@ -566,11 +522,7 @@ void main() {
 
         expect(result.success, false);
 
-        expect(
-            () => number.parse(2),
-            throwsA(
-              TypeMatcher<ValidationError>(),
-            ));
+        expect(() => number.parse(2), throwsA(TypeMatcher<ValidationError>()));
       },
     );
 
@@ -596,11 +548,7 @@ void main() {
         final number = acanthis.number().gte(1).lte(3);
         final result = number.toJsonSchema();
 
-        final expected = {
-          'type': 'number',
-          'minimum': 1,
-          'maximum': 3,
-        };
+        final expected = {'type': 'number', 'minimum': 1, 'maximum': 3};
         expect(result, expected);
 
         final number2 = acanthis.number().gt(1).lt(3);
@@ -628,11 +576,7 @@ void main() {
         final number4 = acanthis.number().between(10, 30);
         final result4 = number4.toJsonSchema();
 
-        final expected4 = {
-          'type': 'number',
-          'minimum': 10,
-          'maximum': 30,
-        };
+        final expected4 = {'type': 'number', 'minimum': 10, 'maximum': 30};
         expect(result4, expected4);
       },
     );
@@ -645,77 +589,57 @@ void main() {
         final number = acanthis.number().multipleOf(2);
         final result = number.toJsonSchema();
 
-        final expected = {
-          'type': 'number',
-          'multipleOf': 2,
-        };
+        final expected = {'type': 'number', 'multipleOf': 2};
         expect(result, expected);
       },
     );
 
-    test(
-      'when creating an number validator,'
-      'and use the toJsonSchema method and the metadata, '
-      'then the result should be a valid json schema with the metadata',
-      () {
-        final number = acanthis.number().meta(MetadataEntry(
-              description: 'test',
-              title: 'test',
-            ));
-        final result = number.toJsonSchema();
+    test('when creating an number validator,'
+        'and use the toJsonSchema method and the metadata, '
+        'then the result should be a valid json schema with the metadata', () {
+      final number = acanthis.number().meta(
+        MetadataEntry(description: 'test', title: 'test'),
+      );
+      final result = number.toJsonSchema();
 
-        final expected = {
-          'type': 'number',
-          'description': 'test',
-          'title': 'test',
-        };
-        expect(result, expected);
-      },
-    );
+      final expected = {
+        'type': 'number',
+        'description': 'test',
+        'title': 'test',
+      };
+      expect(result, expected);
+    });
 
-    test(
-      'when creating an number validator,'
-      'and use the toJsonSchema method and the integer validator, '
-      'then the result should be a valid json schema type "integer"',
-      () {
-        final number = acanthis.number().integer();
-        final result = number.toJsonSchema();
+    test('when creating an number validator,'
+        'and use the toJsonSchema method and the integer validator, '
+        'then the result should be a valid json schema type "integer"', () {
+      final number = acanthis.number().integer();
+      final result = number.toJsonSchema();
 
-        final expected = {
-          'type': 'integer',
-        };
-        expect(result, expected);
-      },
-    );
+      final expected = {'type': 'integer'};
+      expect(result, expected);
+    });
 
-    test(
-      'when creating an enumerated number validator,'
-      'and use the toJsonSchema method, '
-      'then the result should be a valid json schema',
-      () {
-        final number = acanthis.number().enumerated([1, 2]);
-        final result = number.toJsonSchema();
+    test('when creating an enumerated number validator,'
+        'and use the toJsonSchema method, '
+        'then the result should be a valid json schema', () {
+      final number = acanthis.number().enumerated([1, 2]);
+      final result = number.toJsonSchema();
 
-        final expected = {
-          'enum': [1, 2],
-        };
-        expect(result, expected);
-      },
-    );
+      final expected = {
+        'enum': [1, 2],
+      };
+      expect(result, expected);
+    });
 
-    test(
-      'when creating an exact number validator,'
-      'and use the toJsonSchema method, '
-      'then the result should be a valid json schema',
-      () {
-        final number = acanthis.number().exact(1);
-        final result = number.toJsonSchema();
+    test('when creating an exact number validator,'
+        'and use the toJsonSchema method, '
+        'then the result should be a valid json schema', () {
+      final number = acanthis.number().exact(1);
+      final result = number.toJsonSchema();
 
-        final expected = {
-          'const': 1,
-        };
-        expect(result, expected);
-      },
-    );
+      final expected = {'const': 1};
+      expect(result, expected);
+    });
   });
 }

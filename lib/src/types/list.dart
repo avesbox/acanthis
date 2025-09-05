@@ -13,12 +13,18 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   final AcanthisType<T> element;
 
   /// Constructor of the list type
-  const AcanthisList(this.element,
-      {super.operations, super.isAsync, super.key, super.metadataEntry});
+  const AcanthisList(
+    this.element, {
+    super.operations,
+    super.isAsync,
+    super.key,
+    super.metadataEntry,
+  });
 
   @override
   Future<AcanthisParseResult<List<T>>> parseAsync(
-      covariant List<dynamic> value) async {
+    covariant List<dynamic> value,
+  ) async {
     final parsed = <T>[];
     for (var i = 0; i < value.length; i++) {
       final parsedElement = await element.parseAsync(value[i]);
@@ -29,7 +35,8 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   @override
   Future<AcanthisParseResult<List<T>>> tryParseAsync(
-      covariant List<dynamic> value) async {
+    covariant List<dynamic> value,
+  ) async {
     final parsed = <T>[];
     final errors = <String, dynamic>{};
     for (var i = 0; i < value.length; i++) {
@@ -42,10 +49,11 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     final result = await super.tryParseAsync(parsed);
     final mergedErrors = {...errors, ...result.errors};
     return AcanthisParseResult(
-        value: result.value,
-        errors: mergedErrors,
-        metadata: result.metadata,
-        success: _recursiveSuccess(mergedErrors));
+      value: result.value,
+      errors: mergedErrors,
+      metadata: result.metadata,
+      success: _recursiveSuccess(mergedErrors),
+    );
   }
 
   /// Override of [parse] from [AcanthisType]
@@ -54,11 +62,13 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     if (isAsync) {
       throw AsyncValidationException('Cannot use parse with async operations');
     }
-    return super.parse(List.generate(
-      value.length,
-      (index) => element.parse(value[index]).value,
-      growable: false,
-    ));
+    return super.parse(
+      List.generate(
+        value.length,
+        (index) => element.parse(value[index]).value,
+        growable: false,
+      ),
+    );
   }
 
   /// Override of [tryParse] from [AcanthisType]
@@ -66,7 +76,8 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   AcanthisParseResult<List<T>> tryParse(covariant List<dynamic> value) {
     if (isAsync) {
       throw AsyncValidationException(
-          'Cannot use tryParse with async operations');
+        'Cannot use tryParse with async operations',
+      );
     }
     final parsed = <T>[];
     final errors = <String, dynamic>{};
@@ -80,48 +91,83 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     final result = super.tryParse(parsed);
     final mergedErrors = {...errors, ...result.errors};
     return AcanthisParseResult(
-        value: result.value,
-        errors: mergedErrors,
-        success: _recursiveSuccess(mergedErrors),
-        metadata: result.metadata);
+      value: result.value,
+      errors: mergedErrors,
+      success: _recursiveSuccess(mergedErrors),
+      metadata: result.metadata,
+    );
   }
 
   bool _recursiveSuccess(Map<String, dynamic> errors) {
     List<bool> results = [];
     for (var error in errors.values) {
-      results.add(error is Map<String, dynamic>
-          ? _recursiveSuccess(error)
-          : error.isEmpty);
+      results.add(
+        error is Map<String, dynamic>
+            ? _recursiveSuccess(error)
+            : error.isEmpty,
+      );
     }
     return results.every((element) => element);
   }
 
   /// Add a check to the list to check if it is at least [length] elements long
-  AcanthisList<T> min(int length,
-      {String? message, String Function(int minItems)? messageBuilder}) {
-    return withCheck(MinItemsListCheck(length,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisList<T> min(
+    int length, {
+    String? message,
+    String Function(int minItems)? messageBuilder,
+  }) {
+    return withCheck(
+      MinItemsListCheck(
+        length,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the list to check if it contains at least one of the [values]
-  AcanthisList<T> anyOf(List<T> values,
-      {String? message, String Function(List<T> items)? messageBuilder}) {
-    return withCheck(AnyOfListCheck<T>(values,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisList<T> anyOf(
+    List<T> values, {
+    String? message,
+    String Function(List<T> items)? messageBuilder,
+  }) {
+    return withCheck(
+      AnyOfListCheck<T>(
+        values,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the list to check if it contains all of the [values]
-  AcanthisList<T> everyOf(List<T> values,
-      {String? message, String Function(List<T> items)? messageBuilder}) {
-    return withCheck(EveryOfListCheck<T>(values,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisList<T> everyOf(
+    List<T> values, {
+    String? message,
+    String Function(List<T> items)? messageBuilder,
+  }) {
+    return withCheck(
+      EveryOfListCheck<T>(
+        values,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the list to check if it is at most [length] elements long
-  AcanthisList<T> max(int length,
-      {String? message, String Function(int maxItems)? messageBuilder}) {
-    return withCheck(MaxItemsListCheck<T>(length,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisList<T> max(
+    int length, {
+    String? message,
+    String Function(int maxItems)? messageBuilder,
+  }) {
+    return withCheck(
+      MaxItemsListCheck<T>(
+        length,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the list to check if all elements are unique
@@ -132,10 +178,14 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   /// Add a check to the list to check if it has exactly [value] elements
-  AcanthisList<T> length(int value,
-      {String? message, String Function(int length)? messageBuilder}) {
-    return withCheck(LengthListCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisList<T> length(
+    int value, {
+    String? message,
+    String Function(int length)? messageBuilder,
+  }) {
+    return withCheck(
+      LengthListCheck(value, message: message, messageBuilder: messageBuilder),
+    );
   }
 
   /// Returns the element type of the list
@@ -147,10 +197,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   AcanthisList<T> withAsyncCheck(AcanthisAsyncCheck<List<T>> check) {
     return AcanthisList(
       element,
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
@@ -161,10 +208,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   AcanthisList<T> withCheck(AcanthisCheck<List<T>> check) {
     return AcanthisList(
       element,
-      operations: [
-        ...operations,
-        check,
-      ],
+      operations: [...operations, check],
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
@@ -173,13 +217,11 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   @override
   AcanthisList<T> withTransformation(
-      AcanthisTransformation<List<T>> transformation) {
+    AcanthisTransformation<List<T>> transformation,
+  ) {
     return AcanthisList(
       element,
-      operations: [
-        ...operations,
-        transformation,
-      ],
+      operations: [...operations, transformation],
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,

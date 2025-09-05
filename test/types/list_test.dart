@@ -7,8 +7,7 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisList(AcanthisDate());
     });
-    test(
-        'when creating a list validator,'
+    test('when creating a list validator,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list();
@@ -21,8 +20,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a required field,'
+    test('when creating a list validator with a required field,'
         'and the list is empty, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list();
@@ -34,8 +32,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is less than the min check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2);
@@ -44,11 +41,12 @@ void main() {
       expect(result.success, false);
 
       expect(
-          () => list.parse(['value']), throwsA(TypeMatcher<ValidationError>()));
+        () => list.parse(['value']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is greater than the max check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().max(1);
@@ -56,12 +54,13 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => list.parse(['value', 'other']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => list.parse(['value', 'other']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is less than the min check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -70,11 +69,12 @@ void main() {
       expect(result.success, false);
 
       expect(
-          () => list.parse(['value']), throwsA(TypeMatcher<ValidationError>()));
+        () => list.parse(['value']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is greater than the max check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -82,12 +82,13 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => list.parse(['value', 'other', 'another', 'one']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => list.parse(['value', 'other', 'another', 'one']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -100,8 +101,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a min and max check,'
+    test('when creating a list validator with a min and max check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -114,8 +114,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a unique check,'
+    test('when creating a list validator with a unique check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().unique();
@@ -127,8 +126,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator and use the unwrap method,'
+    test('when creating a list validator and use the unwrap method,'
         'then the element should be returned', () {
       final list = acanthis.string().min(5).max(20).list();
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
@@ -138,8 +136,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a unique check,'
+    test('when creating a list validator with a unique check,'
         'and the list is invalid, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().unique();
@@ -147,81 +144,70 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => list.parse(['value', 'other', 'another', 'another']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => list.parse(['value', 'other', 'another', 'another']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-      'when creating a tuple validator from a list validator,'
-      'and the list is not valid, '
-      'then the result should be unsuccessful',
-      () {
-        final schema = string().list().and([string()]);
-        final result = schema.tryParse([5, 'Hello']);
+    test('when creating a tuple validator from a list validator,'
+        'and the list is not valid, '
+        'then the result should be unsuccessful', () {
+      final schema = string().list().and([string()]);
+      final result = schema.tryParse([5, 'Hello']);
 
-        expect(result.success, false);
+      expect(result.success, false);
 
-        expect(() => schema.parse([5, 'Hello']),
-            throwsA(TypeMatcher<ValidationError>()));
-      },
-    );
+      expect(
+        () => schema.parse([5, 'Hello']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
+    });
 
-    test(
-      'when creating a tuple validator from a list validator,'
-      'and the list is valid, '
-      'then the result should be successful',
-      () {
-        final schema = string().list().and([string()]);
-        final result = schema.tryParse(
-          [
-            ['Hello'],
-            'World'
-          ],
-        );
+    test('when creating a tuple validator from a list validator,'
+        'and the list is valid, '
+        'then the result should be successful', () {
+      final schema = string().list().and([string()]);
+      final result = schema.tryParse([
+        ['Hello'],
+        'World',
+      ]);
 
-        expect(result.success, true);
+      expect(result.success, true);
 
-        final resultParse = schema.parse([
-          ['Hello'],
-          'World'
-        ]);
+      final resultParse = schema.parse([
+        ['Hello'],
+        'World',
+      ]);
 
-        expect(resultParse.success, true);
-      },
-    );
+      expect(resultParse.success, true);
+    });
 
-    test(
-      'when creating a union validator from a list validator,'
-      'and the list is not valid, '
-      'then the result should be unsuccessful',
-      () {
-        final schema = string().list().or([string()]);
-        final result = schema.tryParse(5);
+    test('when creating a union validator from a list validator,'
+        'and the list is not valid, '
+        'then the result should be unsuccessful', () {
+      final schema = string().list().or([string()]);
+      final result = schema.tryParse(5);
 
-        expect(result.success, false);
+      expect(result.success, false);
 
-        expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
-      },
-    );
+      expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
+    });
 
-    test(
-      'when creating a union validator from a list validator,'
-      'and the list is valid, '
-      'then the result should be successful',
-      () {
-        final schema = string().list().or([string()]);
-        final result = schema.tryParse(['Hello', 'World']);
+    test('when creating a union validator from a list validator,'
+        'and the list is valid, '
+        'then the result should be successful', () {
+      final schema = string().list().or([string()]);
+      final result = schema.tryParse(['Hello', 'World']);
 
-        expect(result.success, true);
+      expect(result.success, true);
 
-        final resultParse = schema.parse(['Hello', 'World']);
+      final resultParse = schema.parse(['Hello', 'World']);
 
-        expect(resultParse.success, true);
-      },
-    );
+      expect(resultParse.success, true);
+    });
 
-    test(
-        'when creating a list validator with the length check,'
+    test('when creating a list validator with the length check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().length(4);
@@ -234,8 +220,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a list validator with a custom check,'
+    test('when creating a list validator with a custom check,'
         'and the list is invalid, '
         'then the result should be unsuccessful', () {
       final list = acanthis
@@ -244,18 +229,23 @@ void main() {
           .max(20)
           .list()
           .refine(onCheck: (value) => value.length == 4, error: '5', name: '5');
-      final result =
-          list.tryParse(['value', 'other', 'another', 'another', 'oneee']);
+      final result = list.tryParse([
+        'value',
+        'other',
+        'another',
+        'another',
+        'oneee',
+      ]);
 
       expect(result.success, false);
 
       expect(
-          () => list.parse(['value', 'other', 'another', 'another', 'oneee']),
-          throwsA(TypeMatcher<ValidationError>()));
+        () => list.parse(['value', 'other', 'another', 'another', 'oneee']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a list validator with a custom transformation,'
+    test('when creating a list validator with a custom transformation,'
         'and all the elements in the list are valid, '
         'and the list itself is valid, '
         'then the result should be transformed', () {
@@ -299,8 +289,10 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => list.parse(['another']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => list.parse(['another']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     },
   );
 
@@ -326,36 +318,36 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => list.parse(['value', 'another']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => list.parse(['value', 'another']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     },
   );
 
-  test(
-    'when creating a list validator,'
-    'and use the toJsonSchema method, '
-    'then the result should be a valid json schema',
-    () {
-      final schema = acanthis.string().list();
-      final result = schema.toJsonSchema();
+  test('when creating a list validator,'
+      'and use the toJsonSchema method, '
+      'then the result should be a valid json schema', () {
+    final schema = acanthis.string().list();
+    final result = schema.toJsonSchema();
 
-      expect(result, isA<Map<String, dynamic>>());
-      expect(result['type'], 'array');
-      expect(result['items'], isA<Map<String, dynamic>>());
-    },
-  );
+    expect(result, isA<Map<String, dynamic>>());
+    expect(result['type'], 'array');
+    expect(result['items'], isA<Map<String, dynamic>>());
+  });
 
-  test(
-      'when creating a list validator,'
+  test('when creating a list validator,'
       'and use the toJsonSchema method and the meta method, '
       'then the result should be a valid json schema with the metadata', () {
-    final schema = acanthis.string().list().meta(MetadataEntry(
-          description: 'description',
-          title: 'title',
-          examples: [
-            ['example1', 'example2']
-          ],
-        ));
+    final schema = acanthis.string().list().meta(
+      MetadataEntry(
+        description: 'description',
+        title: 'title',
+        examples: [
+          ['example1', 'example2'],
+        ],
+      ),
+    );
     final result = schema.toJsonSchema();
     expect(result, isA<Map<String, dynamic>>());
     expect(result['type'], 'array');
@@ -363,13 +355,12 @@ void main() {
     expect(result['description'], 'description');
     expect(result['title'], 'title');
     expect(result['examples'], [
-      ['example1', 'example2']
+      ['example1', 'example2'],
     ]);
     expect(result['items']['type'], 'string');
   });
 
-  test(
-      'when creating a list validator,'
+  test('when creating a list validator,'
       'and use the toJsonSchema method and length checks are used, '
       'then the result should be a valid json schema with the constraints', () {
     final schema = acanthis.string().list().min(2).max(5);
@@ -390,15 +381,16 @@ void main() {
   });
 
   test(
-      'when creating a list validator,'
-      'and use the toJsonSchema method and the unique check, '
-      'then the result should be a valid json schema with uniqueItems true',
-      () {
-    final schema = acanthis.string().list().unique();
-    final result = schema.toJsonSchema();
-    expect(result, isA<Map<String, dynamic>>());
-    expect(result['type'], 'array');
-    expect(result['items'], isA<Map<String, dynamic>>());
-    expect(result['uniqueItems'], true);
-  });
+    'when creating a list validator,'
+    'and use the toJsonSchema method and the unique check, '
+    'then the result should be a valid json schema with uniqueItems true',
+    () {
+      final schema = acanthis.string().list().unique();
+      final result = schema.toJsonSchema();
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['type'], 'array');
+      expect(result['items'], isA<Map<String, dynamic>>());
+      expect(result['uniqueItems'], true);
+    },
+  );
 }

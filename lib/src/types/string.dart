@@ -10,7 +10,12 @@ import 'types.dart';
 
 /// A class to validate string types
 class AcanthisString extends AcanthisType<String> {
-  const AcanthisString({super.isAsync, super.operations, super.key, super.metadataEntry});
+  const AcanthisString({
+    super.isAsync,
+    super.operations,
+    super.key,
+    super.metadataEntry,
+  });
 
   /// Add a check to the string to check if it is a valid email
   AcanthisString email({String? message}) {
@@ -18,17 +23,33 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   /// Add a check to the string to check if its length is at least [length]
-  AcanthisString min(int length,
-      {String? message, String Function(int value)? messageBuilder}) {
-    return withCheck(MinStringLengthCheck(length,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString min(
+    int length, {
+    String? message,
+    String Function(int value)? messageBuilder,
+  }) {
+    return withCheck(
+      MinStringLengthCheck(
+        length,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if its length is at most [length]
-  AcanthisString max(int length,
-      {String? message, String Function(int value)? messageBuilder}) {
-    return withCheck(MaxStringLengthCheck(length,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString max(
+    int length, {
+    String? message,
+    String Function(int value)? messageBuilder,
+  }) {
+    return withCheck(
+      MaxStringLengthCheck(
+        length,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if follows the pattern [pattern]
@@ -39,37 +60,46 @@ class AcanthisString extends AcanthisType<String> {
   /// Add a check to the string to check if it contains letters
   AcanthisString letters({bool strict = true, String? message}) {
     return withCheck(
-        PatternLettersStringChecks(strict: strict, message: message));
+      PatternLettersStringChecks(strict: strict, message: message),
+    );
   }
 
   /// Add a check to the string to check if it contains digits
   AcanthisString digits({bool strict = true, String? message}) {
     return withCheck(
-        PatternDigitsStringChecks(strict: strict, message: message));
+      PatternDigitsStringChecks(strict: strict, message: message),
+    );
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters
   AcanthisString alphanumeric({bool strict = true, String? message}) {
     return withCheck(
-        PatternAlphanumericStringChecks(strict: strict, message: message));
+      PatternAlphanumericStringChecks(strict: strict, message: message),
+    );
   }
 
   /// Add a check to the string to check if it contains alphanumeric characters and spaces
   AcanthisString alphanumericWithSpaces({bool strict = true, String? message}) {
-    return withCheck(PatternAlphanumericWithSpacesStringChecks(
-        strict: strict, message: message));
+    return withCheck(
+      PatternAlphanumericWithSpacesStringChecks(
+        strict: strict,
+        message: message,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it contains special characters
   AcanthisString specialCharacters({bool strict = true, String? message}) {
     return withCheck(
-        PatternSpecialCharactersStringChecks(strict: strict, message: message));
+      PatternSpecialCharactersStringChecks(strict: strict, message: message),
+    );
   }
 
   /// Add a check to the string to check if it contains all characters
   AcanthisString allCharacters({bool strict = true, String? message}) {
     return withCheck(
-        PatternAllCharactersStringChecks(strict: strict, message: message));
+      PatternAllCharactersStringChecks(strict: strict, message: message),
+    );
   }
 
   /// Add a check to the string to check if it is in uppercase
@@ -115,7 +145,8 @@ class AcanthisString extends AcanthisType<String> {
 
   /// Add a check to the string to check if it is not empty
   @Deprecated(
-      'Use notEmpty() instead; required() will be removed in a future release.')
+    'Use notEmpty() instead; required() will be removed in a future release.',
+  )
   AcanthisString required({String? message}) {
     return withCheck(RequiredStringCheck(message: message));
   }
@@ -126,31 +157,63 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   /// Add a check to the string to check if it's length is exactly [length]
-  AcanthisString length(int length,
-      {String? message, String Function(int value)? messageBuilder}) {
-    return withCheck(ExactStringLengthCheck(length,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString length(
+    int length, {
+    String? message,
+    String Function(int value)? messageBuilder,
+  }) {
+    return withCheck(
+      ExactStringLengthCheck(
+        length,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it contains [value]
-  AcanthisString contains(String value,
-      {String? message, String Function(String value)? messageBuilder}) {
-    return withCheck(ContainsStringCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString contains(
+    String value, {
+    String? message,
+    String Function(String value)? messageBuilder,
+  }) {
+    return withCheck(
+      ContainsStringCheck(
+        value,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it starts with [value]
-  AcanthisString startsWith(String value,
-      {String? message, String Function(String value)? messageBuilder}) {
-    return withCheck(StartsWithStringCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString startsWith(
+    String value, {
+    String? message,
+    String Function(String value)? messageBuilder,
+  }) {
+    return withCheck(
+      StartsWithStringCheck(
+        value,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it ends with [value]
-  AcanthisString endsWith(String value,
-      {String? message, String Function(String value)? messageBuilder}) {
-    return withCheck(EndsWithStringCheck(value,
-        message: message, messageBuilder: messageBuilder));
+  AcanthisString endsWith(
+    String value, {
+    String? message,
+    String Function(String value)? messageBuilder,
+  }) {
+    return withCheck(
+      EndsWithStringCheck(
+        value,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it is a valid card number
@@ -172,21 +235,31 @@ class AcanthisString extends AcanthisType<String> {
     if (enumValues.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
     }
-    return withCheck(EnumeratedStringCheck(
+    return withCheck(
+      EnumeratedStringCheck(
         enumValues: enumValues,
         nameTransformer: nameTransformer,
-        message: message));
+        message: message,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it is a value in the [enumValues]
-  AcanthisString contained(Iterable<String> values,
-      {String? message,
-      String Function(Iterable<String> value)? messageBuilder}) {
+  AcanthisString contained(
+    Iterable<String> values, {
+    String? message,
+    String Function(Iterable<String> value)? messageBuilder,
+  }) {
     if (values.isEmpty) {
       throw ArgumentError('Values cannot be empty');
     }
-    return withCheck(ContainedStringCheck(
-        values: values, message: message, messageBuilder: messageBuilder));
+    return withCheck(
+      ContainedStringCheck(
+        values: values,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a check to the string to check if it is a valid cuid
@@ -225,35 +298,55 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   /// Add a check to the string to check if it is a valid hex color
-  AcanthisString exact(String value,
-      {String? message, String Function(String value)? messageBuilder}) {
-    return withCheck(ExactCheck<String>(
-        value: value, message: message, messageBuilder: messageBuilder));
+  AcanthisString exact(
+    String value, {
+    String? message,
+    String Function(String value)? messageBuilder,
+  }) {
+    return withCheck(
+      ExactCheck<String>(
+        value: value,
+        message: message,
+        messageBuilder: messageBuilder,
+      ),
+    );
   }
 
   /// Add a transformation to the string to encode it to base64
   AcanthisString encode() {
-    return withTransformation(AcanthisTransformation<String>(
-        transformation: (value) => convert.base64.encode(value.codeUnits)));
+    return withTransformation(
+      AcanthisTransformation<String>(
+        transformation: (value) => convert.base64.encode(value.codeUnits),
+      ),
+    );
   }
 
   /// Add a transformation to the string to decode it from base64
   AcanthisString decode() {
-    return withTransformation(AcanthisTransformation<String>(
-        transformation: (value) =>
-            convert.utf8.decode(convert.base64.decode(value))));
+    return withTransformation(
+      AcanthisTransformation<String>(
+        transformation:
+            (value) => convert.utf8.decode(convert.base64.decode(value)),
+      ),
+    );
   }
 
   /// Add a transformation to the string to transform it to uppercase
   AcanthisString toUpperCase() {
-    return withTransformation(AcanthisTransformation<String>(
-        transformation: (value) => value.toUpperCase()));
+    return withTransformation(
+      AcanthisTransformation<String>(
+        transformation: (value) => value.toUpperCase(),
+      ),
+    );
   }
 
   /// Add a transformation to the string to transform it to lowercase
   AcanthisString toLowerCase() {
-    return withTransformation(AcanthisTransformation<String>(
-        transformation: (value) => value.toLowerCase()));
+    return withTransformation(
+      AcanthisTransformation<String>(
+        transformation: (value) => value.toLowerCase(),
+      ),
+    );
   }
 
   // AcanthisDate date() {
@@ -263,27 +356,34 @@ class AcanthisString extends AcanthisType<String> {
 
   @override
   AcanthisString withAsyncCheck(AcanthisAsyncCheck<String> check) {
-    return AcanthisString(operations: [
-      ...operations,
-      check,
-    ], isAsync: true, key: key, metadataEntry: metadataEntry);
+    return AcanthisString(
+      operations: [...operations, check],
+      isAsync: true,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisString withCheck(AcanthisCheck<String> check) {
-    return AcanthisString(operations: [
-      ...operations,
-      check,
-    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
+    return AcanthisString(
+      operations: [...operations, check],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
   AcanthisString withTransformation(
-      AcanthisTransformation<String> transformation) {
-    return AcanthisString(operations: [
-      ...operations,
-      transformation,
-    ], isAsync: isAsync, key: key, metadataEntry: metadataEntry);
+    AcanthisTransformation<String> transformation,
+  ) {
+    return AcanthisString(
+      operations: [...operations, transformation],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+    );
   }
 
   @override
@@ -367,9 +467,10 @@ class AcanthisString extends AcanthisType<String> {
         PatternNanoidStringChecks() => check.regExp.pattern,
         PatternJwtStringChecks() => check.regExp.pattern,
         PatternBase64StringChecks() => check.regExp.pattern,
-        PatternStringCheck() => check.regExp is RegExp
-            ? (check.regExp as RegExp).pattern
-            : check.regExp,
+        PatternStringCheck() =>
+          check.regExp is RegExp
+              ? (check.regExp as RegExp).pattern
+              : check.regExp,
         _ => null,
       };
       if (patternChecksMap['pattern'] == null) {

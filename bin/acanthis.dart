@@ -24,17 +24,13 @@ abstract class Payment {}
 class CreditCard extends Payment {
   final String number;
 
-  CreditCard({
-    required this.number,
-  });
+  CreditCard({required this.number});
 }
 
 class WireTransfer extends Payment {
   final String iban;
 
-  WireTransfer({
-    required this.iban,
-  });
+  WireTransfer({required this.iban});
 }
 
 void main(List<String> arguments) async {
@@ -43,37 +39,44 @@ void main(List<String> arguments) async {
       .field('age', (u) => u.age, number())
       .field('email', (u) => u.email, string().email())
       .field('birthDate', (u) => u.birthDate, date())
-      .withRefs((refs) =>
-          refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age))
+      .withRefs(
+        (refs) =>
+            refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age),
+      )
       .refineWithRefs((u, r) {
-    return (DateTime.now().year - r<int>('age')) ==
-        r<DateTime>('birthDate').year;
-  }, 'User must be at least 18 years old');
+        return (DateTime.now().year - r<int>('age')) ==
+            r<DateTime>('birthDate').year;
+      }, 'User must be at least 18 years old');
   final user = User(
-      name: 'John Doe',
-      age: 30,
-      email: 'john.doe@example.com',
-      birthDate: DateTime(2015, 1, 1));
+    name: 'John Doe',
+    age: 30,
+    email: 'john.doe@example.com',
+    birthDate: DateTime(2015, 1, 1),
+  );
   final result = userValidator.tryParse(user);
   print(result.errors);
 
-  final usersMapper = classSchema<List, List<User>>()
-      .input(object({
-    'name': string().min(1),
-    'age': number().integer().gte(0),
-    'email': string().email(),
-    'birthDate': date(),
-  }).list())
-      .map((m) {
-    return m.map((item) {
-      return User(
-        name: item['name'],
-        age: item['age'],
-        email: item['email'],
-        birthDate: item['birthDate'],
-      );
-    }).toList();
-  }).build();
+  final usersMapper =
+      classSchema<List, List<User>>()
+          .input(
+            object({
+              'name': string().min(1),
+              'age': number().integer().gte(0),
+              'email': string().email(),
+              'birthDate': date(),
+            }).list(),
+          )
+          .map((m) {
+            return m.map((item) {
+              return User(
+                name: item['name'],
+                age: item['age'],
+                email: item['email'],
+                birthDate: item['birthDate'],
+              );
+            }).toList();
+          })
+          .build();
   final usersResult = usersMapper.tryParse([
     {
       'name': 'Jane Doe',
@@ -96,13 +99,19 @@ void main(List<String> arguments) async {
   final unionWithVariants = union<Payment>([
     variant<CreditCard>(
       guard: (p) => p is CreditCard,
-      schema: instance<CreditCard>()
-          .field('number', (c) => c.number, string().min(13).max(19)),
+      schema: instance<CreditCard>().field(
+        'number',
+        (c) => c.number,
+        string().min(13).max(19),
+      ),
     ),
     variant<WireTransfer>(
       guard: (p) => p is WireTransfer,
-      schema: instance<WireTransfer>()
-          .field('iban', (w) => w.iban, string().min(15).max(34)),
+      schema: instance<WireTransfer>().field(
+        'iban',
+        (w) => w.iban,
+        string().min(15).max(34),
+      ),
     ),
   ]);
   print(unionWithVariants.parse(creditCard));
@@ -112,21 +121,29 @@ void main(List<String> arguments) async {
     literal('wire_transfer'),
     variant<CreditCard>(
       guard: (p) => p is CreditCard,
-      schema: instance<CreditCard>()
-          .field('number', (c) => c.number, string().min(13).max(19)),
+      schema: instance<CreditCard>().field(
+        'number',
+        (c) => c.number,
+        string().min(13).max(19),
+      ),
     ),
     object({
       'type': string().contained(['credit_card', 'wire_transfer']),
-      'data': union([
-        instance<CreditCard>(),
-        instance<WireTransfer>(),
-      ]),
-    })
+      'data': union([instance<CreditCard>(), instance<WireTransfer>()]),
+    }),
   ]);
-  print(literalSchemaVariantUnion
-      .parse({'type': 'credit_card', 'data': creditCard}));
-  print(literalSchemaVariantUnion
-      .parse({'type': 'wire_transfer', 'data': wireTransfer}));
+  print(
+    literalSchemaVariantUnion.parse({
+      'type': 'credit_card',
+      'data': creditCard,
+    }),
+  );
+  print(
+    literalSchemaVariantUnion.parse({
+      'type': 'wire_transfer',
+      'data': wireTransfer,
+    }),
+  );
   print(literalSchemaVariantUnion.parse('credit_card'));
   print(literalSchemaVariantUnion.parse('wire_transfer'));
   print(literalSchemaVariantUnion.parse(creditCard));
@@ -137,8 +154,10 @@ void main(List<String> arguments) async {
   print(numericInput.parse(2)); // passes
   print(numericInput.parse('hello')); // passes
 
-  final mapWithLiterals =
-      object({'type': literal('Acanthis'), 'name': string()});
+  final mapWithLiterals = object({
+    'type': literal('Acanthis'),
+    'name': string(),
+  });
 
   print(mapWithLiterals.parse({'type': 'Acanthis', 'name': 'Example'}));
 }

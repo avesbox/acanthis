@@ -27,26 +27,28 @@ abstract class AcanthisType<O> {
   final MetadataEntry<O>? metadataEntry;
 
   /// The constructor of the class
-  const AcanthisType(
-      {List<AcanthisOperation<O>> operations = const [],
-      this.isAsync = false,
-      this.key = '',
-      this.metadataEntry})
-      : __operations = operations;
+  const AcanthisType({
+    List<AcanthisOperation<O>> operations = const [],
+    this.isAsync = false,
+    this.key = '',
+    this.metadataEntry,
+  }) : __operations = operations;
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
   AcanthisParseResult<O> parse(O value) {
     if (isAsync) {
       throw AsyncValidationException(
-          'Cannot use tryParse with async operations');
+        'Cannot use tryParse with async operations',
+      );
     }
     if (operations.isEmpty) {
       return AcanthisParseResult(
-          value: value,
-          errors: {},
-          success: true,
-          metadata: metadataEntry);
+        value: value,
+        errors: {},
+        success: true,
+        metadata: metadataEntry,
+      );
     }
     O newValue = value;
     for (var operation in operations) {
@@ -63,9 +65,7 @@ abstract class AcanthisType<O> {
           break;
       }
     }
-    return AcanthisParseResult<O>(
-        value: newValue,
-        metadata: metadataEntry);
+    return AcanthisParseResult<O>(value: newValue, metadata: metadataEntry);
   }
 
   /// The tryParse method to try to parse the value
@@ -77,15 +77,17 @@ abstract class AcanthisType<O> {
   AcanthisParseResult<O> tryParse(O value) {
     if (isAsync) {
       throw AsyncValidationException(
-          'Cannot use tryParse with async operations');
+        'Cannot use tryParse with async operations',
+      );
     }
     final errors = <String, String>{};
     if (operations.isEmpty) {
       return AcanthisParseResult(
-          value: value,
-          errors: errors,
-          success: true,
-          metadata: metadataEntry);
+        value: value,
+        errors: errors,
+        success: true,
+        metadata: metadataEntry,
+      );
     }
     O newValue = value;
     for (final operation in operations) {
@@ -103,10 +105,11 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue,
-        errors: errors,
-        success: errors.isEmpty,
-        metadata: metadataEntry);
+      value: newValue,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: metadataEntry,
+    );
   }
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
@@ -114,10 +117,11 @@ abstract class AcanthisType<O> {
   Future<AcanthisParseResult<O>> parseAsync(O value) async {
     if (operations.isEmpty) {
       return AcanthisParseResult(
-          value: value,
-          errors: {},
-          success: true,
-          metadata: metadataEntry);
+        value: value,
+        errors: {},
+        success: true,
+        metadata: metadataEntry,
+      );
     }
     O newValue = value;
     for (var operation in operations) {
@@ -139,9 +143,7 @@ abstract class AcanthisType<O> {
           break;
       }
     }
-    return AcanthisParseResult<O>(
-        value: newValue,
-        metadata: metadataEntry);
+    return AcanthisParseResult<O>(value: newValue, metadata: metadataEntry);
   }
 
   /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
@@ -154,10 +156,11 @@ abstract class AcanthisType<O> {
     final errors = <String, String>{};
     if (operations.isEmpty) {
       return AcanthisParseResult(
-          value: value,
-          errors: errors,
-          success: true,
-          metadata: metadataEntry);
+        value: value,
+        errors: errors,
+        success: true,
+        metadata: metadataEntry,
+      );
     }
     O newValue = value;
     for (var operation in operations) {
@@ -180,10 +183,11 @@ abstract class AcanthisType<O> {
       }
     }
     return AcanthisParseResult(
-        value: newValue,
-        errors: errors,
-        success: errors.isEmpty,
-        metadata: metadataEntry);
+      value: newValue,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: metadataEntry,
+    );
   }
 
   /// Add a check to the type
@@ -213,20 +217,23 @@ abstract class AcanthisType<O> {
   }
 
   /// Add a custom check to the number
-  AcanthisType<O> refine(
-      {required bool Function(O value) onCheck,
-      required String error,
-      required String name}) {
+  AcanthisType<O> refine({
+    required bool Function(O value) onCheck,
+    required String error,
+    required String name,
+  }) {
     return withCheck(CustomCheck<O>(onCheck, error: error, name: name));
   }
 
   /// Add a custom async check to the number
-  AcanthisType<O> refineAsync(
-      {required Future<bool> Function(O value) onCheck,
-      required String error,
-      required String name}) {
+  AcanthisType<O> refineAsync({
+    required Future<bool> Function(O value) onCheck,
+    required String error,
+    required String name,
+  }) {
     return withAsyncCheck(
-        CustomAsyncCheck<O>(onCheck, error: error, name: name));
+      CustomAsyncCheck<O>(onCheck, error: error, name: name),
+    );
   }
 
   /// Add a pipe transformation to the type to transform the value to another type
@@ -243,7 +250,8 @@ abstract class AcanthisType<O> {
   /// Add a typed transformation to the type. It does not transform the value if the type is not the same
   AcanthisType<O> transform(O Function(O value) transformation) {
     return withTransformation(
-        AcanthisTransformation<O>(transformation: transformation));
+      AcanthisTransformation<O>(transformation: transformation),
+    );
   }
 
   /// Convert the type to a JSON schema
@@ -261,7 +269,6 @@ abstract class AcanthisType<O> {
 }
 
 @immutable
-
 /// A class to represent a pipeline of transformations
 class AcanthisPipeline<O, T> {
   /// The type of the input value
@@ -274,8 +281,11 @@ class AcanthisPipeline<O, T> {
   final T Function(O value) transform;
 
   /// The constructor of the class
-  const AcanthisPipeline(
-      {required this.inType, required this.outType, required this.transform});
+  const AcanthisPipeline({
+    required this.inType,
+    required this.outType,
+    required this.transform,
+  });
 
   /// The parse method to parse the value
   AcanthisParseResult<T> parse(O value) {
@@ -305,9 +315,10 @@ class AcanthisPipeline<O, T> {
       newValue = transform(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
-          value: null,
-          errors: {'transform': 'Error transforming the value from $O -> $T'},
-          success: false);
+        value: null,
+        errors: {'transform': 'Error transforming the value from $O -> $T'},
+        success: false,
+      );
     }
     var outResult = outType.tryParse(newValue);
     return outResult;
@@ -367,11 +378,12 @@ class AcanthisParseResult<O> {
   final MetadataEntry<O>? metadata;
 
   /// The constructor of the class
-  const AcanthisParseResult(
-      {required this.value,
-      this.errors = const {},
-      this.success = true,
-      this.metadata});
+  const AcanthisParseResult({
+    required this.value,
+    this.errors = const {},
+    this.success = true,
+    this.metadata,
+  });
 
   @override
   String toString() {

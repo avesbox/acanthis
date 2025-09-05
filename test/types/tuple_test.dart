@@ -7,8 +7,7 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisTuple([]);
     });
-    test(
-        'when creating a tuple validator,'
+    test('when creating a tuple validator,'
         'and the tuple is valid, '
         'then the result should be successful', () {
       final tuple = acanthis.tuple([acanthis.string(), acanthis.number()]);
@@ -21,8 +20,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a tuple validator,'
+    test('when creating a tuple validator,'
         'and the tuple is invalid, '
         'then the result should be unsuccessful', () {
       final tuple = acanthis.tuple([acanthis.string(), acanthis.number()]);
@@ -30,12 +28,13 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => tuple.parse(['Hello', '5']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => tuple.parse(['Hello', '5']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
 
-    test(
-        'when creating a variadic tuple validator,'
+    test('when creating a variadic tuple validator,'
         'and the tuple is valid, '
         'then the result should be successful', () {
       final tuple =
@@ -49,8 +48,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a variadic tuple validator,'
+    test('when creating a variadic tuple validator,'
         'and the tuple is invalid, '
         'then the result should be unsuccessful', () {
       final tuple =
@@ -59,8 +57,10 @@ void main() {
 
       expect(result.success, false);
 
-      expect(() => tuple.parse(['Hello', '5']),
-          throwsA(TypeMatcher<ValidationError>()));
+      expect(
+        () => tuple.parse(['Hello', '5']),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
     });
   });
 }

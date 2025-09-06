@@ -30,7 +30,7 @@ void main() {
         result.errors,
         equals({
           'key': {
-            'required': 'Field is required',
+            'required': 'Field key is required',
             'minLength':
                 'Value must be greater than or equal to 5 characters long',
             'maxLength':

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3
+
+- perf: improve performances again.
+
 ## 1.4.2
 
 - chore: update dependencies

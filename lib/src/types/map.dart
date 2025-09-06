@@ -92,27 +92,24 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       );
     }
     final parsed = <String, V>{};
-    final valueKeys = value.keys.toSet();
-    final fieldKeys = _fields.keys.toSet();
-
     // Validate required fields and parse known fields
-    for (final key in fieldKeys) {
-      final fieldType = _fields[key]!;
-      final isOptional = _optionalFields.contains(key);
+    for (final entry in _fields.entries) {
+      final fieldType = entry.value;
+      final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[key];
+      final passedValue = value[entry.key];
 
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = [
-          'Field $key is required',
+          'Field ${entry.key} is required',
           for (final check in checks) check.error,
         ];
         throw ValidationError('${validationErrors.join('.\n')}.');
       }
       if (passedValue == null && isOptional && !isNullable) continue;
 
-      parsed[key] =
+      parsed[entry.key] =
           fieldType is LazyEntry
               ? fieldType.parse(passedValue, this).value
               : fieldType.parse(passedValue).value;
@@ -120,7 +117,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
     // Handle passthrough keys in a single pass
     if (_passthrough) {
-      for (final key in valueKeys.difference(fieldKeys)) {
+      final passthroughKeys = value.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
+      for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
           try {
@@ -172,32 +172,34 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     Map<String, V> value,
   ) async {
     final parsed = <String, V>{};
-    final valueKeys = value.keys.toSet();
-    final fieldKeys = _fields.keys.toSet();
     // Parse each field
-    for (var key in fieldKeys) {
-      final fieldType = _fields[key]!;
-      final isOptional = _optionalFields.contains(key);
+    for (var entry in _fields.entries) {
+      final fieldType = entry.value;
+      final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[key];
+      final passedValue = value[entry.key];
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = [
-          'Field $key is required',
+          'Field ${entry.key} is required',
           for (final check in checks) check.error,
         ];
         throw ValidationError(validationErrors.join('.\n'));
       }
       if (passedValue == null && isOptional && !isNullable) continue;
       if (fieldType is LazyEntry) {
-        parsed[key] = (await fieldType.parseAsync(passedValue, this)).value;
+        parsed[entry.key] =
+            (await fieldType.parseAsync(passedValue, this)).value;
       } else {
-        parsed[key] = (await fieldType.parseAsync(passedValue)).value;
+        parsed[entry.key] = (await fieldType.parseAsync(passedValue)).value;
       }
     }
     // Batch passthrough logic
     if (_passthrough) {
-      for (final key in valueKeys.difference(fieldKeys)) {
+      final passthroughKeys = value.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
+      for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
           try {
@@ -249,20 +251,18 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   ) async {
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    final valueKeys = value.keys.toSet();
-    final fieldKeys = _fields.keys.toSet();
-    for (final key in fieldKeys) {
-      final fieldType = _fields[key]!;
-      final isOptional = _optionalFields.contains(key);
+    for (final entry in _fields.entries) {
+      final fieldType = entry.value;
+      final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[key];
+      final passedValue = value[entry.key];
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
-          'required': 'Field is required',
+          'required': 'Field ${entry.key} is required',
           for (final check in checks) check.name: check.error,
         };
-        errors[key] = validationErrors;
+        errors[entry.key] = validationErrors;
         continue;
       }
       if (passedValue == null && isOptional && !isNullable) continue;
@@ -272,14 +272,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       } else {
         parsedValue = await fieldType.tryParseAsync(passedValue);
       }
-      parsed[key] = parsedValue.value;
+      parsed[entry.key] = parsedValue.value;
       if (parsedValue.errors.isNotEmpty) {
-        errors[key] = parsedValue.errors;
+        errors[entry.key] = parsedValue.errors;
       }
     }
     // Batch passthrough logic
     if (_passthrough) {
-      for (final key in valueKeys.difference(fieldKeys)) {
+      final passthroughKeys = value.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
+      for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
           try {
@@ -346,20 +349,18 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
-    final valueKeys = value.keys.toSet();
-    final fieldKeys = _fields.keys.toSet();
-    for (final key in fieldKeys) {
-      final fieldType = _fields[key]!;
-      final isOptional = _optionalFields.contains(key);
+    for (final entry in _fields.entries) {
+      final fieldType = entry.value;
+      final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[key];
+      final passedValue = value[entry.key];
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
-          'required': 'Field is required',
+          'required': 'Field ${entry.key} is required',
           for (final check in checks) check.name: check.error,
         };
-        errors[key] = validationErrors;
+        errors[entry.key] = validationErrors;
         continue;
       }
       if (passedValue == null && isOptional && !isNullable) continue;
@@ -369,14 +370,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       } else {
         parsedValue = fieldType.tryParse(passedValue);
       }
-      parsed[key] = parsedValue.value;
+      parsed[entry.key] = parsedValue.value;
       if (parsedValue.errors.isNotEmpty) {
-        errors[key] = parsedValue.errors;
+        errors[entry.key] = parsedValue.errors;
       }
     }
     // Batch passthrough logic
     if (_passthrough) {
-      for (final key in valueKeys.difference(fieldKeys)) {
+      final passthroughKeys = value.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
+      for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
           try {

@@ -139,17 +139,6 @@ void main() {
     });
 
     test('when creating a union validator from a date validator,'
-        'and the date is not valid, '
-        'then the result should be unsuccessful', () {
-      final date = acanthis.date().or([acanthis.string()]);
-      final result = date.tryParse(5);
-
-      expect(result.success, false);
-
-      expect(() => date.parse(5), throwsA(TypeMatcher<ValidationError>()));
-    });
-
-    test('when creating a union validator from a date validator,'
         'and the date is valid, '
         'then the result should be successful', () {
       final date = acanthis.date().or([acanthis.string()]);

@@ -8,8 +8,7 @@ void main() {
       const AcanthisString();
     });
 
-    test(
-        'when creating a string validator,'
+    test('when creating a string validator,'
         'and the string is valid, '
         'then the result should be successful', () {
       final string = acanthis.string();
@@ -22,8 +21,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a max check,'
+    test('when creating a string validator with a max check,'
         'and the string is greater than the check, '
         'then the result should be successful', () {
       final string = acanthis.string().max(3);
@@ -36,8 +34,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a max check,'
+    test('when creating a string validator with a max check,'
         'and the string is greater than the check, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().max(3);
@@ -51,8 +48,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a min check,'
+    test('when creating a string validator with a min check,'
         'and the string is less than the check, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().min(5);
@@ -66,8 +62,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a min check,'
+    test('when creating a string validator with a min check,'
         'and the string is less than the check, '
         'then the result should be successful', () {
       final string = acanthis.string().min(3);
@@ -80,8 +75,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a min and max check,'
+    test('when creating a string validator with a min and max check,'
         'and the string is less than the min check, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().min(5).max(10);
@@ -95,8 +89,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a min and max check,'
+    test('when creating a string validator with a min and max check,'
         'and the string is greater than the max check, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().min(1).max(3);
@@ -110,8 +103,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a min and max check,'
+    test('when creating a string validator with a min and max check,'
         'and the string is within the min and max check, '
         'then the result should be successful', () {
       final string = acanthis.string().min(1).max(10);
@@ -124,8 +116,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a pattern check,'
+    test('when creating a string validator with a pattern check,'
         'and the string matches the pattern, '
         'then the result should be successful', () {
       final string = acanthis.string().pattern(RegExp(r'^[a-z]+$'));
@@ -138,8 +129,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a pattern check,'
+    test('when creating a string validator with a pattern check,'
         'and the string does not match the pattern, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().pattern(RegExp(r'^[a-z]+$'));
@@ -153,8 +143,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a required check,'
+    test('when creating a string validator with a required check,'
         'and the string is empty, '
         'then the result should be unsuccessful', () {
       // ignore: deprecated_member_use_from_same_package
@@ -166,8 +155,7 @@ void main() {
       expect(() => string.parse(''), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a string validator with a required check,'
+    test('when creating a string validator with a required check,'
         'and the string is not empty, '
         'then the result should be successful', () {
       // ignore: deprecated_member_use_from_same_package
@@ -181,8 +169,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a notEmpty check,'
+    test('when creating a string validator with a notEmpty check,'
         'and the string is empty, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().notEmpty();
@@ -193,8 +180,7 @@ void main() {
       expect(() => string.parse(''), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test(
-        'when creating a string validator with a notEmpty check,'
+    test('when creating a string validator with a notEmpty check,'
         'and the string is not empty, '
         'then the result should be successful', () {
       final string = acanthis.string().notEmpty();
@@ -207,8 +193,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with an email check,'
+    test('when creating a string validator with an email check,'
         'and the string is a valid email, '
         'then the result should be successful', () {
       final string = acanthis.string().email();
@@ -221,8 +206,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with an email check,'
+    test('when creating a string validator with an email check,'
         'and the string is not a valid email, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().email();
@@ -236,8 +220,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a length check,'
+    test('when creating a string validator with a length check,'
         'and the string length is not the same, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().length(5);
@@ -251,8 +234,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a length check,'
+    test('when creating a string validator with a length check,'
         'and the string length is the same, '
         'then the result should be successful', () {
       final string = acanthis.string().length(4);
@@ -265,8 +247,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a contains check,'
+    test('when creating a string validator with a contains check,'
         'and the string contains the substring, '
         'then the result should be successful', () {
       final string = acanthis.string().contains('es');
@@ -279,8 +260,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a contains check,'
+    test('when creating a string validator with a contains check,'
         'and the string does not contain the substring, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().contains('us');
@@ -294,8 +274,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a startsWith check,'
+    test('when creating a string validator with a startsWith check,'
         'and the string does not starts with the substring, '
         'then the result should be successful', () {
       final string = acanthis.string().startsWith('te');
@@ -308,8 +287,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a startsWith check,'
+    test('when creating a string validator with a startsWith check,'
         'and the string does not starts with the substring, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().startsWith('es');
@@ -323,8 +301,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a endsWith check,'
+    test('when creating a string validator with a endsWith check,'
         'and the string does not ends with the substring, '
         'then the result should be successful', () {
       final string = acanthis.string().endsWith('st');
@@ -337,8 +314,7 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a endsWith check,'
+    test('when creating a string validator with a endsWith check,'
         'and the string does not ends with the substring, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().endsWith('es');
@@ -352,15 +328,14 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with a custom check,'
+    test('when creating a string validator with a custom check,'
         'and the custom check is successful, '
         'then the result should be successful', () {
       final string = acanthis.string().refine(
-            onCheck: (value) => value == 'test',
-            error: 'Value must be test',
-            name: 'customCheck',
-          );
+        onCheck: (value) => value == 'test',
+        error: 'Value must be test',
+        name: 'customCheck',
+      );
       final result = string.tryParse('test');
 
       expect(result.success, true);
@@ -370,15 +345,14 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test(
-        'when creating a string validator with a custom check,'
+    test('when creating a string validator with a custom check,'
         'and the custom check is unsuccessful, '
         'then the result should be unsuccessful', () {
       final string = acanthis.string().refine(
-            onCheck: (value) => value == 'test',
-            error: 'Value must be test',
-            name: 'customCheck',
-          );
+        onCheck: (value) => value == 'test',
+        error: 'Value must be test',
+        name: 'customCheck',
+      );
       final result = string.tryParse('test1');
 
       expect(result.success, false);
@@ -389,8 +363,7 @@ void main() {
       );
     });
 
-    test(
-        'when creating a string validator with the toUpperCase transformation,'
+    test('when creating a string validator with the toUpperCase transformation,'
         'and the string is valid, '
         'then the result should be the string in uppercase', () {
       final string = acanthis.string().toUpperCase();
@@ -404,8 +377,7 @@ void main() {
       expect(resultParse.value, 'TEST');
     });
 
-    test(
-        'when creating a string validator with the toLowerCase transformation,'
+    test('when creating a string validator with the toLowerCase transformation,'
         'and the string is valid, '
         'then the result should be the string in lowercase', () {
       final string = acanthis.string().toLowerCase();
@@ -419,8 +391,7 @@ void main() {
       expect(resultParse.value, 'test');
     });
 
-    test(
-        'when creating a string validator with the encode transformation,'
+    test('when creating a string validator with the encode transformation,'
         'and the string is valid, '
         'then the result should be the string encoded in base64', () {
       final string = acanthis.string().encode();
@@ -434,8 +405,7 @@ void main() {
       expect(resultParse.value, 'dGVzdA==');
     });
 
-    test(
-        'when creating a string validator with the decode transformation,'
+    test('when creating a string validator with the decode transformation,'
         'and the string is valid, '
         'then the result should be the string decoded from base64', () {
       final string = acanthis.string().decode();
@@ -450,8 +420,7 @@ void main() {
     });
   });
 
-  test(
-      'when creating a string validator with a letters check,'
+  test('when creating a string validator with a letters check,'
       'and the string contains only letters, '
       'then the result should be successful', () {
     final string = acanthis.string().letters();
@@ -464,8 +433,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with a letters check,'
+  test('when creating a string validator with a letters check,'
       'and the string contains numbers, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().letters();
@@ -479,8 +447,7 @@ void main() {
     );
   });
 
-  test(
-      'when creating a string validator with a digits check,'
+  test('when creating a string validator with a digits check,'
       'and the string contains only digits, '
       'then the result should be successful', () {
     final string = acanthis.string().digits();
@@ -493,8 +460,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with a digits check,'
+  test('when creating a string validator with a digits check,'
       'and the string contains letters, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().digits();
@@ -505,8 +471,7 @@ void main() {
     expect(() => string.parse('123a'), throwsA(TypeMatcher<ValidationError>()));
   });
 
-  test(
-      'when creating a string validator with an alphanumeric check,'
+  test('when creating a string validator with an alphanumeric check,'
       'and the string contains only letters and digits, '
       'then the result should be successful', () {
     final string = acanthis.string().alphanumeric();
@@ -519,8 +484,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with an alphanumeric check,'
+  test('when creating a string validator with an alphanumeric check,'
       'and the string contains special characters, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().alphanumeric();
@@ -567,8 +531,7 @@ void main() {
     },
   );
 
-  test(
-      'when creating a string validator with a special characters check,'
+  test('when creating a string validator with a special characters check,'
       'and the string contains only special characters, '
       'then the result should be successful', () {
     final string = acanthis.string().specialCharacters();
@@ -581,8 +544,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with a special characters check,'
+  test('when creating a string validator with a special characters check,'
       'and the string contains letters, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().specialCharacters();
@@ -593,8 +555,7 @@ void main() {
     expect(() => string.parse('!@#a'), throwsA(TypeMatcher<ValidationError>()));
   });
 
-  test(
-      'when creating a string validator with an upperCase check,'
+  test('when creating a string validator with an upperCase check,'
       'and the string is in uppercase, '
       'then the result should be successful', () {
     final string = acanthis.string().upperCase();
@@ -607,8 +568,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with an upperCase check,'
+  test('when creating a string validator with an upperCase check,'
       'and the string is not in uppercase, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().upperCase();
@@ -619,8 +579,7 @@ void main() {
     expect(() => string.parse('test'), throwsA(TypeMatcher<ValidationError>()));
   });
 
-  test(
-      'when creating a string validator with a lowerCase check,'
+  test('when creating a string validator with a lowerCase check,'
       'and the string is in lowercase, '
       'then the result should be successful', () {
     final string = acanthis.string().lowerCase();
@@ -633,8 +592,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with a lowerCase check,'
+  test('when creating a string validator with a lowerCase check,'
       'and the string is not in lowercase, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().lowerCase();
@@ -645,8 +603,7 @@ void main() {
     expect(() => string.parse('TEST'), throwsA(TypeMatcher<ValidationError>()));
   });
 
-  test(
-      'when creating a string validator with a mixedCase check,'
+  test('when creating a string validator with a mixedCase check,'
       'and the string is in mixed case, '
       'then the result should be successful', () {
     final string = acanthis.string().mixedCase();
@@ -659,8 +616,7 @@ void main() {
     expect(resultParse.success, true);
   });
 
-  test(
-      'when creating a string validator with a mixedCase check,'
+  test('when creating a string validator with a mixedCase check,'
       'and the string is not in mixed case, '
       'then the result should be unsuccessful', () {
     final string = acanthis.string().mixedCase();
@@ -679,8 +635,29 @@ void main() {
   test(
     'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
     () {
+      final string = acanthis
+          .string()
+          .digits(strict: false)
+          .letters(strict: false);
+      final result = string.tryParse('test 123');
+
+      expect(result.success, true);
+
+      final resultParse = string.parse('test 123');
+
+      expect(resultParse.success, true);
+    },
+  );
+
+  test(
+    'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
+    () {
       final string =
-          acanthis.string().digits(strict: false).letters(strict: false);
+          acanthis
+              .string()
+              .digits(strict: false)
+              .letters(strict: false)
+              .lowerCase();
       final result = string.tryParse('test 123');
 
       expect(result.success, true);
@@ -694,29 +671,12 @@ void main() {
   test(
     'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
     () {
-      final string = acanthis
-          .string()
-          .digits(strict: false)
-          .letters(strict: false)
-          .lowerCase();
-      final result = string.tryParse('test 123');
-
-      expect(result.success, true);
-
-      final resultParse = string.parse('test 123');
-
-      expect(resultParse.success, true);
-    },
-  );
-
-  test(
-    'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
-    () {
-      final string = acanthis
-          .string()
-          .digits(strict: false)
-          .letters(strict: false)
-          .lowerCase();
+      final string =
+          acanthis
+              .string()
+              .digits(strict: false)
+              .letters(strict: false)
+              .lowerCase();
       final result = string.tryParse('test 123');
 
       expect(result.success, true);
@@ -745,12 +705,12 @@ void main() {
     'when creating an async string validator, then the result should be successful',
     () async {
       final string = acanthis.string().refineAsync(
-            onCheck: (value) async {
-              return value == 'test';
-            },
-            name: 'asyncCheck',
-            error: 'Value must be test',
-          );
+        onCheck: (value) async {
+          return value == 'test';
+        },
+        name: 'asyncCheck',
+        error: 'Value must be test',
+      );
       final result = await string.tryParseAsync('test');
 
       expect(result.success, true);
@@ -775,12 +735,12 @@ void main() {
     'when creating an async string validator, and a sync parse method is used, then an exception should be thrown',
     () async {
       final string = acanthis.string().refineAsync(
-            onCheck: (value) async {
-              return value == 'test';
-            },
-            name: 'asyncCheck',
-            error: 'Value must be test',
-          );
+        onCheck: (value) async {
+          return value == 'test';
+        },
+        name: 'asyncCheck',
+        error: 'Value must be test',
+      );
       expect(
         () => string.parse('test'),
         throwsA(isA<AsyncValidationException>()),
@@ -1125,9 +1085,9 @@ void main() {
     'when creating an enumerated string validator with a nameTransformer, and the string is in the list of valid values, then the result should be successful',
     () {
       final string = acanthis.string().enumerated(
-            TestEnum.values,
-            nameTransformer: (value) => value.toUpperCase(),
-          );
+        TestEnum.values,
+        nameTransformer: (value) => value.toUpperCase(),
+      );
       final result = string.tryParse('TEST');
 
       expect(result.success, true);
@@ -1209,8 +1169,7 @@ void main() {
     },
   );
 
-  test(
-      'when creating an string validator,'
+  test('when creating an string validator,'
       'and use the toJsonSchema method and the constraint checks are used, '
       'then the result should be a valid json schema with the constraints', () {
     final string = acanthis.string().max(10).min(5);
@@ -1225,21 +1184,19 @@ void main() {
     expect(result2, expected2);
   });
 
-  test(
-      'when creating an string validator,'
+  test('when creating an string validator,'
       'and use the toJsonSchema method and the metadata, '
       'then the result should be a valid json schema with the metadata', () {
     final string = acanthis.string().meta(
-          MetadataEntry(description: 'test', title: 'test'),
-        );
+      MetadataEntry(description: 'test', title: 'test'),
+    );
     final result = string.toJsonSchema();
 
     final expected = {'type': 'string', 'description': 'test', 'title': 'test'};
     expect(result, expected);
   });
 
-  test(
-      'when creating an string validator,'
+  test('when creating an string validator,'
       'and use the toJsonSchema method and the validator has pattern checks, '
       'then the result should be a valid json schema with the pattern', () {
     final string = acanthis.string().pattern(RegExp(r'^[a-z]+$'));
@@ -1249,8 +1206,7 @@ void main() {
     expect(result, expected);
   });
 
-  test(
-      'when creating an enumerated string validator,'
+  test('when creating an enumerated string validator,'
       'and use the toJsonSchema method, '
       'then the result should be a valid json schema', () {
     final string = acanthis.string().max(10).min(5).enumerated(TestEnum.values);
@@ -1262,8 +1218,7 @@ void main() {
     expect(result, expected);
   });
 
-  test(
-      'when creating an exact string validator,'
+  test('when creating an exact string validator,'
       'and use the toJsonSchema method, '
       'then the result should be a valid json schema', () {
     final string = acanthis.string().exact('test');

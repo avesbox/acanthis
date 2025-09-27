@@ -9,11 +9,12 @@ class EnumeratedNullableCheck<T> extends AcanthisCheck<T> {
     String? message,
     String Function(List<T> values)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(values) ??
-              message ??
-              'Value must be one of the enumerated values',
-          name: 'enumerated',
-        );
+         error:
+             messageBuilder?.call(values) ??
+             message ??
+             'Value must be one of the enumerated values',
+         name: 'enumerated',
+       );
 
   @override
   bool call(T? value) {

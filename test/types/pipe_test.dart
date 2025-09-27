@@ -18,9 +18,9 @@ void main() {
       'when creating a pipeline to convert a string to a date, and the string is a parsable string, then the result should be successful',
       () {
         final pipeline = string().dateTime().pipe(
-              date(),
-              transform: (value) => DateTime.parse(value),
-            );
+          date(),
+          transform: (value) => DateTime.parse(value),
+        );
         final result = pipeline.tryParse('2020-01-01');
 
         expect(result.success, true);
@@ -37,9 +37,9 @@ void main() {
       'when creating a pipeline to convert a string to a date, and the string is not a parsable string, then the result should be unsuccessful',
       () {
         final pipeline = string().dateTime().pipe(
-              date(),
-              transform: (value) => DateTime.parse(value),
-            );
+          date(),
+          transform: (value) => DateTime.parse(value),
+        );
         final result = pipeline.tryParse('aaaa');
 
         expect(result.success, false);

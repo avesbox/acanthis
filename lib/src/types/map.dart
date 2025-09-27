@@ -22,10 +22,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   /// Constructor of the map type
   const AcanthisMap(this._fields, {super.key, super.metadataEntry})
-      : _passthrough = false,
-        _passthroughType = null,
-        _dependencies = const [],
-        _optionalFields = const [];
+    : _passthrough = false,
+      _passthroughType = null,
+      _dependencies = const [],
+      _optionalFields = const [];
 
   AcanthisMap._({
     required Map<String, AcanthisType<dynamic>> fields,
@@ -37,11 +37,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.operations,
     super.key,
     super.metadataEntry,
-  })  : _fields = fields,
-        _passthrough = passthrough,
-        _passthroughType = passthroughType,
-        _dependencies = dependencies,
-        _optionalFields = optionalFields;
+  }) : _fields = fields,
+       _passthrough = passthrough,
+       _passthroughType = passthroughType,
+       _dependencies = dependencies,
+       _optionalFields = optionalFields;
 
   dynamic _keyQuery(String key, Map<String, V> value) {
     final keys = key.split('.');
@@ -109,16 +109,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
       if (passedValue == null && isOptional && !isNullable) continue;
 
-      parsed[entry.key] = fieldType is LazyEntry
-          ? fieldType.parse(passedValue, this).value
-          : fieldType.parse(passedValue).value;
+      parsed[entry.key] =
+          fieldType is LazyEntry
+              ? fieldType.parse(passedValue, this).value
+              : fieldType.parse(passedValue).value;
     }
 
     // Handle passthrough keys in a single pass
     if (_passthrough) {
       final passthroughKeys = value.keys.toSet().difference(
-            _fields.keys.toSet(),
-          );
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
@@ -196,8 +197,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     // Batch passthrough logic
     if (_passthrough) {
       final passthroughKeys = value.keys.toSet().difference(
-            _fields.keys.toSet(),
-          );
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
@@ -279,8 +280,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     // Batch passthrough logic
     if (_passthrough) {
       final passthroughKeys = value.keys.toSet().difference(
-            _fields.keys.toSet(),
-          );
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
@@ -377,8 +378,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     // Batch passthrough logic
     if (_passthrough) {
       final passthroughKeys = value.keys.toSet().difference(
-            _fields.keys.toSet(),
-          );
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = value[key];
         if (_passthroughType != null) {
@@ -731,9 +732,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       'type': 'object',
       if (metadataEntry != null) ...metadataEntry!.toJson(),
       'properties': schema,
-      'additionalProperties': _passthrough == false
-          ? false
-          : _passthroughType?.toJsonSchema() ?? true,
+      'additionalProperties':
+          _passthrough == false
+              ? false
+              : _passthroughType?.toJsonSchema() ?? true,
       'required':
           _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
       if (constraints.isNotEmpty) ...constraints,
@@ -869,5 +871,4 @@ class LazyEntry<O> extends AcanthisType<O> {
 
 LazyEntry<O> lazy<O>(
   AcanthisType<O> Function(AcanthisMap<dynamic> parent) type,
-) =>
-    LazyEntry<O>(type);
+) => LazyEntry<O>(type);

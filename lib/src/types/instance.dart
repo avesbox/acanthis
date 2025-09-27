@@ -61,8 +61,8 @@ class InstanceType<T> extends AcanthisType<T> {
     super.isAsync,
     super.key,
     super.metadataEntry,
-  })  : _fields = fields,
-        _refs = refs;
+  }) : _fields = fields,
+       _refs = refs;
 
   /// Create an empty instance validator
   const InstanceType() : this._();

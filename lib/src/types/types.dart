@@ -269,7 +269,6 @@ abstract class AcanthisType<O> {
 }
 
 @immutable
-
 /// A class to represent a pipeline of transformations
 class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   /// The type of the input value
@@ -282,11 +281,11 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   final T Function(O value) transformFn;
 
   /// The constructor of the class
-  const AcanthisPipeline(
-      {required this.inType,
-      required this.outType,
-      required T Function(O value) transform})
-      : transformFn = transform;
+  const AcanthisPipeline({
+    required this.inType,
+    required this.outType,
+    required T Function(O value) transform,
+  }) : transformFn = transform;
 
   @override
   AcanthisParseResult<T?> parse(dynamic value) {
@@ -384,7 +383,8 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
 
   @override
   AcanthisType<T?> withTransformation(
-      AcanthisTransformation<T?> transformation) {
+    AcanthisTransformation<T?> transformation,
+  ) {
     throw UnimplementedError();
   }
 }

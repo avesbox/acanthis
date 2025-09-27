@@ -34,9 +34,11 @@ class AcanthisDate extends AcanthisType<DateTime> {
       final date = _convertToDate(value);
       return super.tryParseAsync(date);
     } on ValidationError catch (e) {
-      return AcanthisParseResult(errors: {
-        'date': e.message,
-      }, value: DateTime.now(), success: false);
+      return AcanthisParseResult(
+        errors: {'date': e.message},
+        value: DateTime.now(),
+        success: false,
+      );
     }
   }
 
@@ -46,9 +48,11 @@ class AcanthisDate extends AcanthisType<DateTime> {
       final date = _convertToDate(value);
       return super.tryParse(date);
     } on ValidationError catch (e) {
-      return AcanthisParseResult(errors: {
-        'date': e.message,
-      }, value: DateTime.now(), success: false);
+      return AcanthisParseResult(
+        errors: {'date': e.message},
+        value: DateTime.now(),
+        success: false,
+      );
     }
   }
 

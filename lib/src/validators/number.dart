@@ -9,11 +9,12 @@ class LteNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(num value)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(value) ??
-              message ??
-              'Value must be less than or equal to $value',
-          name: 'lte',
-        );
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be less than or equal to $value',
+         name: 'lte',
+       );
 
   @override
   bool call(num value) {
@@ -30,11 +31,12 @@ class GteNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(num value)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(value) ??
-              message ??
-              'Value must be greater than or equal to $value',
-          name: 'gte',
-        );
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be greater than or equal to $value',
+         name: 'gte',
+       );
 
   @override
   bool call(num value) {
@@ -53,11 +55,12 @@ class BetweenNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(num min, num max)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(min, max) ??
-              message ??
-              'Value must be between $min and $max',
-          name: 'between',
-        );
+         error:
+             messageBuilder?.call(min, max) ??
+             message ??
+             'Value must be between $min and $max',
+         name: 'between',
+       );
 
   @override
   bool call(num value) {
@@ -74,11 +77,12 @@ class GtNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(num value)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(value) ??
-              message ??
-              'Value must be greater than $value',
-          name: 'gt',
-        );
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be greater than $value',
+         name: 'gt',
+       );
 
   @override
   bool call(num value) {
@@ -95,11 +99,12 @@ class LtNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(num value)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(value) ??
-              message ??
-              'Value must be less than $value',
-          name: 'lt',
-        );
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be less than $value',
+         name: 'lt',
+       );
 
   @override
   bool call(num value) {
@@ -110,7 +115,7 @@ class LtNumberCheck extends AcanthisCheck<num> {
 /// Number check for positive value.
 class PositiveNumberCheck extends AcanthisCheck<num> {
   const PositiveNumberCheck({String? message})
-      : super(error: message ?? 'Value must be positive', name: 'positive');
+    : super(error: message ?? 'Value must be positive', name: 'positive');
 
   @override
   bool call(num value) {
@@ -121,7 +126,7 @@ class PositiveNumberCheck extends AcanthisCheck<num> {
 /// Number check for negative value.
 class NegativeNumberCheck extends AcanthisCheck<num> {
   const NegativeNumberCheck({String? message})
-      : super(error: message ?? 'Value must be negative', name: 'negative');
+    : super(error: message ?? 'Value must be negative', name: 'negative');
 
   @override
   bool call(num value) {
@@ -132,8 +137,7 @@ class NegativeNumberCheck extends AcanthisCheck<num> {
 /// Number check for nonpositive value.
 class NonPositiveNumberCheck extends AcanthisCheck<num> {
   const NonPositiveNumberCheck({String? message})
-      : super(
-            error: message ?? 'Value must be nonpositive', name: 'nonpositive');
+    : super(error: message ?? 'Value must be nonpositive', name: 'nonpositive');
 
   @override
   bool call(num value) {
@@ -144,8 +148,7 @@ class NonPositiveNumberCheck extends AcanthisCheck<num> {
 /// Number check for nonnegative value.
 class NonNegativeNumberCheck extends AcanthisCheck<num> {
   const NonNegativeNumberCheck({String? message})
-      : super(
-            error: message ?? 'Value must be nonnegative', name: 'nonnegative');
+    : super(error: message ?? 'Value must be nonnegative', name: 'nonnegative');
 
   @override
   bool call(num value) {
@@ -162,11 +165,12 @@ class MultipleOfCheck extends AcanthisCheck<num> {
     String? message,
     String Function(int value)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(value) ??
-              message ??
-              'Value must be a multiple of $value',
-          name: 'multipleOf',
-        );
+         error:
+             messageBuilder?.call(value) ??
+             message ??
+             'Value must be a multiple of $value',
+         name: 'multipleOf',
+       );
 
   @override
   bool call(num value) {
@@ -177,7 +181,7 @@ class MultipleOfCheck extends AcanthisCheck<num> {
 /// Number check for integer value.
 class IntegerNumberCheck extends AcanthisCheck<num> {
   const IntegerNumberCheck({String? message})
-      : super(error: message ?? 'Value must be an integer', name: 'integer');
+    : super(error: message ?? 'Value must be an integer', name: 'integer');
 
   @override
   bool call(num value) {
@@ -188,7 +192,7 @@ class IntegerNumberCheck extends AcanthisCheck<num> {
 /// Number check for double value.
 class DoubleNumberCheck extends AcanthisCheck<num> {
   const DoubleNumberCheck({String? message})
-      : super(error: message ?? 'Value must be a double', name: 'double');
+    : super(error: message ?? 'Value must be a double', name: 'double');
 
   @override
   bool call(num value) {
@@ -199,7 +203,7 @@ class DoubleNumberCheck extends AcanthisCheck<num> {
 /// Number check for finite value.
 class FiniteNumberCheck extends AcanthisCheck<num> {
   const FiniteNumberCheck({String? message})
-      : super(error: message ?? 'Value must be finite', name: 'finite');
+    : super(error: message ?? 'Value must be finite', name: 'finite');
 
   @override
   bool call(num value) {
@@ -210,7 +214,7 @@ class FiniteNumberCheck extends AcanthisCheck<num> {
 /// Number check for infinite value.
 class InfiniteNumberCheck extends AcanthisCheck<num> {
   const InfiniteNumberCheck({String? message})
-      : super(error: message ?? 'Value must be infinite', name: 'infinite');
+    : super(error: message ?? 'Value must be infinite', name: 'infinite');
 
   @override
   bool call(num value) {
@@ -221,7 +225,7 @@ class InfiniteNumberCheck extends AcanthisCheck<num> {
 /// Number check for NaN value.
 class NaNNumberCheck extends AcanthisCheck<num> {
   const NaNNumberCheck({String? message})
-      : super(error: message ?? 'Value must be NaN', name: 'nan');
+    : super(error: message ?? 'Value must be NaN', name: 'nan');
 
   @override
   bool call(num value) {
@@ -232,7 +236,7 @@ class NaNNumberCheck extends AcanthisCheck<num> {
 /// Number check for not NaN value.
 class NotNaNNumberCheck extends AcanthisCheck<num> {
   const NotNaNNumberCheck({String? message})
-      : super(error: message ?? 'Value must not be NaN', name: 'notNaN');
+    : super(error: message ?? 'Value must not be NaN', name: 'notNaN');
 
   @override
   bool call(num value) {
@@ -249,11 +253,12 @@ class EnumeratedNumberCheck extends AcanthisCheck<num> {
     String? message,
     String Function(List<num> values)? messageBuilder,
   }) : super(
-          error: messageBuilder?.call(values) ??
-              message ??
-              'Value must be one of the enumerated values',
-          name: 'enumerated',
-        );
+         error:
+             messageBuilder?.call(values) ??
+             message ??
+             'Value must be one of the enumerated values',
+         name: 'enumerated',
+       );
 
   @override
   bool call(num value) {

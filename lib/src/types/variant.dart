@@ -19,5 +19,4 @@ AcanthisVariant<T> variant<T>({
   required bool Function(dynamic value) guard,
   required AcanthisType<T> schema,
   String name = '',
-}) =>
-    AcanthisVariant<T>(guard: guard, schema: schema, name: name);
+}) => AcanthisVariant<T>(guard: guard, schema: schema, name: name);

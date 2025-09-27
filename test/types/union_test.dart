@@ -8,7 +8,8 @@ void main() {
     test("Can be created using `const`", () {
       AcanthisUnion([]);
     });
-    test('when creating a union validator with a string and a number,'
+    test(
+        'when creating a union validator with a string and a number,'
         'and the value is a string, '
         'then the result should be successful', () {
       final u = union([string(), number()]);
@@ -21,7 +22,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a union validator with a string and a number,'
+    test(
+        'when creating a union validator with a string and a number,'
         'and the value is a number, '
         'then the result should be successful', () {
       final u = union([string(), number()]);
@@ -34,7 +36,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a union validator with a string and a number,'
+    test(
+        'when creating a union validator with a string and a number,'
         'and the value is a boolean, '
         'then the result should be unsuccessful', () {
       final u = union([string(), number()]);
@@ -45,7 +48,8 @@ void main() {
       expect(() => u.parse(true), throwsA(isA<ValidationError>()));
     });
 
-    test('when creating a string validator, '
+    test(
+        'when creating a string validator, '
         'and use the [or] method to create a union with a number,'
         'and the value is a string, '
         'then the result should be successful', () {
@@ -59,7 +63,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a string validator with checks, '
+    test(
+        'when creating a string validator with checks, '
         'and use the [or] method to create a union with a number,'
         'and the value is a valid string, '
         'then the result should be successful', () {
@@ -73,7 +78,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a string validator with checks, '
+    test(
+        'when creating a string validator with checks, '
         'and use the [or] method to create a union with a number,'
         'and the value is an invalid string, '
         'then the result should be unsuccessful', () {
@@ -85,7 +91,8 @@ void main() {
       expect(() => u.parse('This is a test'), throwsA(isA<ValidationError>()));
     });
 
-    test('when creating a number validator, '
+    test(
+        'when creating a number validator, '
         'and use the [or] method to create a union with a string,'
         'and the value is a number, '
         'then the result should be successful', () {
@@ -99,7 +106,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a date validator, '
+    test(
+        'when creating a date validator, '
         'and use the [or] method to create a union with a string,'
         'and the value is a valid date, '
         'then the result should be successful', () {
@@ -113,7 +121,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and use the [or] method to create a union with a string,'
         'and the value is a valid bool, '
         'then the result should be successful', () {
@@ -127,7 +136,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable string validator, '
+    test(
+        'when creating a nullable string validator, '
         'and use the [or] method to create a union with a number,'
         'and the value is null, '
         'then the result should be successful', () {
@@ -141,7 +151,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a typed union validator, '
+    test(
+        'when creating a typed union validator, '
         'and use the variant validator to validate subtypes of the main type, '
         'then the result should be successful', () {
       final u = union<TestVariant>([

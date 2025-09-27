@@ -9,12 +9,11 @@ class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
     String? message,
     String Function(int constraintValue)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(constraintValue) ??
-             message ??
-             'The map has more than $constraintValue fields',
-         name: 'maxProperties',
-       );
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has more than $constraintValue fields',
+          name: 'maxProperties',
+        );
 
   @override
   bool call(Map<String, V> value) {
@@ -31,12 +30,11 @@ class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
     String? message,
     String Function(int constraintValue)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(constraintValue) ??
-             message ??
-             'The map has less than $constraintValue fields',
-         name: 'minProperties',
-       );
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has less than $constraintValue fields',
+          name: 'minProperties',
+        );
 
   @override
   bool call(Map<String, V> value) {
@@ -53,12 +51,11 @@ class LengthPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
     String? message,
     String Function(int constraintValue)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(constraintValue) ??
-             message ??
-             'The map has not $constraintValue fields',
-         name: 'lengthProperties',
-       );
+          error: messageBuilder?.call(constraintValue) ??
+              message ??
+              'The map has not $constraintValue fields',
+          name: 'lengthProperties',
+        );
 
   @override
   bool call(Map<String, V> value) {

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.4
+
+- feat: pipes are now acanthis type and can be used to validate more complex structures.
+- feat: date type accept now string, int and DateTime values.
+
 ## 1.4.3
 
 - perf: improve performances again.

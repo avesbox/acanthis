@@ -7,7 +7,8 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisList(AcanthisDate());
     });
-    test('when creating a list validator,'
+    test(
+        'when creating a list validator,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list();
@@ -20,7 +21,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a required field,'
+    test(
+        'when creating a list validator with a required field,'
         'and the list is empty, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list();
@@ -32,7 +34,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is less than the min check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2);
@@ -46,7 +49,8 @@ void main() {
       );
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is greater than the max check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().max(1);
@@ -60,7 +64,8 @@ void main() {
       );
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is less than the min check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -74,7 +79,8 @@ void main() {
       );
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is greater than the max check, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -88,7 +94,8 @@ void main() {
       );
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -101,7 +108,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a min and max check,'
+    test(
+        'when creating a list validator with a min and max check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
@@ -114,7 +122,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a unique check,'
+    test(
+        'when creating a list validator with a unique check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().unique();
@@ -126,7 +135,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator and use the unwrap method,'
+    test(
+        'when creating a list validator and use the unwrap method,'
         'then the element should be returned', () {
       final list = acanthis.string().min(5).max(20).list();
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
@@ -136,7 +146,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a unique check,'
+    test(
+        'when creating a list validator with a unique check,'
         'and the list is invalid, '
         'then the result should be unsuccessful', () {
       final list = acanthis.string().min(5).max(20).list().unique();
@@ -150,7 +161,8 @@ void main() {
       );
     });
 
-    test('when creating a tuple validator from a list validator,'
+    test(
+        'when creating a tuple validator from a list validator,'
         'and the list is not valid, '
         'then the result should be unsuccessful', () {
       final schema = string().list().and([string()]);
@@ -164,7 +176,8 @@ void main() {
       );
     });
 
-    test('when creating a tuple validator from a list validator,'
+    test(
+        'when creating a tuple validator from a list validator,'
         'and the list is valid, '
         'then the result should be successful', () {
       final schema = string().list().and([string()]);
@@ -183,7 +196,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a union validator from a list validator,'
+    test(
+        'when creating a union validator from a list validator,'
         'and the list is not valid, '
         'then the result should be unsuccessful', () {
       final schema = string().list().or([string()]);
@@ -194,7 +208,8 @@ void main() {
       expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test('when creating a union validator from a list validator,'
+    test(
+        'when creating a union validator from a list validator,'
         'and the list is valid, '
         'then the result should be successful', () {
       final schema = string().list().or([string()]);
@@ -207,7 +222,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with the length check,'
+    test(
+        'when creating a list validator with the length check,'
         'and the list is valid, '
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().length(4);
@@ -220,7 +236,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list validator with a custom check,'
+    test(
+        'when creating a list validator with a custom check,'
         'and the list is invalid, '
         'then the result should be unsuccessful', () {
       final list = acanthis
@@ -245,7 +262,8 @@ void main() {
       );
     });
 
-    test('when creating a list validator with a custom transformation,'
+    test(
+        'when creating a list validator with a custom transformation,'
         'and all the elements in the list are valid, '
         'and the list itself is valid, '
         'then the result should be transformed', () {
@@ -325,7 +343,8 @@ void main() {
     },
   );
 
-  test('when creating a list validator,'
+  test(
+      'when creating a list validator,'
       'and use the toJsonSchema method, '
       'then the result should be a valid json schema', () {
     final schema = acanthis.string().list();
@@ -336,18 +355,19 @@ void main() {
     expect(result['items'], isA<Map<String, dynamic>>());
   });
 
-  test('when creating a list validator,'
+  test(
+      'when creating a list validator,'
       'and use the toJsonSchema method and the meta method, '
       'then the result should be a valid json schema with the metadata', () {
     final schema = acanthis.string().list().meta(
-      MetadataEntry(
-        description: 'description',
-        title: 'title',
-        examples: [
-          ['example1', 'example2'],
-        ],
-      ),
-    );
+          MetadataEntry(
+            description: 'description',
+            title: 'title',
+            examples: [
+              ['example1', 'example2'],
+            ],
+          ),
+        );
     final result = schema.toJsonSchema();
     expect(result, isA<Map<String, dynamic>>());
     expect(result['type'], 'array');
@@ -360,7 +380,8 @@ void main() {
     expect(result['items']['type'], 'string');
   });
 
-  test('when creating a list validator,'
+  test(
+      'when creating a list validator,'
       'and use the toJsonSchema method and length checks are used, '
       'then the result should be a valid json schema with the constraints', () {
     final schema = acanthis.string().list().min(2).max(5);

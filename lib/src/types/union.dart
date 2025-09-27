@@ -21,8 +21,8 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     super.isAsync,
     super.key,
     super.metadataEntry,
-  }) : _types = types,
-       _variants = variants;
+  })  : _types = types,
+        _variants = variants;
 
   factory AcanthisUnion(List<dynamic> elements) {
     final types = <AcanthisType<T>>[];
@@ -134,10 +134,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     for (final v in _variants) {
       if (v.guard(value)) {
         try {
-          final r =
-              v.schema.isAsync
-                  ? await v.schema.tryParseAsync(value)
-                  : v.schema.tryParse(value);
+          final r = v.schema.isAsync
+              ? await v.schema.tryParseAsync(value)
+              : v.schema.tryParse(value);
           if (r.success) {
             var base = AcanthisParseResult<T>(
               value: r.value,
@@ -229,10 +228,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     for (final v in _variants) {
       if (v.guard(value)) {
         try {
-          final r =
-              v.schema.isAsync
-                  ? await v.schema.tryParseAsync(value)
-                  : v.schema.tryParse(value);
+          final r = v.schema.isAsync
+              ? await v.schema.tryParseAsync(value)
+              : v.schema.tryParse(value);
           if (r.success) {
             // Apply own ops asynchronously
             T newVal = r.value;

@@ -325,8 +325,8 @@ class AcanthisString extends AcanthisType<String> {
   AcanthisString decode() {
     return withTransformation(
       AcanthisTransformation<String>(
-        transformation:
-            (value) => convert.utf8.decode(convert.base64.decode(value)),
+        transformation: (value) =>
+            convert.utf8.decode(convert.base64.decode(value)),
       ),
     );
   }
@@ -467,10 +467,9 @@ class AcanthisString extends AcanthisType<String> {
         PatternNanoidStringChecks() => check.regExp.pattern,
         PatternJwtStringChecks() => check.regExp.pattern,
         PatternBase64StringChecks() => check.regExp.pattern,
-        PatternStringCheck() =>
-          check.regExp is RegExp
-              ? (check.regExp as RegExp).pattern
-              : check.regExp,
+        PatternStringCheck() => check.regExp is RegExp
+            ? (check.regExp as RegExp).pattern
+            : check.regExp,
         _ => null,
       };
       if (patternChecksMap['pattern'] == null) {

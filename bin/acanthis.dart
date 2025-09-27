@@ -44,9 +44,9 @@ void main(List<String> arguments) async {
             refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age),
       )
       .refineWithRefs((u, r) {
-        return (DateTime.now().year - r<int>('age')) ==
-            r<DateTime>('birthDate').year;
-      }, 'User must be at least 18 years old');
+    return (DateTime.now().year - r<int>('age')) ==
+        r<DateTime>('birthDate').year;
+  }, 'User must be at least 18 years old');
   final user = User(
     name: 'John Doe',
     age: 30,
@@ -56,39 +56,37 @@ void main(List<String> arguments) async {
   final result = userValidator.tryParse(user);
   print(result.errors);
 
-  final usersMapper =
-      classSchema<List, List<User>>()
-          .input(
-            object({
-              'name': string().min(1),
-              'age': number().integer().gte(0),
-              'email': string().email(),
-              'birthDate': date(),
-            }).list(),
-          )
-          .map((m) {
-            return m.map((item) {
-              return User(
-                name: item['name'],
-                age: item['age'],
-                email: item['email'],
-                birthDate: item['birthDate'],
-              );
-            }).toList();
-          })
-          .build();
+  final usersMapper = classSchema<List, List<User>>()
+      .input(object({
+    'name': string().min(1),
+    'age': number().integer().gte(0),
+    'email': string().email(),
+    'birthDate': string()
+        .dateTime()
+        .pipe(date(), transform: (value) => DateTime.parse(value)),
+  }).list())
+      .map((m) {
+    return m.map((item) {
+      return User(
+        name: item['name'],
+        age: item['age'],
+        email: item['email'],
+        birthDate: item['birthDate'],
+      );
+    }).toList();
+  }).build();
   final usersResult = usersMapper.tryParse([
     {
       'name': 'Jane Doe',
       'age': 25,
       'email': 'jane.doe@example.com',
-      'birthDate': DateTime(1995, 5, 15),
+      'birthDate': DateTime(1995, 5, 15).toIso8601String(),
     },
     {
       'name': 'John Smith',
       'age': 30,
       'email': 'john.smith@example.com',
-      'birthDate': DateTime(1990, 10, 20),
+      'birthDate': DateTime(1990, 10, 20).toIso8601String(),
     },
   ]);
   print(usersResult.value);

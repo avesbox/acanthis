@@ -6,7 +6,8 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisBoolean();
     });
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and the value is true, '
         'then the result should be successful', () {
       final b = boolean();
@@ -19,7 +20,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and the value is false, '
         'then the result should be successful', () {
       final b = boolean();
@@ -32,7 +34,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and add the [isFalse] check, '
         'and the value is [false]'
         'then the result should be successful', () {
@@ -46,7 +49,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and add the [isFalse] check, '
         'and the value is [true]'
         'then the result should be unsuccessful', () {
@@ -58,7 +62,8 @@ void main() {
       expect(() => b.parse(true), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and add the [isTrue] check, '
         'and the value is [true]'
         'then the result should be successful', () {
@@ -72,7 +77,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a boolean validator, '
+    test(
+        'when creating a boolean validator, '
         'and add the [isTrue] check, '
         'and the value is [false]'
         'then the result should be unsuccessful', () {
@@ -84,7 +90,8 @@ void main() {
       expect(() => b.parse(false), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test('when creating a list of boolean validator, '
+    test(
+        'when creating a list of boolean validator, '
         'and the value is valid, '
         'then the result should be successful', () {
       final b = boolean().list();
@@ -97,7 +104,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a tuple validator from a date validator,'
+    test(
+        'when creating a tuple validator from a date validator,'
         'and the date is not valid, '
         'then the result should be unsuccessful', () {
       final bool = boolean().and([string()]);
@@ -111,7 +119,8 @@ void main() {
       );
     });
 
-    test('when creating a tuple validator from a bool validator,'
+    test(
+        'when creating a tuple validator from a bool validator,'
         'and the bool is valid, '
         'then the result should be successful', () {
       final bool = boolean().and([string()]);
@@ -124,7 +133,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a union validator from a bool validator,'
+    test(
+        'when creating a union validator from a bool validator,'
         'and the bool is not valid, '
         'then the result should be unsuccessful', () {
       final bool = boolean().or([string()]);
@@ -135,7 +145,8 @@ void main() {
       expect(() => bool.parse(5), throwsA(TypeMatcher<ValidationError>()));
     });
 
-    test('when creating a union validator from a bool validator,'
+    test(
+        'when creating a union validator from a bool validator,'
         'and the bool is valid, '
         'then the result should be successful', () {
       final bool = boolean().or([string()]);

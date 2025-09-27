@@ -9,12 +9,11 @@ class ExactCheck<T> extends AcanthisCheck<T> {
     String? message,
     String Function(T value)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be exactly $value',
-         name: 'exact',
-       );
+          error: messageBuilder?.call(value) ??
+              message ??
+              'Value must be exactly $value',
+          name: 'exact',
+        );
 
   @override
   bool call(T value) {

@@ -6,7 +6,8 @@ void main() {
     test("Can be created using `const`", () {
       const AcanthisNullable(AcanthisDate());
     });
-    test('when creating a nullable validator on a string,'
+    test(
+        'when creating a nullable validator on a string,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = string().nullable();
@@ -19,7 +20,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator on a string,'
+    test(
+        'when creating a nullable validator on a string,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = string().nullable();
@@ -32,7 +34,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator on a number,'
+    test(
+        'when creating a nullable validator on a number,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = number().nullable();
@@ -45,7 +48,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator on a number,'
+    test(
+        'when creating a nullable validator on a number,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = number().nullable();
@@ -58,7 +62,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator on a date,'
+    test(
+        'when creating a nullable validator on a date,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = date().nullable();
@@ -71,7 +76,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator on a date,'
+    test(
+        'when creating a nullable validator on a date,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = date().nullable();
@@ -109,7 +115,8 @@ void main() {
       },
     );
 
-    test('when creating a list of nullable strings,'
+    test(
+        'when creating a list of nullable strings,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = string().nullable().list();
@@ -123,7 +130,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a list of nullable strings,'
+    test(
+        'when creating a list of nullable strings,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = string().nullable().list();
@@ -137,7 +145,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable list of strings,'
+    test(
+        'when creating a nullable list of strings,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = string().list().nullable();
@@ -151,7 +160,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable list of strings,'
+    test(
+        'when creating a nullable list of strings,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = string().list().nullable();
@@ -165,7 +175,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable list of nullable strings,'
+    test(
+        'when creating a nullable list of nullable strings,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = string().nullable().list().nullable();
@@ -179,7 +190,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable list of nullable strings,'
+    test(
+        'when creating a nullable list of nullable strings,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = string().nullable().list().nullable();
@@ -193,7 +205,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map,'
+    test(
+        'when creating a nullable map,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = object({'key': string()}).nullable();
@@ -207,7 +220,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map,'
+    test(
+        'when creating a nullable map,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = object({'key': string()}).nullable();
@@ -221,7 +235,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map with nullable values,'
+    test(
+        'when creating a nullable map with nullable values,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = object({'key': string().nullable()}).nullable();
@@ -235,7 +250,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map with nullable values,'
+    test(
+        'when creating a nullable map with nullable values,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = object({'key': string().nullable()}).nullable();
@@ -249,7 +265,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map with nullable keys,'
+    test(
+        'when creating a nullable map with nullable keys,'
         'and the value is not null, '
         'then the result should be successful', () {
       final nullable = object({'key': string()}).nullable();
@@ -263,7 +280,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map with nullable keys,'
+    test(
+        'when creating a nullable map with nullable keys,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = object({'key': string()}).nullable();
@@ -277,7 +295,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable map with a default value,'
+    test(
+        'when creating a nullable map with a default value,'
         'and the value is null, '
         'then the result should be successful', () {
       final nullable = object({
@@ -294,7 +313,8 @@ void main() {
       expect(resultParse.value, {'key': 'This is a null value'});
     });
 
-    test('when creating a nullable boolean validator, '
+    test(
+        'when creating a nullable boolean validator, '
         'and the value is null, '
         'then the result should be successful', () {
       final b = boolean().nullable();
@@ -307,7 +327,8 @@ void main() {
       expect(resultParse.success, true);
     });
 
-    test('when creating a nullable validator,'
+    test(
+        'when creating a nullable validator,'
         'and use the toJsonSchema method, '
         'then the result should be a valid json schema', () {
       final schema = string().nullable();
@@ -322,7 +343,8 @@ void main() {
       expect(result, expected);
     });
 
-    test('when creating an enumerated nullable validator,'
+    test(
+        'when creating an enumerated nullable validator,'
         'and use the toJsonSchema method, '
         'then the result should be a valid json schema', () {
       final schema = string().nullable().enumerated(['Hello', 'World']);
@@ -334,12 +356,13 @@ void main() {
       expect(result, expected);
     });
 
-    test('when creating a nullable validator,'
+    test(
+        'when creating a nullable validator,'
         'and use the toJsonSchema method and the metadata, '
         'then the result should be a valid json schema with metadata', () {
       final schema = string().nullable().meta(
-        MetadataEntry(title: 'Title', description: 'Description'),
-      );
+            MetadataEntry(title: 'Title', description: 'Description'),
+          );
       final result = schema.toJsonSchema();
 
       final expected = {

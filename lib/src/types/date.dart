@@ -4,6 +4,7 @@ import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:acanthis/src/validators/date.dart';
 import 'package:nanoid2/nanoid2.dart';
 
+import '../exceptions/validation_error.dart';
 import 'types.dart';
 
 /// A class to validate date types
@@ -14,6 +15,62 @@ class AcanthisDate extends AcanthisType<DateTime> {
     super.key,
     super.metadataEntry,
   });
+
+  @override
+  AcanthisParseResult<DateTime> parse(dynamic value) {
+    final date = _convertToDate(value);
+    return super.parse(date);
+  }
+
+  @override
+  Future<AcanthisParseResult<DateTime>> parseAsync(dynamic value) async {
+    final date = _convertToDate(value);
+    return super.parseAsync(date);
+  }
+
+  @override
+  Future<AcanthisParseResult<DateTime>> tryParseAsync(dynamic value) async {
+    try {
+      final date = _convertToDate(value);
+      return super.tryParseAsync(date);
+    } on ValidationError catch (e) {
+      return AcanthisParseResult(errors: {
+        'date': e.message,
+      }, value: DateTime.now(), success: false);
+    }
+  }
+
+  @override
+  AcanthisParseResult<DateTime> tryParse(dynamic value) {
+    try {
+      final date = _convertToDate(value);
+      return super.tryParse(date);
+    } on ValidationError catch (e) {
+      return AcanthisParseResult(errors: {
+        'date': e.message,
+      }, value: DateTime.now(), success: false);
+    }
+  }
+
+  DateTime _convertToDate(dynamic value) {
+    if (value is! String && value is! DateTime && value is! int) {
+      throw ValidationError(
+        'Invalid type: ${value.runtimeType}, expected date-like value',
+      );
+    }
+    DateTime? date;
+    if (value is DateTime) {
+      date = value;
+    } else if (value is int) {
+      date = DateTime.fromMillisecondsSinceEpoch(value);
+    } else {
+      date = DateTime.tryParse(value);
+    }
+    if (date == null) {
+      throw ValidationError('Invalid date format: $value');
+    }
+    return date;
+  }
 
   /// Add a check to the date to check if it is before or equal to [value]
   AcanthisDate min(

@@ -9,12 +9,11 @@ class MinDateCheck extends AcanthisCheck<DateTime> {
     String? message,
     String Function(DateTime value)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'The date must be greater than or equal to $value',
-         name: 'min',
-       );
+          error: messageBuilder?.call(value) ??
+              message ??
+              'The date must be greater than or equal to $value',
+          name: 'min',
+        );
 
   @override
   bool call(DateTime value) {
@@ -31,12 +30,11 @@ class MaxDateCheck extends AcanthisCheck<DateTime> {
     String? message,
     String Function(DateTime value)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'The date must be less than or equal to $value',
-         name: 'max',
-       );
+          error: messageBuilder?.call(value) ??
+              message ??
+              'The date must be less than or equal to $value',
+          name: 'max',
+        );
 
   @override
   bool call(DateTime value) {
@@ -53,12 +51,11 @@ class DiffersFromNowCheck extends AcanthisCheck<DateTime> {
     String? message,
     String Function(Duration difference)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(difference) ??
-             message ??
-             'The date must differ from now by $difference or more',
-         name: 'differsFromNow',
-       );
+          error: messageBuilder?.call(difference) ??
+              message ??
+              'The date must differ from now by $difference or more',
+          name: 'differsFromNow',
+        );
 
   @override
   bool call(DateTime value) {
@@ -77,12 +74,11 @@ class DiffersFromCheck extends AcanthisCheck<DateTime> {
     String? message,
     String Function(DateTime fromDate, Duration difference)? messageBuilder,
   }) : super(
-         error:
-             messageBuilder?.call(fromDate, difference) ??
-             message ??
-             'The date must differ from $fromDate by $difference or more',
-         name: 'differsFrom',
-       );
+          error: messageBuilder?.call(fromDate, difference) ??
+              message ??
+              'The date must differ from $fromDate by $difference or more',
+          name: 'differsFrom',
+        );
 
   @override
   bool call(DateTime value) {

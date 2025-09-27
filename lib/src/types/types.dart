@@ -269,8 +269,9 @@ abstract class AcanthisType<O> {
 }
 
 @immutable
+
 /// A class to represent a pipeline of transformations
-class AcanthisPipeline<O, T> {
+class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   /// The type of the input value
   final AcanthisType<O> inType;
 
@@ -278,21 +279,21 @@ class AcanthisPipeline<O, T> {
   final AcanthisType<T> outType;
 
   /// The function that will be used to transform the value
-  final T Function(O value) transform;
+  final T Function(O value) transformFn;
 
   /// The constructor of the class
-  const AcanthisPipeline({
-    required this.inType,
-    required this.outType,
-    required this.transform,
-  });
+  const AcanthisPipeline(
+      {required this.inType,
+      required this.outType,
+      required T Function(O value) transform})
+      : transformFn = transform;
 
-  /// The parse method to parse the value
-  AcanthisParseResult<T> parse(O value) {
+  @override
+  AcanthisParseResult<T?> parse(dynamic value) {
     var inResult = inType.parse(value);
     final T newValue;
     try {
-      newValue = transform(inResult.value);
+      newValue = transformFn(inResult.value);
     } catch (e) {
       throw ValidationError('Error transforming the value from $O -> $T: $e');
     }
@@ -300,7 +301,7 @@ class AcanthisPipeline<O, T> {
     return outResult;
   }
 
-  /// The tryParse method to try to parse the value
+  @override
   AcanthisParseResult<T?> tryParse(dynamic value) {
     var inResult = inType.tryParse(value);
     if (!inResult.success) {
@@ -312,7 +313,7 @@ class AcanthisPipeline<O, T> {
     }
     final T newValue;
     try {
-      newValue = transform(inResult.value);
+      newValue = transformFn(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
         value: null,
@@ -324,12 +325,12 @@ class AcanthisPipeline<O, T> {
     return outResult;
   }
 
-  /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
-  Future<AcanthisParseResult<T>> parseAsync(O value) async {
+  @override
+  Future<AcanthisParseResult<T?>> parseAsync(dynamic value) async {
     final inResult = await inType.parseAsync(value);
     final T newValue;
     try {
-      newValue = transform(inResult.value);
+      newValue = transformFn(inResult.value);
     } catch (e) {
       throw ValidationError('Error transforming the value from $O -> $T: $e');
     }
@@ -337,8 +338,8 @@ class AcanthisPipeline<O, T> {
     return outResult;
   }
 
-  /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
-  Future<AcanthisParseResult<T?>> tryParseAsync(O value) async {
+  @override
+  Future<AcanthisParseResult<T?>> tryParseAsync(dynamic value) async {
     var inResult = await inType.tryParseAsync(value);
     if (!inResult.success) {
       return AcanthisParseResult(
@@ -349,7 +350,7 @@ class AcanthisPipeline<O, T> {
     }
     final T newValue;
     try {
-      newValue = transform(inResult.value);
+      newValue = transformFn(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
         value: null,
@@ -359,6 +360,32 @@ class AcanthisPipeline<O, T> {
     }
     var outResult = await outType.tryParseAsync(newValue);
     return outResult;
+  }
+
+  @override
+  AcanthisType<T?> meta(MetadataEntry<T?> metadata) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, dynamic> toJsonSchema() {
+    throw UnimplementedError();
+  }
+
+  @override
+  AcanthisType<T?> withAsyncCheck(AcanthisAsyncCheck<T?> check) {
+    throw UnimplementedError();
+  }
+
+  @override
+  AcanthisType<T?> withCheck(AcanthisCheck<T?> check) {
+    throw UnimplementedError();
+  }
+
+  @override
+  AcanthisType<T?> withTransformation(
+      AcanthisTransformation<T?> transformation) {
+    throw UnimplementedError();
   }
 }
 

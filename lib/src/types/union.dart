@@ -160,9 +160,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             for (final op in operations) {
               switch (op) {
                 case AcanthisCheck<T>():
-                  if(op is CustomCauseCheck<T>){
+                  if (op is CustomCauseCheck<T>) {
                     final cause = op.cause(base.value);
-                    if(cause != null){
+                    if (cause != null) {
                       throw ValidationError(cause, key: op.name);
                     }
                     break;
@@ -209,9 +209,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           for (final op in operations) {
             switch (op) {
               case AcanthisCheck<T>():
-                if(op is CustomCauseCheck<T>){
+                if (op is CustomCauseCheck<T>) {
                   final cause = op.cause(base.value);
-                  if(cause != null){
+                  if (cause != null) {
                     throw ValidationError(cause, key: op.name);
                   }
                   break;

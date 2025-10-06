@@ -240,10 +240,9 @@ class InstanceType<T> extends AcanthisType<T> {
     String? Function(T value, RefAccessor<T> refs) onCheck, {
     String name = 'refineWithCause',
   }) {
-    return withCheck(CustomCauseCheck(
-      (t) => onCheck(t, RefAccessor<T>(_refs, t)),
-      name: name,
-    ));
+    return withCheck(
+      CustomCauseCheck((t) => onCheck(t, RefAccessor<T>(_refs, t)), name: name),
+    );
   }
 
   /// Convert the instance to a map using the defined fields.

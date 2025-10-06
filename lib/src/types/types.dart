@@ -54,9 +54,9 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
-          if(operation is CustomCauseCheck<O>){
+          if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
-            if(cause != null){
+            if (cause != null) {
               throw ValidationError(cause, key: operation.name);
             }
             break;
@@ -100,9 +100,9 @@ abstract class AcanthisType<O> {
     for (final operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
-          if(operation is CustomCauseCheck<O>){
+          if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
-            if(cause != null){
+            if (cause != null) {
               errors[operation.name] = cause;
             }
             break;
@@ -141,9 +141,9 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
-          if(operation is CustomCauseCheck<O>){
+          if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
-            if(cause != null){
+            if (cause != null) {
               throw ValidationError(cause, key: operation.name);
             }
             break;
@@ -187,9 +187,9 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
-          if(operation is CustomCauseCheck<O>){
+          if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
-            if(cause != null){
+            if (cause != null) {
               errors[operation.name] = cause;
             }
             break;

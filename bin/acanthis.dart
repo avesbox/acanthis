@@ -43,10 +43,9 @@ void main(List<String> arguments) async {
         (refs) =>
             refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age),
       )
-      .refineWithRefs((u, r) {
-        return (DateTime.now().year - r<int>('age')) ==
-            r<DateTime>('birthDate').year;
-      }, 'User must be at least 18 years old');
+      .refineWithCause((u, r) {
+        return u.name == 'John Doe' ? '${u.name} is not allowed' : null;
+      });
   final user = User(
     name: 'John Doe',
     age: 30,

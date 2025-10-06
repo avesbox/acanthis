@@ -57,6 +57,18 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     for (final op in operations) {
       switch (op) {
         case AcanthisCheck<T>():
+          if (op is CustomCauseCheck<T>) {
+            final cause = op.cause(newValue);
+            if (cause != null) {
+              return AcanthisParseResult(
+                value: newValue,
+                errors: {op.name: cause},
+                success: false,
+                metadata: metadataEntry,
+              );
+            }
+            break;
+          }
           if (!op(newValue)) {
             return AcanthisParseResult(
               value: newValue,
@@ -148,8 +160,15 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             for (final op in operations) {
               switch (op) {
                 case AcanthisCheck<T>():
+                  if(op is CustomCauseCheck<T>){
+                    final cause = op.cause(base.value);
+                    if(cause != null){
+                      throw ValidationError(cause, key: op.name);
+                    }
+                    break;
+                  }
                   if (!op(base.value)) {
-                    throw ValidationError(op.error);
+                    throw ValidationError(op.error, key: op.name);
                   }
                   break;
                 case AcanthisTransformation<T>():
@@ -161,7 +180,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
                   break;
                 case AcanthisAsyncCheck<T>():
                   if (!(await op(base.value))) {
-                    throw ValidationError(op.error);
+                    throw ValidationError(op.error, key: op.name);
                   }
                   break;
                 default:
@@ -190,8 +209,15 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           for (final op in operations) {
             switch (op) {
               case AcanthisCheck<T>():
+                if(op is CustomCauseCheck<T>){
+                  final cause = op.cause(base.value);
+                  if(cause != null){
+                    throw ValidationError(cause, key: op.name);
+                  }
+                  break;
+                }
                 if (!op(base.value)) {
-                  throw ValidationError(op.error);
+                  throw ValidationError(op.error, key: op.name);
                 }
                 break;
               case AcanthisTransformation<T>():
@@ -203,7 +229,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
                 break;
               case AcanthisAsyncCheck<T>():
                 if (!(await op(base.value))) {
-                  throw ValidationError(op.error);
+                  throw ValidationError(op.error, key: op.name);
                 }
                 break;
               default:
@@ -239,6 +265,13 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             for (final op in operations) {
               switch (op) {
                 case AcanthisCheck<T>():
+                  if (op is CustomCauseCheck<T>) {
+                    final cause = op.cause(newVal);
+                    if (cause != null) {
+                      errors[op.name] = cause;
+                    }
+                    break;
+                  }
                   if (!op(newVal)) {
                     errors[op.name] = op.error;
                   }
@@ -286,6 +319,13 @@ class AcanthisUnion<T> extends AcanthisType<T> {
           for (final op in operations) {
             switch (op) {
               case AcanthisCheck<T>():
+                if (op is CustomCauseCheck<T>) {
+                  final cause = op.cause(newVal);
+                  if (cause != null) {
+                    errors[op.name] = cause;
+                  }
+                  break;
+                }
                 if (!op(newVal)) {
                   errors[op.name] = op.error;
                 }

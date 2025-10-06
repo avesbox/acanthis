@@ -54,6 +54,13 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
+          if(operation is CustomCauseCheck<O>){
+            final cause = operation.cause(newValue);
+            if(cause != null){
+              throw ValidationError(cause, key: operation.name);
+            }
+            break;
+          }
           if (!operation(newValue)) {
             throw ValidationError(operation.error, key: operation.name);
           }
@@ -93,6 +100,13 @@ abstract class AcanthisType<O> {
     for (final operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
+          if(operation is CustomCauseCheck<O>){
+            final cause = operation.cause(newValue);
+            if(cause != null){
+              errors[operation.name] = cause;
+            }
+            break;
+          }
           if (!operation(newValue)) {
             errors[operation.name] = operation.error;
           }
@@ -127,6 +141,13 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
+          if(operation is CustomCauseCheck<O>){
+            final cause = operation.cause(newValue);
+            if(cause != null){
+              throw ValidationError(cause, key: operation.name);
+            }
+            break;
+          }
           if (!operation(newValue)) {
             throw ValidationError(operation.error, key: operation.name);
           }
@@ -166,6 +187,13 @@ abstract class AcanthisType<O> {
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
+          if(operation is CustomCauseCheck<O>){
+            final cause = operation.cause(newValue);
+            if(cause != null){
+              errors[operation.name] = cause;
+            }
+            break;
+          }
           if (!operation(newValue)) {
             errors[operation.name] = operation.error;
           }

@@ -206,6 +206,7 @@ class InstanceType<T> extends AcanthisType<T> {
     );
   }
 
+  /// Add references that can be used in refineWithRefs and refineWithCause
   InstanceType<T> withRefs(
     InstanceRefsBuilder<T> Function(InstanceRefsBuilder<T>) build,
   ) {
@@ -220,6 +221,7 @@ class InstanceType<T> extends AcanthisType<T> {
     );
   }
 
+  /// Add a custom check that can use other fields as references
   InstanceType<T> refineWithRefs(
     bool Function(T value, RefAccessor<T> refs) onCheck,
     String error, {
@@ -233,6 +235,18 @@ class InstanceType<T> extends AcanthisType<T> {
     return withCheck(check);
   }
 
+  /// Add a custom check that can use other fields as references and returns a cause message on failure
+  InstanceType<T> refineWithCause(
+    String? Function(T value, RefAccessor<T> refs) onCheck, {
+    String name = 'refineWithCause',
+  }) {
+    return withCheck(CustomCauseCheck(
+      (t) => onCheck(t, RefAccessor<T>(_refs, t)),
+      name: name,
+    ));
+  }
+
+  /// Convert the instance to a map using the defined fields.
   Map<String, dynamic> toMap(T value) {
     final map = <String, dynamic>{};
     for (final f in _fields) {

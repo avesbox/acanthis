@@ -51,6 +51,33 @@ final class CustomCheck<T> extends AcanthisCheck<T> {
   }
 }
 
+/// A class that represents a custom check operation that returns a cause message on failure
+final class CustomCauseCheck<T> extends AcanthisCheck<T> {
+  /// The function that will be used to check the value
+  final String? Function(T) check;
+
+  /// The constructor of the class
+  const CustomCauseCheck(this.check, {super.name = ''});
+
+  @override
+  bool call(T value) {
+    try {
+      return check(value) == null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Calls the check function and returns the error message if the check fails
+  String? cause(T value) {
+    try {
+      return check(value);
+    } catch (e) {
+      return error.isNotEmpty ? error : 'Check failed';
+    }
+  }
+}
+
 /// A class that represents a custom async check operation
 final class CustomAsyncCheck<T> extends AcanthisAsyncCheck<T> {
   /// The function that will be used to check the value

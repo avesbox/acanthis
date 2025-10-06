@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.5
+
+- feat: add `CustomCauseCheck` to allow for custom checks that return a cause message on failure based on the input value.
+
 ## 1.4.4
 
 - feat: pipes are now acanthis type and can be used to validate more complex structures.

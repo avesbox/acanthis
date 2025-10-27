@@ -744,5 +744,22 @@ void main() {
         expect(result['minProperties'], 2);
       },
     );
+
+    test('when creating a map validator,'
+        'and use the withDefault method, '
+        'then the result should be unsuccessful but provide a default value', () {
+      final map = acanthis
+          .object({'key': acanthis.string().min(5).max(20)})
+          .withDefault({'key': 'defaultValue'});
+      final result = map.tryParse({});
+
+      expect(result.value, {'key': 'defaultValue'});
+
+      final map2 = acanthis
+          .object({'key': acanthis.string().min(5).max(20).withDefault('v')});
+      final result2 = map2.tryParse({});
+
+      expect(result2.value, {'key': 'v'});
+    });
   });
 }

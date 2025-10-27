@@ -21,7 +21,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     super.isAsync,
     super.key,
     super.metadataEntry,
-    super.defaultValue
+    super.defaultValue,
   }) : _types = types,
        _variants = variants;
 
@@ -496,7 +496,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       defaultValue: defaultValue,
     );
   }
-  
+
   @override
   AcanthisType<T> withDefault(T value) {
     return AcanthisUnion._(

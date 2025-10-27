@@ -35,7 +35,7 @@ abstract class AcanthisType<O> {
     this.key = '',
     this.metadataEntry,
     this.defaultValue,
-  })  : __operations = operations;
+  }) : __operations = operations;
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -277,7 +277,12 @@ abstract class AcanthisType<O> {
     required T Function(O value) transform,
     T? defaultValue,
   }) {
-    return AcanthisPipeline(inType: this, outType: type, transform: transform, defaultValue: defaultValue);
+    return AcanthisPipeline(
+      inType: this,
+      outType: type,
+      transform: transform,
+      defaultValue: defaultValue,
+    );
   }
 
   /// Add a transformation to the type
@@ -322,7 +327,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     required this.outType,
     required T Function(O value) transform,
     super.defaultValue,
-  })  : transformFn = transform;
+  }) : transformFn = transform;
 
   @override
   AcanthisParseResult<T?> parse(dynamic value) {
@@ -424,7 +429,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   ) {
     throw UnimplementedError();
   }
-  
+
   @override
   AcanthisType<T?> withDefault(T? value) {
     return AcanthisPipeline<O, T?>(

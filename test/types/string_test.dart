@@ -1227,6 +1227,15 @@ void main() {
     final expected = {'const': 'test'};
     expect(result, expected);
   });
+
+  test('when creating a string validator,'
+      'and use the withDefault method, '
+      'then the result should be unsuccessful but provide a default value', () {
+    final string = acanthis.string().min(4).withDefault('test');
+    final result = string.tryParse('A');
+
+    expect(result.value, 'test');
+  });
 }
 
 enum TestEnum { test, test2 }

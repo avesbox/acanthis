@@ -211,7 +211,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       defaultValue: defaultValue,
     );
   }
-  
+
   @override
   AcanthisType<List> withDefault(List value) {
     return AcanthisTuple(

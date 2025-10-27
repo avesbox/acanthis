@@ -641,5 +641,14 @@ void main() {
       final expected = {'const': 1};
       expect(result, expected);
     });
+
+    test('when creating a num validator,'
+      'and use the withDefault method, '
+      'then the result should be unsuccessful but provide a default value', () {
+    final string = acanthis.number().gte(10).withDefault(0);
+    final result = string.tryParse(5);
+
+    expect(result.value, 0);
+  });
   });
 }

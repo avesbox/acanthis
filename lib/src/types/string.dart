@@ -499,7 +499,7 @@ class AcanthisString extends AcanthisType<String> {
       defaultValue: defaultValue,
     );
   }
-  
+
   @override
   AcanthisType<String> withDefault(String value) {
     return AcanthisString(

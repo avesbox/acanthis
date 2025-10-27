@@ -6,7 +6,6 @@ import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate nullable types
 class AcanthisNullable<T> extends AcanthisType<T?> {
-
   /// The element of the nullable
   final AcanthisType<T> element;
 
@@ -88,7 +87,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: [...operations, check],
       isAsync: true,
       key: key,
-      metadataEntry: metadataEntry
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -100,7 +99,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: [...operations, check],
       isAsync: isAsync,
       key: key,
-      metadataEntry: metadataEntry
+      metadataEntry: metadataEntry,
     );
   }
 
@@ -173,7 +172,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       metadataEntry: metadata,
     );
   }
-  
+
   @override
   AcanthisType<T?> withDefault(T? value) {
     return AcanthisNullable(

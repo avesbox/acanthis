@@ -69,10 +69,7 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
 
   @override
   AcanthisType<T> withDefault(T value) {
-    return AcanthisLiteral(
-      value,
-      defaultValue: value,
-    );
+    return AcanthisLiteral(value, defaultValue: value);
   }
 }
 

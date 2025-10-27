@@ -764,7 +764,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     return constraints;
   }
-  
+
   @override
   AcanthisType<Map<String, V>> withDefault(Map<String, V> value) {
     return AcanthisMap._(
@@ -886,7 +886,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   LazyEntry<O> meta(MetadataEntry metadata) {
     throw UnimplementedError('The implementation must be done from the parent');
   }
-  
+
   @override
   AcanthisType<O> withDefault(O value) {
     throw UnimplementedError('The implementation must be done from the parent');

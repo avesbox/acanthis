@@ -162,4 +162,15 @@ void main(List<String> arguments) async {
   });
 
   print(mapWithLiterals.parse({'type': 'Acanthis', 'name': 'Example'}));
+
+  final mapWithDefault = object({
+    'type': string().withDefault('Acanthis'),
+    'name': string().withDefault('Unknown'),
+  });
+  print(mapWithDefault.tryParse({}));
+  final listWithDefault = string().list().min(1).withDefault(['Acanthis']);
+  print(listWithDefault.tryParse([]));
+  final name = string().min(2).max(100).withDefault('Unknown');
+  print(name.tryParse(''));
+  print(name.tryParse('Acanthis'));
 }

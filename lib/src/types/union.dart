@@ -21,6 +21,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue
   }) : _types = types,
        _variants = variants;
 
@@ -296,7 +297,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
               );
             }
             return AcanthisParseResult<T>(
-              value: newVal,
+              value: defaultValue ?? newVal,
               success: false,
               errors: errors,
               metadata: metadataEntry,
@@ -350,7 +351,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
             );
           }
           return AcanthisParseResult<T>(
-            value: newVal,
+            value: defaultValue ?? newVal,
             success: false,
             errors: errors,
             metadata: metadataEntry,
@@ -363,7 +364,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     }
     errors['union'] = 'Value does not match any union entry';
     return AcanthisParseResult<T>(
-      value: value,
+      value: defaultValue ?? value,
       errors: errors,
       success: false,
       metadata: metadataEntry,
@@ -421,7 +422,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     }
     errors['union'] = 'Value does not match any union entry';
     return AcanthisParseResult<T>(
-      value: value,
+      value: defaultValue ?? value,
       errors: errors,
       success: false,
       metadata: metadataEntry,
@@ -436,6 +437,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       operations: [...operations, check],
       isAsync: true,
       key: key,
+      defaultValue: defaultValue,
     );
   }
 
@@ -447,6 +449,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       operations: [...operations, check],
       isAsync: isAsync,
       key: key,
+      defaultValue: defaultValue,
     );
   }
 
@@ -460,6 +463,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       operations: [...operations, transformation],
       isAsync: isAsync,
       key: key,
+      defaultValue: defaultValue,
     );
   }
 
@@ -489,6 +493,20 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       isAsync: isAsync,
       key: k,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
+  }
+  
+  @override
+  AcanthisType<T> withDefault(T value) {
+    return AcanthisUnion._(
+      types: _types,
+      variants: _variants,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

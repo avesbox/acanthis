@@ -26,13 +26,16 @@ abstract class AcanthisType<O> {
 
   final MetadataEntry<O>? metadataEntry;
 
+  final O? defaultValue;
+
   /// The constructor of the class
   const AcanthisType({
     List<AcanthisOperation<O>> operations = const [],
     this.isAsync = false,
     this.key = '',
     this.metadataEntry,
-  }) : __operations = operations;
+    this.defaultValue,
+  })  : __operations = operations;
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -118,10 +121,11 @@ abstract class AcanthisType<O> {
           break;
       }
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: newValue,
+      value: success ? newValue : defaultValue ?? newValue,
       errors: errors,
-      success: errors.isEmpty,
+      success: success,
       metadata: metadataEntry,
     );
   }
@@ -210,8 +214,9 @@ abstract class AcanthisType<O> {
           break;
       }
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: newValue,
+      value: success ? newValue : defaultValue ?? newValue,
       errors: errors,
       success: errors.isEmpty,
       metadata: metadataEntry,
@@ -228,6 +233,8 @@ abstract class AcanthisType<O> {
   AcanthisNullable nullable({O? defaultValue}) {
     return AcanthisNullable(this, defaultValue: defaultValue);
   }
+
+  AcanthisType<O> withDefault(O value);
 
   /// Make the type a list of the type
   AcanthisList<O> list() {
@@ -268,8 +275,9 @@ abstract class AcanthisType<O> {
   AcanthisPipeline<O, T> pipe<T>(
     AcanthisType<T> type, {
     required T Function(O value) transform,
+    T? defaultValue,
   }) {
-    return AcanthisPipeline(inType: this, outType: type, transform: transform);
+    return AcanthisPipeline(inType: this, outType: type, transform: transform, defaultValue: defaultValue);
   }
 
   /// Add a transformation to the type
@@ -313,7 +321,8 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     required this.inType,
     required this.outType,
     required T Function(O value) transform,
-  }) : transformFn = transform;
+    super.defaultValue,
+  })  : transformFn = transform;
 
   @override
   AcanthisParseResult<T?> parse(dynamic value) {
@@ -333,7 +342,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     var inResult = inType.tryParse(value);
     if (!inResult.success) {
       return AcanthisParseResult(
-        value: null,
+        value: defaultValue,
         errors: inResult.errors,
         success: false,
       );
@@ -343,7 +352,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
       newValue = transformFn(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
-        value: null,
+        value: defaultValue,
         errors: {'transform': 'Error transforming the value from $O -> $T'},
         success: false,
       );
@@ -370,7 +379,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     var inResult = await inType.tryParseAsync(value);
     if (!inResult.success) {
       return AcanthisParseResult(
-        value: null,
+        value: defaultValue,
         errors: inResult.errors,
         success: false,
       );
@@ -380,7 +389,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
       newValue = transformFn(inResult.value);
     } catch (e) {
       return AcanthisParseResult(
-        value: null,
+        value: defaultValue,
         errors: {'transform': 'Error transforming the value from $O -> $T'},
         success: false,
       );
@@ -414,6 +423,16 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     AcanthisTransformation<T?> transformation,
   ) {
     throw UnimplementedError();
+  }
+  
+  @override
+  AcanthisType<T?> withDefault(T? value) {
+    return AcanthisPipeline<O, T?>(
+      inType: inType,
+      outType: outType,
+      transform: transformFn,
+      defaultValue: value,
+    );
   }
 }
 

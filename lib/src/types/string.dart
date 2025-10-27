@@ -15,6 +15,7 @@ class AcanthisString extends AcanthisType<String> {
     super.operations,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   });
 
   /// Add a check to the string to check if it is a valid email
@@ -361,6 +362,7 @@ class AcanthisString extends AcanthisType<String> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -371,6 +373,7 @@ class AcanthisString extends AcanthisType<String> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -383,6 +386,7 @@ class AcanthisString extends AcanthisType<String> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -492,6 +496,18 @@ class AcanthisString extends AcanthisType<String> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
+  }
+  
+  @override
+  AcanthisType<String> withDefault(String value) {
+    return AcanthisString(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

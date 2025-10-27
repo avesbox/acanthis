@@ -674,3 +674,17 @@ You can use the `pipe()` method to add a custom transformation function to a sch
 ```dart
 final name = string().pipe(number(), transform: (value) => int.parse(value));
 ```
+
+## Default Values
+
+To provide a default value for a schema, you can use the `withDefault()` method. This method allows you to specify a value that will be used if the validation operations fail.
+
+```dart
+final name = string().min(2).max(100).withDefault('Unknown');
+name.tryParse('A'); // returns 'Unknown'
+name.tryParse('Acanthis'); // returns 'Acanthis'
+```
+
+::: warning
+This behavior is available only when using `tryParse()` or `tryParseAsync()`. When using `parse()` or `parseAsync()`, a `ValidationError` will be thrown if the validation fails regardless of the default value.
+:::

@@ -19,6 +19,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   });
 
   @override
@@ -48,11 +49,12 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final result = await super.tryParseAsync(parsed);
     final mergedErrors = {...errors, ...result.errors};
+    final success = mergedErrors.isEmpty;
     return AcanthisParseResult(
-      value: result.value,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: mergedErrors,
       metadata: result.metadata,
-      success: _recursiveSuccess(mergedErrors),
+      success: success,
     );
   }
 
@@ -90,24 +92,13 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final result = super.tryParse(parsed);
     final mergedErrors = {...errors, ...result.errors};
+    final success = mergedErrors.isEmpty;
     return AcanthisParseResult(
-      value: result.value,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: mergedErrors,
-      success: _recursiveSuccess(mergedErrors),
+      success: success,
       metadata: result.metadata,
     );
-  }
-
-  bool _recursiveSuccess(Map<String, dynamic> errors) {
-    List<bool> results = [];
-    for (var error in errors.values) {
-      results.add(
-        error is Map<String, dynamic>
-            ? _recursiveSuccess(error)
-            : error.isEmpty,
-      );
-    }
-    return results.every((element) => element);
   }
 
   /// Add a check to the list to check if it is at least [length] elements long
@@ -201,6 +192,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -212,6 +204,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -225,6 +218,19 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+    );
+  }
+
+  @override
+  AcanthisList<T> withDefault(List<T> value) {
+    return AcanthisList(
+      element,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 
@@ -241,6 +247,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
     );
   }
 

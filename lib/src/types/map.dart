@@ -37,6 +37,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.operations,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   }) : _fields = fields,
        _passthrough = passthrough,
        _passthroughType = passthroughType,
@@ -331,10 +332,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     if (result.errors.isNotEmpty) {
       errors.addAll(result.errors);
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: result.value,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: errors,
-      success: errors.isEmpty,
+      success: success,
       metadata: result.metadata,
     );
   }
@@ -353,7 +355,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final fieldType = entry.value;
       final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[entry.key];
+      final passedValue = value[entry.key] ?? fieldType.defaultValue;
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
@@ -431,10 +433,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     if (result.errors.isNotEmpty) {
       errors.addAll(result.errors);
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: parsed,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: errors,
-      success: errors.isEmpty,
+      success: success,
       metadata: result.metadata,
     );
   }
@@ -761,6 +764,22 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     return constraints;
   }
+  
+  @override
+  AcanthisType<Map<String, V>> withDefault(Map<String, V> value) {
+    return AcanthisMap._(
+      fields: _fields,
+      passthrough: _passthrough,
+      passthroughType: _passthroughType,
+      dependencies: _dependencies,
+      optionalFields: _optionalFields,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
+    );
+  }
 }
 
 /// Create a map of [fields]
@@ -865,6 +884,11 @@ class LazyEntry<O> extends AcanthisType<O> {
 
   @override
   LazyEntry<O> meta(MetadataEntry metadata) {
+    throw UnimplementedError('The implementation must be done from the parent');
+  }
+  
+  @override
+  AcanthisType<O> withDefault(O value) {
     throw UnimplementedError('The implementation must be done from the parent');
   }
 }

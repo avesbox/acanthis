@@ -6,6 +6,7 @@ class ClassSchemaBuilder<I, T> {
   AcanthisType<I>? _input;
   T Function(I)? _mapper;
   AcanthisType<T>? _output;
+  T? _defaultOutput;
 
   /// Provide the input schema (can be object(...), list(...), etc.)
   ClassSchemaBuilder<I, T> input(AcanthisType<I> schema) {
@@ -16,6 +17,12 @@ class ClassSchemaBuilder<I, T> {
   /// Provide the mapping function from validated input (I) to T.
   ClassSchemaBuilder<I, T> map(T Function(I value) mapper) {
     _mapper = mapper;
+    return this;
+  }
+
+  /// Provide a default output schema.
+  ClassSchemaBuilder<I, T> defaultOutput(T value) {
+    _defaultOutput = value;
     return this;
   }
 
@@ -45,7 +52,7 @@ class ClassSchemaBuilder<I, T> {
       throw StateError('ClassSchemaBuilder: map() not provided');
     }
     final out = _output ?? instance<T>();
-    return _input!.pipe<T>(out, transform: (v) => _mapper!(v));
+    return _input!.pipe<T>(out, transform: (v) => _mapper!(v), defaultValue: _defaultOutput);
   }
 }
 

@@ -6,15 +6,13 @@ import 'package:nanoid2/nanoid2.dart';
 
 /// A class to validate nullable types
 class AcanthisNullable<T> extends AcanthisType<T?> {
-  /// The default value of the nullable
-  final T? defaultValue;
 
   /// The element of the nullable
   final AcanthisType<T> element;
 
   const AcanthisNullable(
     this.element, {
-    this.defaultValue,
+    super.defaultValue,
     super.operations,
     super.isAsync,
     super.key,
@@ -90,6 +88,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: [...operations, check],
       isAsync: true,
       key: key,
+      metadataEntry: metadataEntry
     );
   }
 
@@ -101,6 +100,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       operations: [...operations, check],
       isAsync: isAsync,
       key: key,
+      metadataEntry: metadataEntry
     );
   }
 
@@ -171,6 +171,18 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+    );
+  }
+  
+  @override
+  AcanthisType<T?> withDefault(T? value) {
+    return AcanthisNullable(
+      element,
+      defaultValue: value,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
     );
   }
 }

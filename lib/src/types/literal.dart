@@ -8,7 +8,7 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   final T value;
 
   /// Creates a new instance of [AcanthisLiteral].
-  AcanthisLiteral(this.value);
+  AcanthisLiteral(this.value, {super.defaultValue});
 
   @override
   Map<String, dynamic> toJsonSchema() {
@@ -65,6 +65,14 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   @override
   AcanthisType<T> withTransformation(AcanthisTransformation<T> transformation) {
     throw UnimplementedError();
+  }
+
+  @override
+  AcanthisType<T> withDefault(T value) {
+    return AcanthisLiteral(
+      value,
+      defaultValue: value,
+    );
   }
 }
 

@@ -14,6 +14,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   });
 
   @override
@@ -137,6 +138,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -147,6 +149,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -159,6 +162,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -183,6 +187,18 @@ class AcanthisDate extends AcanthisType<DateTime> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
+  }
+
+  @override
+  AcanthisDate withDefault(DateTime value) {
+    return AcanthisDate(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

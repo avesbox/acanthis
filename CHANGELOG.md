@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.6
+
+- feat: add `AcanthisType#defaultValue` to get the default value of the schema.
+- chore: `meta` dependency is now less strict.
+
 ## 1.4.5
 
 - feat: add `CustomCauseCheck` to allow for custom checks that return a cause message on failure based on the input value.

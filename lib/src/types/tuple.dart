@@ -14,6 +14,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   }) : _variadic = false;
 
   AcanthisTuple._(
@@ -23,6 +24,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     super.key,
     bool variadic = false,
     super.metadataEntry,
+    super.defaultValue,
   }) : _variadic = variadic;
 
   @override
@@ -70,10 +72,11 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     if (result.errors.isNotEmpty) {
       errors.addAll(result.errors);
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: result.value,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: errors,
-      success: errors.isEmpty,
+      success: success,
       metadata: result.metadata,
     );
   }
@@ -123,10 +126,11 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     if (result.errors.isNotEmpty) {
       errors.addAll(result.errors);
     }
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: result.value,
+      value: success ? result.value : defaultValue ?? result.value,
       errors: errors,
-      success: errors.isEmpty,
+      success: success,
       metadata: result.metadata,
     );
   }
@@ -139,6 +143,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -150,6 +155,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -163,6 +169,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -175,6 +182,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       isAsync: isAsync,
       variadic: true,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -200,6 +208,19 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
+  }
+  
+  @override
+  AcanthisType<List> withDefault(List value) {
+    return AcanthisTuple(
+      elements,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

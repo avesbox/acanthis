@@ -16,6 +16,7 @@ class AcanthisNumber extends AcanthisType<num> {
     super.operations,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   });
 
   /// Add a check to the number to check if it is less than or equal to [value]
@@ -188,6 +189,7 @@ class AcanthisNumber extends AcanthisType<num> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -198,6 +200,7 @@ class AcanthisNumber extends AcanthisType<num> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -210,6 +213,7 @@ class AcanthisNumber extends AcanthisType<num> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -293,6 +297,18 @@ class AcanthisNumber extends AcanthisType<num> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
+  }
+
+  @override
+  AcanthisNumber withDefault(num value) {
+    return AcanthisNumber(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

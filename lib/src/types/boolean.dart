@@ -12,6 +12,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   });
 
   /// Add a check to the boolean to check if it is true
@@ -76,6 +77,17 @@ class AcanthisBoolean extends AcanthisType<bool> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+    );
+  }
+
+  @override
+  AcanthisBoolean withDefault(bool value) {
+    return AcanthisBoolean(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
     );
   }
 }

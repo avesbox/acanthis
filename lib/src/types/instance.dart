@@ -61,6 +61,7 @@ class InstanceType<T> extends AcanthisType<T> {
     super.isAsync,
     super.key,
     super.metadataEntry,
+    super.defaultValue,
   }) : _fields = fields,
        _refs = refs;
 
@@ -134,6 +135,7 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: anyAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -145,6 +147,7 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -156,6 +159,7 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -168,6 +172,7 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -203,6 +208,7 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: isAsync,
       key: newKey,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
     );
   }
 
@@ -218,6 +224,8 @@ class InstanceType<T> extends AcanthisType<T> {
       isAsync: isAsync,
       key: key,
       refs: {..._refs, ...configured._refs},
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
     );
   }
 
@@ -252,6 +260,18 @@ class InstanceType<T> extends AcanthisType<T> {
       map[f.name] = f.getter(value);
     }
     return map;
+  }
+
+  @override
+  InstanceType<T> withDefault(T value) {
+    return InstanceType._(
+      operations: operations,
+      fields: _fields,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
+    );
   }
 }
 

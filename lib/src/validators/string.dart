@@ -230,10 +230,9 @@ class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
   PatternAlphanumericWithSpacesStringChecks({
     this.strict = true,
     String? message,
-  }) : regExp =
-           strict
-               ? RegExp(_alphanumericWithSpacesStrict)
-               : RegExp(_alphanumericWithSpaces),
+  }) : regExp = strict
+           ? RegExp(_alphanumericWithSpacesStrict)
+           : RegExp(_alphanumericWithSpaces),
        super(
          error:
              message ??
@@ -254,10 +253,9 @@ class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
   final RegExp regExp;
 
   PatternSpecialCharactersStringChecks({this.strict = true, String? message})
-    : regExp =
-          strict
-              ? RegExp(_specialCharactersStrict)
-              : RegExp(_specialCharacters),
+    : regExp = strict
+          ? RegExp(_specialCharactersStrict)
+          : RegExp(_specialCharacters),
       super(
         error:
             message ??

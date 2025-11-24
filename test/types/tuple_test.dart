@@ -37,8 +37,10 @@ void main() {
     test('when creating a variadic tuple validator,'
         'and the tuple is valid, '
         'then the result should be successful', () {
-      final tuple =
-          acanthis.tuple([acanthis.string(), acanthis.number()]).variadic();
+      final tuple = acanthis.tuple([
+        acanthis.string(),
+        acanthis.number(),
+      ]).variadic();
       final result = tuple.tryParse(['Hello', 5, 10, 20]);
 
       expect(result.success, true);
@@ -51,8 +53,10 @@ void main() {
     test('when creating a variadic tuple validator,'
         'and the tuple is invalid, '
         'then the result should be unsuccessful', () {
-      final tuple =
-          acanthis.tuple([acanthis.string(), acanthis.number()]).variadic();
+      final tuple = acanthis.tuple([
+        acanthis.string(),
+        acanthis.number(),
+      ]).variadic();
       final result = tuple.tryParse(['Hello', '5']);
 
       expect(result.success, false);

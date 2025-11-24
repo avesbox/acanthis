@@ -326,8 +326,8 @@ class AcanthisString extends AcanthisType<String> {
   AcanthisString decode() {
     return withTransformation(
       AcanthisTransformation<String>(
-        transformation:
-            (value) => convert.utf8.decode(convert.base64.decode(value)),
+        transformation: (value) =>
+            convert.utf8.decode(convert.base64.decode(value)),
       ),
     );
   }
@@ -429,8 +429,9 @@ class AcanthisString extends AcanthisType<String> {
     final enumeratedChecks = operations.whereType<EnumeratedStringCheck>();
     final enumeratedChecksMap = <String, dynamic>{};
     for (var check in enumeratedChecks) {
-      enumeratedChecksMap['enum'] =
-          check.enumValues.map((e) => e.name).toList();
+      enumeratedChecksMap['enum'] = check.enumValues
+          .map((e) => e.name)
+          .toList();
     }
     return enumeratedChecksMap;
   }
@@ -529,7 +530,7 @@ class AcanthisString extends AcanthisType<String> {
     }
     return containsChecksMap;
   }
-  
+
   @override
   Map<String, dynamic> toOpenApiSchema() {
     final lengthChecksMap = _getConstraints();

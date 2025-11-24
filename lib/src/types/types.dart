@@ -308,8 +308,6 @@ abstract class AcanthisType<O> {
   }
 
   Map<String, dynamic> toOpenApiSchema();
-
-
 }
 
 @immutable

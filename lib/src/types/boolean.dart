@@ -94,13 +94,17 @@ class AcanthisBoolean extends AcanthisType<bool> {
   @override
   Map<String, dynamic> toOpenApiSchema() {
     if (operations.any((op) => op is IsTrueCheck)) {
-      return {'type': 'boolean', 'enum': [true]};
+      return {
+        'type': 'boolean',
+        'enum': [true],
+      };
     } else if (operations.any((op) => op is IsFalseCheck)) {
-      return {'type': 'boolean', 'enum': [false]};
+      return {
+        'type': 'boolean',
+        'enum': [false],
+      };
     }
-    return {
-      'type': 'boolean',
-    };
+    return {'type': 'boolean'};
   }
 }
 

@@ -147,10 +147,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     for (final v in _variants) {
       if (v.guard(value)) {
         try {
-          final r =
-              v.schema.isAsync
-                  ? await v.schema.tryParseAsync(value)
-                  : v.schema.tryParse(value);
+          final r = v.schema.isAsync
+              ? await v.schema.tryParseAsync(value)
+              : v.schema.tryParse(value);
           if (r.success) {
             var base = AcanthisParseResult<T>(
               value: r.value,
@@ -256,10 +255,9 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     for (final v in _variants) {
       if (v.guard(value)) {
         try {
-          final r =
-              v.schema.isAsync
-                  ? await v.schema.tryParseAsync(value)
-                  : v.schema.tryParse(value);
+          final r = v.schema.isAsync
+              ? await v.schema.tryParseAsync(value)
+              : v.schema.tryParse(value);
           if (r.success) {
             // Apply own ops asynchronously
             T newVal = r.value;
@@ -509,16 +507,14 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       defaultValue: value,
     );
   }
-  
+
   @override
   Map<String, dynamic> toOpenApiSchema() {
     final schemas = [
       ..._variants.map((v) => v.schema.toOpenApiSchema()),
       ..._types.map((t) => t.toOpenApiSchema()),
     ];
-    return {
-      'oneOf': schemas,
-    };
+    return {'oneOf': schemas};
   }
 }
 

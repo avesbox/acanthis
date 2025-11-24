@@ -206,12 +206,11 @@ void main() {
         'and use the list method, '
         'and all the values are valid, '
         'then the result should be successful', () {
-      final date =
-          acanthis
-              .date()
-              .min(DateTime(2020, 1, 1))
-              .max(DateTime(2021, 1, 1))
-              .list();
+      final date = acanthis
+          .date()
+          .min(DateTime(2020, 1, 1))
+          .max(DateTime(2021, 1, 1))
+          .list();
       final result = date.tryParse([
         DateTime(2020, 1, 1),
         DateTime(2021, 1, 1),

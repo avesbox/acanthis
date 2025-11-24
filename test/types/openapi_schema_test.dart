@@ -14,11 +14,17 @@ void main() {
       expect(boolean().toOpenApiSchema(), equals({'type': 'boolean'}));
       expect(
         boolean().isTrue().toOpenApiSchema(),
-        equals({'type': 'boolean', 'enum': [true]}),
+        equals({
+          'type': 'boolean',
+          'enum': [true],
+        }),
       );
       expect(
         boolean().isFalse().toOpenApiSchema(),
-        equals({'type': 'boolean', 'enum': [false]}),
+        equals({
+          'type': 'boolean',
+          'enum': [false],
+        }),
       );
     });
 
@@ -27,11 +33,7 @@ void main() {
 
       expect(
         schema,
-        equals({
-          'type': 'integer',
-          'minimum': 1,
-          'exclusiveMaximum': 10,
-        }),
+        equals({'type': 'integer', 'minimum': 1, 'exclusiveMaximum': 10}),
       );
     });
 
@@ -45,8 +47,10 @@ void main() {
         }),
       );
 
-      final exactSchema =
-          number().enumerated([1, 2]).exact(5).toOpenApiSchema();
+      final exactSchema = number()
+          .enumerated([1, 2])
+          .exact(5)
+          .toOpenApiSchema();
       expect(
         exactSchema,
         equals({
@@ -90,13 +94,7 @@ void main() {
     test('string pattern checks surface regex metadata', () {
       final schema = string().pattern(RegExp(r'^[a-z]+$')).toOpenApiSchema();
 
-      expect(
-        schema,
-        equals({
-          'type': 'string',
-          'pattern': r'^[a-z]+$',
-        }),
-      );
+      expect(schema, equals({'type': 'string', 'pattern': r'^[a-z]+$'}));
     });
 
     test('string exposes exact value enums and contains helpers', () {
@@ -110,18 +108,12 @@ void main() {
 
       expect(
         string().notEmpty().toOpenApiSchema(),
-        equals({
-          'type': 'string',
-          'minLength': 1,
-        }),
+        equals({'type': 'string', 'minLength': 1}),
       );
 
       expect(
         string().contains('token').toOpenApiSchema(),
-        equals({
-          'type': 'string',
-          'pattern': '/token/',
-        }),
+        equals({'type': 'string', 'pattern': '/token/'}),
       );
     });
 
@@ -136,12 +128,10 @@ void main() {
     });
 
     test('list captures cardinality, uniqueness and anyOf branches', () {
-      final schema = string()
-          .list()
-          .min(2)
-          .unique()
-          .anyOf(['foo', 'bar'])
-          .toOpenApiSchema();
+      final schema = string().list().min(2).unique().anyOf([
+        'foo',
+        'bar',
+      ]).toOpenApiSchema();
 
       expect(
         schema,
@@ -175,10 +165,7 @@ void main() {
     });
 
     test('tuple includes prefix items and variadic metadata', () {
-      final tupleType = tuple([
-        string(),
-        number(),
-      ]);
+      final tupleType = tuple([string(), number()]);
 
       expect(
         tupleType.toOpenApiSchema(),
@@ -216,13 +203,8 @@ void main() {
         equals({
           'type': 'object',
           'properties': {
-            'label': {
-              'type': 'string',
-              'minLength': 1,
-            },
-            'count': {
-              'type': 'integer',
-            },
+            'label': {'type': 'string', 'minLength': 1},
+            'count': {'type': 'integer'},
           },
           'required': ['label', 'count'],
         }),
@@ -250,31 +232,22 @@ void main() {
                   r'^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$',
               'format': 'uuid',
             },
-            {
-              'type': 'string',
-              'minLength': 3,
-            },
-            {
-              'type': 'number',
-            },
+            {'type': 'string', 'minLength': 3},
+            {'type': 'number'},
           ],
         }),
       );
     });
 
     test('map outputs refs, optionals and passthrough rules', () {
-      final node = object({
-        'label': string().notEmpty(),
-      });
+      final node = object({'label': string().notEmpty()});
 
-      final schema = object({
-        'id': string().notEmpty(),
-        'child': lazy((_) => node),
-      })
-          .optionals(['child'])
-          .passthrough(type: string())
-          .minProperties(1)
-          .toOpenApiSchema();
+      final schema =
+          object({'id': string().notEmpty(), 'child': lazy((_) => node)})
+              .optionals(['child'])
+              .passthrough(type: string())
+              .minProperties(1)
+              .toOpenApiSchema();
 
       expect(
         schema,
@@ -283,10 +256,7 @@ void main() {
             'child-lazy': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'type': 'string',
-                  'minLength': 1,
-                },
+                'label': {'type': 'string', 'minLength': 1},
               },
               'additionalProperties': false,
               'required': ['label'],
@@ -294,17 +264,10 @@ void main() {
           },
           'type': 'object',
           'properties': {
-            'id': {
-              'type': 'string',
-              'minLength': 1,
-            },
-            'child': {
-              r'$ref': '#/components/child-lazy',
-            },
+            'id': {'type': 'string', 'minLength': 1},
+            'child': {r'$ref': '#/components/child-lazy'},
           },
-          'additionalProperties': {
-            'type': 'string',
-          },
+          'additionalProperties': {'type': 'string'},
           'required': ['id'],
           'minProperties': 1,
         }),

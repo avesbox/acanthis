@@ -273,7 +273,7 @@ class InstanceType<T> extends AcanthisType<T> {
       defaultValue: value,
     );
   }
-  
+
   @override
   Map<String, dynamic> toOpenApiSchema() {
     return toJsonSchema();

@@ -110,10 +110,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
       if (passedValue == null && isOptional && !isNullable) continue;
 
-      parsed[entry.key] =
-          fieldType is LazyEntry
-              ? fieldType.parse(passedValue, this).value
-              : fieldType.parse(passedValue).value;
+      parsed[entry.key] = fieldType is LazyEntry
+          ? fieldType.parse(passedValue, this).value
+          : fieldType.parse(passedValue).value;
     }
 
     // Handle passthrough keys in a single pass
@@ -189,8 +188,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       }
       if (passedValue == null && isOptional && !isNullable) continue;
       if (fieldType is LazyEntry) {
-        parsed[entry.key] =
-            (await fieldType.parseAsync(passedValue, this)).value;
+        parsed[entry.key] = (await fieldType.parseAsync(
+          passedValue,
+          this,
+        )).value;
       } else {
         parsed[entry.key] = (await fieldType.parseAsync(passedValue)).value;
       }
@@ -703,8 +704,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   @override
   Map<String, dynamic> toJsonSchema() {
     final schema = <String, dynamic>{};
-    final lazyEntries =
-        _fields.entries.where((entry) => entry.value is LazyEntry).toList();
+    final lazyEntries = _fields.entries
+        .where((entry) => entry.value is LazyEntry)
+        .toList();
     for (var entry in _fields.entries) {
       if (entry.value is LazyEntry) {
         final entryKey = '${entry.key}-lazy';
@@ -735,12 +737,12 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       'type': 'object',
       if (metadataEntry != null) ...metadataEntry!.toJson(),
       'properties': schema,
-      'additionalProperties':
-          _passthrough == false
-              ? false
-              : _passthroughType?.toJsonSchema() ?? true,
-      'required':
-          _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+      'additionalProperties': _passthrough == false
+          ? false
+          : _passthroughType?.toJsonSchema() ?? true,
+      'required': _fields.keys
+          .where((key) => !_optionalFields.contains(key))
+          .toList(),
       if (constraints.isNotEmpty) ...constraints,
     };
   }
@@ -784,8 +786,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   @override
   Map<String, dynamic> toOpenApiSchema() {
     final schema = <String, dynamic>{};
-    final lazyEntries =
-        _fields.entries.where((entry) => entry.value is LazyEntry).toList();
+    final lazyEntries = _fields.entries
+        .where((entry) => entry.value is LazyEntry)
+        .toList();
     for (var entry in _fields.entries) {
       if (entry.value is LazyEntry) {
         final entryKey = '${entry.key}-lazy';
@@ -816,12 +819,12 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       'type': 'object',
       if (metadataEntry != null) ...metadataEntry!.toJson(),
       'properties': schema,
-      'additionalProperties':
-          _passthrough == false
-              ? false
-              : _passthroughType?.toOpenApiSchema() ?? true,
-      'required':
-          _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+      'additionalProperties': _passthrough == false
+          ? false
+          : _passthroughType?.toOpenApiSchema() ?? true,
+      'required': _fields.keys
+          .where((key) => !_optionalFields.contains(key))
+          .toList(),
       if (constraints.isNotEmpty) ...constraints,
     };
   }
@@ -936,7 +939,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   AcanthisType<O> withDefault(O value) {
     throw UnimplementedError('The implementation must be done from the parent');
   }
-  
+
   @override
   Map<String, dynamic> toOpenApiSchema({
     AcanthisMap<dynamic>? parent,

@@ -69,19 +69,15 @@ final class MetadataEntry<T> {
       if (id != null) 'id': id,
       if (title != null) 'title': title,
       if (examples != null)
-        'examples':
-            T == DateTime
-                ? examples
-                    ?.map((e) => (e as DateTime).toIso8601String())
-                    .toList()
-                : examples,
+        'examples': T == DateTime
+            ? examples?.map((e) => (e as DateTime).toIso8601String()).toList()
+            : examples,
       if (comment != null) '$comment': comment,
       if (deprecated != null) 'deprecated': deprecated,
       if (defaultValue != null)
-        'default':
-            T == DateTime
-                ? (defaultValue as DateTime).toIso8601String()
-                : defaultValue,
+        'default': T == DateTime
+            ? (defaultValue as DateTime).toIso8601String()
+            : defaultValue,
       if (format != null) 'format': format,
       if (readOnly != null) 'readOnly': readOnly,
       if (writeOnly != null) 'writeOnly': writeOnly,

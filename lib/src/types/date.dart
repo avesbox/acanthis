@@ -209,10 +209,8 @@ class AcanthisDate extends AcanthisType<DateTime> {
     return {
       'type': 'string',
       'format': 'date-time',
-      if (maxDate != null)
-        'maximum': maxDate.value.toUtc().toIso8601String(),
-      if (minDate != null)
-        'minimum': minDate.value.toUtc().toIso8601String(),
+      if (maxDate != null) 'maximum': maxDate.value.toUtc().toIso8601String(),
+      if (minDate != null) 'minimum': minDate.value.toUtc().toIso8601String(),
     };
   }
 }

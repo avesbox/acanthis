@@ -304,9 +304,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       return {
         'type': 'array',
         'items': {
-          'oneOf': anyOf.items
-              .map((e) => element.toOpenApiSchema())
-              .toList(),
+          'oneOf': anyOf.items.map((e) => element.toOpenApiSchema()).toList(),
         },
         if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
         if (uniqueItems) 'uniqueItems': true,

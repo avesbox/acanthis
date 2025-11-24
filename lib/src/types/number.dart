@@ -235,8 +235,9 @@ class AcanthisNumber extends AcanthisType<num> {
         if (metadataEntry != null) ...metadataEntry!.toJson(),
       };
     }
-    final enumeratedCheck =
-        operations.whereType<EnumeratedNumberCheck>().firstOrNull;
+    final enumeratedCheck = operations
+        .whereType<EnumeratedNumberCheck>()
+        .firstOrNull;
     if (enumeratedCheck != null) {
       return {
         'enum': enumeratedCheck.values,
@@ -316,7 +317,9 @@ class AcanthisNumber extends AcanthisType<num> {
   Map<String, dynamic> toOpenApiSchema() {
     String type = 'number';
     final constraints = _getConstraints();
-    final enumerated = operations.whereType<EnumeratedNumberCheck>().firstOrNull;
+    final enumerated = operations
+        .whereType<EnumeratedNumberCheck>()
+        .firstOrNull;
     final checks = operations.whereType<AcanthisCheck<num>>();
     if (checks.isNotEmpty) {
       for (var check in checks) {

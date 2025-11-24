@@ -22,8 +22,9 @@ class _User {
 void main() {
   group('ClassSchemaBuilder', () {
     test('throws when build is called without an input schema', () {
-      final builder = classSchema<Map<String, dynamic>, _User>()
-          .map((_) => const _User(name: 'fallback', age: 0));
+      final builder = classSchema<Map<String, dynamic>, _User>().map(
+        (_) => const _User(name: 'fallback', age: 0),
+      );
 
       expect(
         () => builder.build(),
@@ -38,8 +39,9 @@ void main() {
     });
 
     test('throws when build is called without a mapper', () {
-      final builder =
-          classSchema<Map<String, dynamic>, _User>().input(object({}));
+      final builder = classSchema<Map<String, dynamic>, _User>().input(
+        object({}),
+      );
 
       expect(
         () => builder.build(),
@@ -55,12 +57,7 @@ void main() {
 
     test('composes input validation, mapping and output refinement', () {
       final pipeline = classSchema<Map<String, dynamic>, _User>()
-          .input(
-            object({
-              'name': string().min(1),
-              'age': number().gte(0),
-            }),
-          )
+          .input(object({'name': string().min(1), 'age': number().gte(0)}))
           .map(
             (payload) => _User(
               name: payload['name'] as String,

@@ -135,8 +135,9 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    final enumerated =
-        operations.whereType<EnumeratedNullableCheck>().firstOrNull;
+    final enumerated = operations
+        .whereType<EnumeratedNullableCheck>()
+        .firstOrNull;
     if (enumerated != null) {
       final values = {...enumerated.values, defaultValue, null};
       return {

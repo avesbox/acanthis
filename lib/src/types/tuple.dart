@@ -224,7 +224,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       defaultValue: value,
     );
   }
-  
+
   @override
   Map<String, dynamic> toOpenApiSchema() {
     return {

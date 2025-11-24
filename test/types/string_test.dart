@@ -652,12 +652,11 @@ void main() {
   test(
     'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
     () {
-      final string =
-          acanthis
-              .string()
-              .digits(strict: false)
-              .letters(strict: false)
-              .lowerCase();
+      final string = acanthis
+          .string()
+          .digits(strict: false)
+          .letters(strict: false)
+          .lowerCase();
       final result = string.tryParse('test 123');
 
       expect(result.success, true);
@@ -671,12 +670,11 @@ void main() {
   test(
     'when creating a string validator with multiple non-strict pattern checks, then the result should be successful',
     () {
-      final string =
-          acanthis
-              .string()
-              .digits(strict: false)
-              .letters(strict: false)
-              .lowerCase();
+      final string = acanthis
+          .string()
+          .digits(strict: false)
+          .letters(strict: false)
+          .lowerCase();
       final result = string.tryParse('test 123');
 
       expect(result.success, true);

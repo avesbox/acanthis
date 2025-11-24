@@ -49,6 +49,10 @@ export default defineConfig({
         text: 'JSON Schema',
         link: '/json-schema',
       },
+      {
+        text: 'Open API Schema',
+        link: '/open-api-schema',
+      }
     ],
     footer: {
       copyright: 'Copyright © 2024 Avesbox',

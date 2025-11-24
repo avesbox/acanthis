@@ -447,6 +447,8 @@ class AcanthisString extends AcanthisType<String> {
       } else if (check is ExactStringLengthCheck) {
         lengthChecksMap['maxLength'] = check.value;
         lengthChecksMap['minLength'] = check.value;
+      } else if (check is NotEmptyStringCheck) {
+        lengthChecksMap['minLength'] = 1;
       }
     }
     return lengthChecksMap;
@@ -509,6 +511,59 @@ class AcanthisString extends AcanthisType<String> {
       metadataEntry: metadataEntry,
       defaultValue: value,
     );
+  }
+
+  Map<String, dynamic> _getContainsChecks() {
+    final containsChecks = operations.whereType<ContainsStringCheck>();
+    final containsChecksMap = <String, dynamic>{};
+    for (var check in containsChecks) {
+      containsChecksMap['pattern'] = '/${check.value}/';
+    }
+    final startsWith = operations.whereType<StartsWithStringCheck>();
+    for (var check in startsWith) {
+      containsChecksMap['pattern'] = '^${check.value}';
+    }
+    final endsWith = operations.whereType<EndsWithStringCheck>();
+    for (var check in endsWith) {
+      containsChecksMap['pattern'] = '${check.value}\$';
+    }
+    return containsChecksMap;
+  }
+  
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    final lengthChecksMap = _getConstraints();
+    final patternChecksMap = _getPattern();
+    final enumeratedChecksMap = _getEnumeratedChecks();
+    final containsCheck = _getContainsChecks();
+    final exactChecksMap = _getExactChecks();
+    final formatsChecksMap = <String, dynamic>{};
+    for (var check in operations) {
+      if (check is EmailStringCheck) {
+        formatsChecksMap['format'] = 'email';
+      } else if (check is UriStringCheck) {
+        formatsChecksMap['format'] = 'uri';
+      } else if (check is UrlStringCheck) {
+        formatsChecksMap['format'] = 'uri';
+      } else if (check is DateTimeStringCheck) {
+        formatsChecksMap['format'] = 'date-time';
+      } else if (check is PatternTimeStringChecks) {
+        formatsChecksMap['format'] = 'time';
+      } else if (check is PatternUuidStringChecks) {
+        formatsChecksMap['format'] = 'uuid';
+      } else if (check is PatternBase64StringChecks) {
+        formatsChecksMap['format'] = 'byte';
+      }
+    }
+    return {
+      'type': 'string',
+      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+      if (patternChecksMap.isNotEmpty) ...patternChecksMap,
+      if (enumeratedChecksMap.isNotEmpty) 'enum': enumeratedChecksMap.values,
+      if (containsCheck.isNotEmpty) ...containsCheck,
+      if (exactChecksMap.isNotEmpty) 'enum': [exactChecksMap['const']],
+      if (formatsChecksMap.isNotEmpty) ...formatsChecksMap,
+    };
   }
 }
 

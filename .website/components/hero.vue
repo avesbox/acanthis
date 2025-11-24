@@ -14,7 +14,7 @@
             </div>
             <div class="flex flex-col lg:flex-row justify-center items-center gap-4">
                 <a href="/introduction.html" class="bg-red-600 px-8 py-4 rounded-full text-white font-semibold">Get Started</a>
-                <a href="/discord.html" class="px-8 py-4 font-semibold">Join the community</a>
+                <a href="https://discord.gg/zydgnJ3ksJ" class="px-8 py-4 font-semibold">Join the community</a>
             </div>
         </div>
   	</div>

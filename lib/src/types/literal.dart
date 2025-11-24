@@ -71,6 +71,14 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   AcanthisType<T> withDefault(T value) {
     return AcanthisLiteral(value, defaultValue: value);
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    return {
+      'type': 'literal',
+      'enum': [value],
+    };
+  }
 }
 
 /// Creates a new instance of [AcanthisLiteral].

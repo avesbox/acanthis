@@ -201,6 +201,20 @@ class AcanthisDate extends AcanthisType<DateTime> {
       defaultValue: value,
     );
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    final maxDate = operations.whereType<MaxDateCheck>().firstOrNull;
+    final minDate = operations.whereType<MinDateCheck>().firstOrNull;
+    return {
+      'type': 'string',
+      'format': 'date-time',
+      if (maxDate != null)
+        'maximum': maxDate.value.toUtc().toIso8601String(),
+      if (minDate != null)
+        'minimum': minDate.value.toUtc().toIso8601String(),
+    };
+  }
 }
 
 /// Create a new date type

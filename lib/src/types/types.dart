@@ -304,9 +304,12 @@ abstract class AcanthisType<O> {
   /// Convert the type to a JSON schema and format it with [indent] spaces
   String toPrettyJsonSchema({int indent = 2}) {
     final encoder = JsonEncoder.withIndent(' ' * indent);
-    final json = toJsonSchema();
-    return encoder.convert(json);
+    return encoder.convert(toJsonSchema());
   }
+
+  Map<String, dynamic> toOpenApiSchema();
+
+
 }
 
 @immutable
@@ -410,6 +413,11 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
 
   @override
   Map<String, dynamic> toJsonSchema() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
     throw UnimplementedError();
   }
 

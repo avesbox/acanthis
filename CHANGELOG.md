@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+- feat: add Open API schema generation for all types.
+
 ## 1.4.6
 
 - feat: add `AcanthisType#defaultValue` to get the default value of the schema.

@@ -509,6 +509,17 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       defaultValue: value,
     );
   }
+  
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    final schemas = [
+      ..._variants.map((v) => v.schema.toOpenApiSchema()),
+      ..._types.map((t) => t.toOpenApiSchema()),
+    ];
+    return {
+      'oneOf': schemas,
+    };
+  }
 }
 
 /// Factory for union of types / variants.

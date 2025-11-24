@@ -780,6 +780,51 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       defaultValue: value,
     );
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    final schema = <String, dynamic>{};
+    final lazyEntries =
+        _fields.entries.where((entry) => entry.value is LazyEntry).toList();
+    for (var entry in _fields.entries) {
+      if (entry.value is LazyEntry) {
+        final entryKey = '${entry.key}-lazy';
+        schema[entry.key] = {r'$ref': '#/components/$entryKey'};
+      } else {
+        schema[entry.key] = entry.value.toOpenApiSchema();
+      }
+    }
+    final defsMap = {};
+    final lazyObjectMapper = LazyObjectMapper();
+    for (var entry in lazyEntries) {
+      final entryKey = '${entry.key}-lazy';
+      final lazyEntry = lazyObjectMapper.get(entryKey);
+      if (lazyEntry == false) {
+        defsMap[entryKey] = (entry.value as LazyEntry).toOpenApiSchema(
+          parent: this,
+          defs: true,
+          defKey: entryKey,
+        );
+      }
+    }
+    for (final key in defsMap.keys) {
+      lazyObjectMapper.remove(key);
+    }
+    final constraints = _getConstraints();
+    return {
+      if (defsMap.isNotEmpty) 'refs': defsMap,
+      'type': 'object',
+      if (metadataEntry != null) ...metadataEntry!.toJson(),
+      'properties': schema,
+      'additionalProperties':
+          _passthrough == false
+              ? false
+              : _passthroughType?.toOpenApiSchema() ?? true,
+      'required':
+          _fields.keys.where((key) => !_optionalFields.contains(key)).toList(),
+      if (constraints.isNotEmpty) ...constraints,
+    };
+  }
 }
 
 /// Create a map of [fields]
@@ -890,6 +935,24 @@ class LazyEntry<O> extends AcanthisType<O> {
   @override
   AcanthisType<O> withDefault(O value) {
     throw UnimplementedError('The implementation must be done from the parent');
+  }
+  
+  @override
+  Map<String, dynamic> toOpenApiSchema({
+    AcanthisMap<dynamic>? parent,
+    bool defs = false,
+    String defKey = '',
+  }) {
+    final lazyObjectMapper = LazyObjectMapper();
+    final type = _type(parent!);
+    if (type is LazyEntry) {
+      throw StateError('Circular dependency detected');
+    }
+    if (defs) {
+      lazyObjectMapper.add(defKey);
+    }
+    final schema = type.toOpenApiSchema();
+    return schema;
   }
 }
 

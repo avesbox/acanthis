@@ -274,4 +274,49 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       if (uniqueItems) 'uniqueItems': true,
     };
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    final checks = operations.whereType<AcanthisCheck>().toList();
+    final lengthChecksMap = {};
+    for (var lengthCheck in checks) {
+      if (lengthCheck is MinItemsListCheck) {
+        lengthChecksMap['minItems'] = lengthCheck.minItems;
+      } else if (lengthCheck is MaxItemsListCheck) {
+        lengthChecksMap['maxItems'] = lengthCheck.maxItems;
+      } else if (lengthCheck is LengthListCheck) {
+        lengthChecksMap['minItems'] = lengthCheck.length;
+        lengthChecksMap['maxItems'] = lengthCheck.length;
+      }
+    }
+    final uniqueItems = checks.whereType<UniqueItemsListCheck>().isNotEmpty;
+    final everyOf = operations.whereType<EveryOfListCheck<T>>().firstOrNull;
+    if (everyOf != null) {
+      return {
+        'type': 'array',
+        'items': element.toOpenApiSchema(),
+        if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+        if (uniqueItems) 'uniqueItems': true,
+      };
+    }
+    final anyOf = operations.whereType<AnyOfListCheck<T>>().firstOrNull;
+    if (anyOf != null) {
+      return {
+        'type': 'array',
+        'items': {
+          'oneOf': anyOf.items
+              .map((e) => element.toOpenApiSchema())
+              .toList(),
+        },
+        if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+        if (uniqueItems) 'uniqueItems': true,
+      };
+    }
+    return {
+      'type': 'array',
+      'items': element.toOpenApiSchema(),
+      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
+      if (uniqueItems) 'uniqueItems': true,
+    };
+  }
 }

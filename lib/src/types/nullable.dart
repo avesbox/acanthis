@@ -184,4 +184,13 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       metadataEntry: metadataEntry,
     );
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    return {
+      ...element.toOpenApiSchema(),
+      'nullable': true,
+      if (defaultValue != null) 'default': defaultValue,
+    };
+  }
 }

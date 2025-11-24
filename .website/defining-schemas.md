@@ -70,7 +70,7 @@ To validate an email address, you can use the `email()` method. This method chec
 string().email();
 ```
 
-Under the hood it uses the `email_validator` package. You can find more information about the package [here](https://pub.dev/packages/email_validator).
+Under the hood it uses the `email_validator` package. You can find more information about the package at [his pub.dev page](https://pub.dev/packages/email_validator).
 
 ## Numbers
 
@@ -546,17 +546,20 @@ Use `variant()` to build a discriminated (guarded) branch inside a `union()`.
 A variant couples a lightweight guard with a full schema. The guard decides if the schema should even be attempted, letting you short‑circuit work and produce clearer errors.
 
 Concept:
+
 - Guard: `bool Function(dynamic)` returning true if this branch may validate the value.
 - Schema: the `AcanthisType<T>` executed only when the guard passes.
 - Name (optional): label used in aggregated errors (recommended).
 
 Why variants instead of only plain union element types?
+
 - Selective evaluation: only schemas whose guards return true are parsed (a plain union tries everything).
 - Cleaner error surfaces: if no guard matches you get one union error instead of multiple unrelated schema errors.
 - Natural discriminators: model tagged / algebraic unions (`type` fields, prefix patterns, structural probes).
 - Performance: cheap guards filter out heavy schemas early.
 
 Basic (tagged) example:
+
 ```dart
 final shape = union([
   variant(
@@ -584,6 +587,7 @@ shape.parse({'type': 'triangle'}); // ❌ ValidationError (no variant matched)
 ```
 
 Mixing variants and plain types:
+
 ```dart
 final idOrPointOrBool = union([
   variant(
@@ -604,6 +608,7 @@ final idOrPointOrBool = union([
 ```
 
 Fallback pattern (keep last):
+
 ```dart
 final numericInput = union([
   variant(
@@ -620,6 +625,7 @@ final numericInput = union([
 ```
 
 Guidelines:
+
 - Order matters. Guards are evaluated top‑down. The first variant whose guard returns true is attempted; if its schema fails, later variants whose guards also returned true will still be considered.
 - Keep guards pure, fast, and side‑effect free. They must not throw.
 - Name every variant for clearer aggregated errors (`name:`).
@@ -628,6 +634,7 @@ Guidelines:
 - If at least one guard matches but all corresponding schemas fail, union aggregates those failures.
 
 When to use:
+
 - Tagged JSON objects (`type`, `kind`, `opcode`).
 - Structural branching (presence of keys, collection shape).
 - Prefix / pattern based routing for primitives.

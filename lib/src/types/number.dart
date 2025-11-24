@@ -311,6 +311,28 @@ class AcanthisNumber extends AcanthisType<num> {
       defaultValue: value,
     );
   }
+
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    String type = 'number';
+    final constraints = _getConstraints();
+    final enumerated = operations.whereType<EnumeratedNumberCheck>().firstOrNull;
+    final checks = operations.whereType<AcanthisCheck<num>>();
+    if (checks.isNotEmpty) {
+      for (var check in checks) {
+        if (check.name == 'integer') {
+          type = 'integer';
+        }
+      }
+    }
+    final exactCheck = operations.whereType<ExactCheck<num>>().firstOrNull;
+    return {
+      'type': type,
+      if (enumerated != null) 'enum': enumerated.values,
+      if (constraints.isNotEmpty) ...constraints,
+      if (exactCheck != null) 'enum': [exactCheck.value],
+    };
+  }
 }
 
 /// Create a number type

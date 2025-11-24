@@ -191,6 +191,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
     return {
       'type': 'array',
       'prefixItems': elements.map((e) => e.toJsonSchema()).toList(),
+      'items': _variadic ? elements.last.toJsonSchema() : false,
       if (metadataEntry != null) ...metadataEntry!.toJson(),
     };
   }
@@ -222,6 +223,15 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       metadataEntry: metadataEntry,
       defaultValue: value,
     );
+  }
+  
+  @override
+  Map<String, dynamic> toOpenApiSchema() {
+    return {
+      'type': 'array',
+      'prefixItems': elements.map((e) => e.toOpenApiSchema()).toList(),
+      'items': _variadic ? elements.last.toOpenApiSchema() : false,
+    };
   }
 }
 

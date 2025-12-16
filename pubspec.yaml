@@ -1,6 +1,6 @@
 name: acanthis
 description: Acanthis is an easy-to-use validation library for Dart and Flutter.
-version: 1.5.0
+version: 1.5.1
 homepage: https://acanthis.avesbox.com
 documentation: https://acanthis.avesbox.com/introduction.html
 repository: https://github.com/avesbox/acanthis
@@ -15,7 +15,7 @@ topics:
   - zod
 
 environment:
-  sdk: '>=3.8.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   email_validator: ^3.0.0

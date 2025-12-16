@@ -308,6 +308,38 @@ abstract class AcanthisType<O> {
   }
 
   Map<String, dynamic> toOpenApiSchema();
+
+  static AcanthisNumber number() => AcanthisNumber();
+
+  static AcanthisInt integer() => AcanthisInt();
+
+  static AcanthisDouble doubleType() => AcanthisDouble();
+
+  static AcanthisString string() => AcanthisString();
+
+  static AcanthisBoolean boolean() => AcanthisBoolean();
+
+  static AcanthisDate date() => AcanthisDate();
+
+  static AcanthisMap<dynamic> object(
+    Map<String, AcanthisType<dynamic>> value,
+  ) => AcanthisMap<dynamic>(value);
+
+  static AcanthisLiteral<T> literal<T>(T value) => AcanthisLiteral<T>(value);
+
+  static AcanthisTemplate template(List<dynamic> parts) =>
+      AcanthisTemplate(parts);
+
+  static AcanthisUnion<T> union<T>(List<dynamic> elements) =>
+      AcanthisUnion<T>(elements);
+
+  static AcanthisTuple tuple(List<AcanthisType> elements) =>
+      AcanthisTuple(elements);
+
+  static InstanceType<T> instance<T>() => InstanceType<T>();
+
+  static ClassSchemaBuilder<I, T> classSchema<I, T>() =>
+      ClassSchemaBuilder<I, T>();
 }
 
 @immutable

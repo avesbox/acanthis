@@ -10,8 +10,8 @@ import 'package:nanoid2/nanoid2.dart';
 import 'types.dart';
 
 /// A class to validate number types
-class AcanthisNumber extends AcanthisType<num> {
-  const AcanthisNumber({
+class AcanthisNumeric<T extends num> extends AcanthisType<T> {
+  const AcanthisNumeric({
     super.isAsync,
     super.operations,
     super.key,
@@ -20,10 +20,10 @@ class AcanthisNumber extends AcanthisType<num> {
   });
 
   /// Add a check to the number to check if it is less than or equal to [value]
-  AcanthisNumber lte(
-    num value, {
+  AcanthisNumeric<T> lte(
+    T value, {
     String? message,
-    String Function(num value)? messageBuilder,
+    String Function(T value)? messageBuilder,
   }) {
     return withCheck(
       LteNumberCheck(value, message: message, messageBuilder: messageBuilder),
@@ -31,21 +31,21 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is greater than or equal to [value]
-  AcanthisNumber gte(
-    num value, {
+  AcanthisNumeric<T> gte(
+    T value, {
     String? message,
-    String Function(num value)? messageBuilder,
+    String Function(T value)? messageBuilder,
   }) {
     return withCheck(
       GteNumberCheck(value, message: message, messageBuilder: messageBuilder),
     );
   }
 
-  AcanthisNumber between(
-    num min,
-    num max, {
+  AcanthisNumeric<T> between(
+    T min,
+    T max, {
     String? message,
-    String Function(num min, num max)? messageBuilder,
+    String Function(T min, T max)? messageBuilder,
   }) {
     return withCheck(
       BetweenNumberCheck(
@@ -58,10 +58,10 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is greater than [value]
-  AcanthisNumber gt(
-    num value, {
+  AcanthisNumeric<T> gt(
+    T value, {
     String? message,
-    String Function(num value)? messageBuilder,
+    String Function(T value)? messageBuilder,
   }) {
     return withCheck(
       GtNumberCheck(value, message: message, messageBuilder: messageBuilder),
@@ -69,10 +69,10 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is less than [value]
-  AcanthisNumber lt(
-    num value, {
+  AcanthisNumeric<T> lt(
+    T value, {
     String? message,
-    String Function(num value)? messageBuilder,
+    String Function(T value)? messageBuilder,
   }) {
     return withCheck(
       LtNumberCheck(value, message: message, messageBuilder: messageBuilder),
@@ -80,37 +80,37 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is positive
-  AcanthisNumber positive({String? message}) {
+  AcanthisNumeric positive({String? message}) {
     return withCheck(PositiveNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is negative
-  AcanthisNumber negative({String? message}) {
+  AcanthisNumeric negative({String? message}) {
     return withCheck(NegativeNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is nonpositive
-  AcanthisNumber nonPositive({String? message}) {
+  AcanthisNumeric nonPositive({String? message}) {
     return withCheck(NonPositiveNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is nonnegative
-  AcanthisNumber nonNegative({String? message}) {
+  AcanthisNumeric nonNegative({String? message}) {
     return withCheck(NonNegativeNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is an integer
-  AcanthisNumber integer({String? message}) {
+  AcanthisNumeric integer({String? message}) {
     return withCheck(IntegerNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is a double
-  AcanthisNumber double({String? message}) {
+  AcanthisNumeric double({String? message}) {
     return withCheck(DoubleNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is a multiple of [value]
-  AcanthisNumber multipleOf(
+  AcanthisNumeric multipleOf(
     int value, {
     String? message,
     String Function(int value)? messageBuilder,
@@ -121,30 +121,30 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to check if it is finite
-  AcanthisNumber finite({String? message}) {
+  AcanthisNumeric finite({String? message}) {
     return withCheck(FiniteNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is infinite
-  AcanthisNumber infinite({String? message}) {
+  AcanthisNumeric infinite({String? message}) {
     return withCheck(InfiniteNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is "not a number"
-  AcanthisNumber nan({String? message}) {
+  AcanthisNumeric nan({String? message}) {
     return withCheck(NaNNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is not "not a number"
-  AcanthisNumber notNaN({String? message}) {
+  AcanthisNumeric notNaN({String? message}) {
     return withCheck(NotNaNNumberCheck(message: message));
   }
 
   /// Add a check to the number to check if it is one of the [values]
-  AcanthisNumber enumerated(
-    List<num> values, {
+  AcanthisNumeric<T> enumerated(
+    List<T> values, {
     String? message,
-    String Function(List<num> values)? messageBuilder,
+    String Function(List<T> values)? messageBuilder,
   }) {
     if (values.isEmpty) {
       throw ArgumentError('Enumeration values cannot be empty');
@@ -159,13 +159,13 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Add a check to the number to ensure it is exactly [value]
-  AcanthisNumber exact(
-    num value, {
+  AcanthisNumeric<T> exact(
+    T value, {
     String? message,
-    String Function(num value)? messageBuilder,
+    String Function(T value)? messageBuilder,
   }) {
     return withCheck(
-      ExactCheck<num>(
+      ExactCheck<T>(
         value: value,
         message: message,
         messageBuilder: messageBuilder,
@@ -174,17 +174,17 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   /// Transform the number to a power of [value]
-  AcanthisNumber pow(int value) {
+  AcanthisNumeric<T> pow(int value) {
     return withTransformation(
-      AcanthisTransformation<num>(
-        transformation: (toTransform) => math.pow(toTransform, value),
+      AcanthisTransformation<T>(
+        transformation: (toTransform) => math.pow(toTransform, value) as T,
       ),
     );
   }
 
   @override
-  AcanthisNumber withAsyncCheck(AcanthisAsyncCheck<num> check) {
-    return AcanthisNumber(
+  AcanthisNumeric<T> withAsyncCheck(AcanthisAsyncCheck<T> check) {
+    return AcanthisNumeric(
       operations: [...operations, check],
       isAsync: true,
       key: key,
@@ -194,8 +194,8 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   @override
-  AcanthisNumber withCheck(AcanthisCheck<num> check) {
-    return AcanthisNumber(
+  AcanthisNumeric<T> withCheck(AcanthisCheck<T> check) {
+    return AcanthisNumeric(
       operations: [...operations, check],
       isAsync: isAsync,
       key: key,
@@ -205,10 +205,10 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   @override
-  AcanthisNumber withTransformation(
-    AcanthisTransformation<num> transformation,
+  AcanthisNumeric<T> withTransformation(
+    AcanthisTransformation<T> transformation,
   ) {
-    return AcanthisNumber(
+    return AcanthisNumeric(
       operations: [...operations, transformation],
       isAsync: isAsync,
       key: key,
@@ -287,13 +287,13 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   @override
-  AcanthisNumber meta(MetadataEntry<num> metadata) {
+  AcanthisNumeric<T> meta(MetadataEntry<T> metadata) {
     String key = this.key;
     if (key.isEmpty) {
       key = nanoid();
     }
     MetadataRegistry().add(key, metadata);
-    return AcanthisNumber(
+    return AcanthisNumeric(
       operations: operations,
       isAsync: isAsync,
       key: key,
@@ -303,8 +303,8 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 
   @override
-  AcanthisNumber withDefault(num value) {
-    return AcanthisNumber(
+  AcanthisNumeric<T> withDefault(T value) {
+    return AcanthisNumeric(
       operations: operations,
       isAsync: isAsync,
       key: key,
@@ -338,5 +338,12 @@ class AcanthisNumber extends AcanthisType<num> {
   }
 }
 
-/// Create a number type
+typedef AcanthisNumber = AcanthisNumeric<num>;
+typedef AcanthisInt = AcanthisNumeric<int>;
+typedef AcanthisDouble = AcanthisNumeric<double>;
+
 AcanthisNumber number() => AcanthisNumber();
+
+AcanthisInt integer() => AcanthisInt();
+
+AcanthisDouble doubleType() => AcanthisDouble();

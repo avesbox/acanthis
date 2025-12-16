@@ -72,9 +72,11 @@ string().email();
 
 Under the hood it uses the `email_validator` package. You can find more information about the package at [his pub.dev page](https://pub.dev/packages/email_validator).
 
-## Numbers
+## Numeric values
 
-Use the `number()` method to create a number schema. This method allows you to validate and transform numbers.
+Acanthis provides three types to represent numeric values: `AcanthisNumber`, `AcanthisInteger` and `AcanthisDouble`. All of them shares the same validators and api.
+
+Use the `number()` function or the `integer()` or `double()` functions to create a number schema. This method allows you to validate and transform numbers.
 
 ```dart
 number().gt(5);
@@ -695,3 +697,26 @@ name.tryParse('Acanthis'); // returns 'Acanthis'
 ::: warning
 This behavior is available only when using `tryParse()` or `tryParseAsync()`. When using `parse()` or `parseAsync()`, a `ValidationError` will be thrown if the validation fails regardless of the default value.
 :::
+
+## Template Literals
+
+Use `template()` to create a schema that matches template literal strings with placeholders.
+
+```dart
+
+enum SizeUnit { px, em, rem }
+
+final sizeSchema = template([
+  number(),
+  string().enumerated(SizeUnit.values),
+]);
+
+sizeSchema.parse('12px'); // ✅
+sizeSchema.parse('5em');  // ✅
+sizeSchema.parse('20rem'); // ✅
+sizeSchema.parse('15pt'); // ❌ ValidationError
+```
+
+The `template()` function takes a list of schemas that represent the placeholders in the template literal. The resulting schema will match strings that follow the pattern defined by the schemas.
+
+The placeholders can be of any type, including strings, numbers, booleans, or even complex objects.

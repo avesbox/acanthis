@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.1
+
+- feat: add dot-shorthand support for all types.
+- feat: add `AcanthisInteger` and `AcanthisDouble` to represent integer and double types separately.
+- feat: add `template` type to create template literal schemas with placeholders.
+
 ## 1.5.0
 
 - feat: add Open API schema generation for all types.

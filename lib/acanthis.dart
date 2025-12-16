@@ -12,6 +12,7 @@ export 'src/types/instance.dart';
 export 'src/types/class_schema.dart';
 export 'src/types/variant.dart';
 export 'src/types/literal.dart';
+export 'src/types/template.dart';
 
 export 'src/exceptions/validation_error.dart';
 export 'src/exceptions/async_exception.dart';

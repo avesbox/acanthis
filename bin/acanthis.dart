@@ -35,10 +35,10 @@ class WireTransfer extends Payment {
 
 void main(List<String> arguments) async {
   final userValidator = instance<User>()
-      .field('name', (u) => u.name, string().contains('Doe'))
-      .field('age', (u) => u.age, number())
-      .field('email', (u) => u.email, string().email())
-      .field('birthDate', (u) => u.birthDate, date())
+      .field('name', (u) => u.name, .string().contains('Doe'))
+      .field('age', (u) => u.age, .integer())
+      .field('email', (u) => u.email, .string().email())
+      .field('birthDate', (u) => u.birthDate, .date())
       .withRefs(
         (refs) =>
             refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age),
@@ -58,11 +58,11 @@ void main(List<String> arguments) async {
   final usersMapper = classSchema<List, List<User>>()
       .input(
         object({
-          'name': string().min(1),
-          'age': number().integer().gte(0),
-          'email': string().email(),
-          'birthDate': string().dateTime().pipe(
-            date(),
+          'name': .string().min(1),
+          'age': .integer().gte(0),
+          'email': .string().email(),
+          'birthDate': .string().dateTime().pipe(
+            .date(),
             transform: (value) => DateTime.parse(value),
           ),
         }).list(),
@@ -103,7 +103,7 @@ void main(List<String> arguments) async {
       schema: instance<CreditCard>().field(
         'number',
         (c) => c.number,
-        string().min(13).max(19),
+        .string().min(13).max(19),
       ),
     ),
     variant<WireTransfer>(
@@ -111,26 +111,29 @@ void main(List<String> arguments) async {
       schema: instance<WireTransfer>().field(
         'iban',
         (w) => w.iban,
-        string().min(15).max(34),
+        .string().min(15).max(34),
       ),
     ),
   ]);
   print(unionWithVariants.parse(creditCard));
   print(unionWithVariants.parse(wireTransfer));
-  final literalSchemaVariantUnion = union([
+  final literalSchemaVariantUnion = AcanthisType.union([
     literal('credit_card'),
     literal('wire_transfer'),
     variant<CreditCard>(
       guard: (p) => p is CreditCard,
-      schema: instance<CreditCard>().field(
+      schema: .instance<CreditCard>().field(
         'number',
         (c) => c.number,
-        string().min(13).max(19),
+        .string().min(13).max(19),
       ),
     ),
     object({
-      'type': string().contained(['credit_card', 'wire_transfer']),
-      'data': union([instance<CreditCard>(), instance<WireTransfer>()]),
+      'type': .string().contained(['credit_card', 'wire_transfer']),
+      'data': .union([
+        AcanthisType.instance<CreditCard>(),
+        AcanthisType.instance<WireTransfer>(),
+      ]),
     }),
   ]);
   print(
@@ -149,27 +152,36 @@ void main(List<String> arguments) async {
   print(literalSchemaVariantUnion.parse('wire_transfer'));
   print(literalSchemaVariantUnion.parse(creditCard));
 
-  final numericInput = union([literal(1), literal(2), string().min(3)]);
+  final numericInput = AcanthisType.union([
+    AcanthisType.literal(1),
+    AcanthisType.literal(2),
+    AcanthisType.string().min(3),
+  ]);
 
   print(numericInput.parse(1)); // passes
   print(numericInput.parse(2)); // passes
   print(numericInput.parse('hello')); // passes
 
-  final mapWithLiterals = object({
-    'type': literal('Acanthis'),
-    'name': string(),
+  final mapWithLiterals = AcanthisType.object({
+    'type': .literal('Acanthis'),
+    'name': .string(),
   });
 
   print(mapWithLiterals.parse({'type': 'Acanthis', 'name': 'Example'}));
 
-  final mapWithDefault = object({
-    'type': string().withDefault('Acanthis'),
-    'name': string().withDefault('Unknown'),
+  final mapWithDefault = AcanthisType.object({
+    'type': .string().withDefault('Acanthis'),
+    'name': .string().withDefault('Unknown'),
   });
   print(mapWithDefault.tryParse({}));
-  final listWithDefault = string().list().min(1).withDefault(['Acanthis']);
+  final listWithDefault = AcanthisType.string().list().min(1).withDefault([
+    'Acanthis',
+  ]);
   print(listWithDefault.tryParse([]));
-  final name = string().min(2).max(100).withDefault('Unknown');
+  final name = AcanthisType.string().min(2).max(100).withDefault('Unknown');
   print(name.tryParse(''));
   print(name.tryParse('Acanthis'));
+  final literalTemplate = template(['user_', literal(5), '_end']);
+  print(literalTemplate.pattern);
+  print(literalTemplate.parse('user_5_end'));
 }

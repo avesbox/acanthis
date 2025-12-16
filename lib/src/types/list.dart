@@ -318,3 +318,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     };
   }
 }
+
+AcanthisList<T> list<T>(AcanthisType<T> element) {
+  return AcanthisList<T>(element);
+}

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
@@ -212,6 +214,30 @@ class AcanthisDate extends AcanthisType<DateTime> {
       if (maxDate != null) 'maximum': maxDate.value.toUtc().toIso8601String(),
       if (minDate != null) 'minimum': minDate.value.toUtc().toIso8601String(),
     };
+  }
+  
+  @override
+  DateTime mock([int? seed]) {
+    final random = Random(seed);
+    final now = DateTime.now();
+    final defaultPast = now.subtract(const Duration(days: 365 * 10));
+    final defaultFuture = now.add(const Duration(days: 365 * 10));
+
+    final minDate = operations.whereType<MinDateCheck>().firstOrNull?.value ??
+        defaultPast;
+    final maxDate = operations.whereType<MaxDateCheck>().firstOrNull?.value ??
+        defaultFuture;
+
+    final startMs = minDate.millisecondsSinceEpoch;
+    final endMs = maxDate.millisecondsSinceEpoch;
+
+    if (endMs <= startMs) {
+      return DateTime.fromMillisecondsSinceEpoch(startMs);
+    }
+
+    final randomMilliseconds =
+        startMs + ((endMs - startMs) * random.nextDouble()).round();
+    return DateTime.fromMillisecondsSinceEpoch(randomMilliseconds);
   }
 }
 

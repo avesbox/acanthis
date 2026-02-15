@@ -1,3 +1,6 @@
+import 'dart:math';
+import 'dart:math' as math;
+
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/validators/common.dart';
@@ -565,6 +568,75 @@ class AcanthisString extends AcanthisType<String> {
       if (exactChecksMap.isNotEmpty) 'enum': [exactChecksMap['const']],
       if (formatsChecksMap.isNotEmpty) ...formatsChecksMap,
     };
+  }
+  
+  @override
+  String mock([int? seed]) {
+    final random = Random(seed);
+    final checks = operations.whereType<AcanthisCheck<String>>().toList();
+
+    final exactCheck = checks.whereType<ExactCheck<String>>().firstOrNull;
+    if (exactCheck != null) {
+      return exactCheck.value;
+    }
+
+    final enumCheck = checks.whereType<EnumeratedStringCheck>().firstOrNull;
+    if (enumCheck != null) {
+      final values = enumCheck.enumValues.map((value) => value.name).toList();
+      return values[random.nextInt(values.length)];
+    }
+
+    int minLength = 0;
+    int? maxLength;
+
+    final exactLengthCheck = checks.whereType<ExactStringLengthCheck>().firstOrNull;
+    if (exactLengthCheck != null) {
+      minLength = exactLengthCheck.value;
+      maxLength = exactLengthCheck.value;
+    } else {
+      final minLengthChecks = checks.whereType<MinStringLengthCheck>();
+      if (minLengthChecks.isNotEmpty) {
+        minLength = minLengthChecks.map((check) => check.value).reduce(math.max);
+      }
+
+      final maxLengthChecks = checks.whereType<MaxStringLengthCheck>();
+      if (maxLengthChecks.isNotEmpty) {
+        maxLength = maxLengthChecks.map((check) => check.value).reduce(math.min);
+      }
+    }
+
+    if (checks.whereType<NotEmptyStringCheck>().isNotEmpty) {
+      minLength = math.max(minLength, 1);
+    }
+
+    final targetLength = maxLength == null
+        ? (minLength > 0 ? minLength : 10)
+        : math.max(minLength, maxLength);
+
+    final patternChecks = checks.whereType<PatternStringCheck>().toList();
+    String pattern = '';
+    if (patternChecks.isNotEmpty) {
+      pattern = patternChecks.first.regExp is RegExp
+          ? (patternChecks.first.regExp as RegExp).pattern
+          : patternChecks.first.regExp.toString();
+    }
+    if (pattern.isNotEmpty) {
+      // This is a very naive way to generate a string that matches the pattern, it only works for very simple patterns.
+      // For more complex patterns, the user should provide a custom mock implementation.
+      final regex = RegExp(pattern);
+      String generated = '';
+      while (!regex.hasMatch(generated) || generated.length < targetLength) {
+        generated += _randomString(random, targetLength);
+      }
+      return generated;
+    }
+    return _randomString(random, targetLength);
+  }
+
+  String _randomString(Random random, int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return List.generate(length, (index) => chars[random.nextInt(chars.length)])
+        .join();
   }
 }
 

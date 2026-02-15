@@ -828,6 +828,31 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (constraints.isNotEmpty) ...constraints,
     };
   }
+  
+  @override
+  Map<String, V> mock([int? seed]) {
+    final result = <String, V>{};
+    for (var entry in _fields.entries) {
+      if (entry.value is LazyEntry) {
+        result[entry.key] = (entry.value as LazyEntry).call(this).mock(seed);
+      } else {
+        result[entry.key] = entry.value.mock(seed);
+      }
+    }
+    if (_passthrough) {
+      // Generate some random additional properties if passthrough is enabled
+      for (int i = 0; i < 3; i++) {
+        final randomKey = 'additional_${nanoid()}';
+        if (_passthroughType != null) {
+          result[randomKey] = _passthroughType.mock(seed);
+        } else {
+          // If no specific type is defined for passthrough, we can just assign a random value
+          result[randomKey] = 'random_value_${nanoid()}' as V;
+        }
+      }
+    }
+    return result;
+  }
 }
 
 /// Create a map of [fields]
@@ -956,6 +981,11 @@ class LazyEntry<O> extends AcanthisType<O> {
     }
     final schema = type.toOpenApiSchema();
     return schema;
+  }
+  
+  @override
+  O mock([int? seed]) {
+    throw UnimplementedError('The implementation must be done from the parent');
   }
 }
 

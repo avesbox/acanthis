@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
@@ -193,5 +195,11 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       'nullable': true,
       if (defaultValue != null) 'default': defaultValue,
     };
+  }
+  
+  @override
+  T? mock([int? seed]) {
+    final random = Random(seed);
+    return random.nextBool() ? null : element.mock(seed);
   }
 }

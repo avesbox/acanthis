@@ -516,6 +516,17 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     ];
     return {'oneOf': schemas};
   }
+  
+  @override
+  T mock([int? seed]) {
+    if (_variants.isNotEmpty) {
+      return _variants.first.schema.mock(seed);
+    }
+    if (_types.isNotEmpty) {
+      return _types.first.mock(seed);
+    }
+    throw UnimplementedError('Cannot mock empty union');
+  }
 }
 
 /// Factory for union of types / variants.

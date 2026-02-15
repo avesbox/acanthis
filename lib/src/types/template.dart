@@ -263,6 +263,11 @@ class AcanthisTemplate extends AcanthisType<String> {
       if (defaultValue != null) 'default': defaultValue,
     };
   }
+  
+  @override
+  String mock([int? seed]) {
+    throw UnimplementedError('Mocking not implemented for template literals');
+  }
 }
 
 AcanthisTemplate template(List<dynamic> parts) =>

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:acanthis/src/exceptions/async_exception.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
@@ -316,6 +318,45 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
       if (uniqueItems) 'uniqueItems': true,
     };
+  }
+  
+  @override
+  List<T> mock([int? seed]) {
+    final random = math.Random(seed);
+    final lengthChecks = operations.whereType<MinItemsListCheck>().toList();
+    int minLength = 0;
+    for (var check in lengthChecks) {
+      if (check.minItems > minLength) {
+        minLength = check.minItems;
+      }
+    }
+    final maxLengthChecks = operations.whereType<MaxItemsListCheck>().toList();
+    int maxLength = minLength + 10; // Default max length
+    for (var check in maxLengthChecks) {
+      if (check.maxItems < maxLength) {
+        maxLength = check.maxItems;
+      }
+    }
+    final lengthCheck = operations.whereType<LengthListCheck>().firstOrNull;
+    if (lengthCheck != null) {
+      minLength = lengthCheck.length;
+      maxLength = lengthCheck.length;
+    }
+    final anyOf = operations.whereType<AnyOfListCheck<T>>().firstOrNull;
+    final everyOf = operations.whereType<EveryOfListCheck<T>>().firstOrNull;
+    final possibleValues = <T>{};
+    if (anyOf != null) {
+      possibleValues.addAll(anyOf.items);
+    }
+    if (everyOf != null) {
+      possibleValues.addAll(everyOf.items);
+    }
+    while (possibleValues.length < maxLength) {
+      possibleValues.add(element.mock(seed));
+    }
+    final valuesList = possibleValues.toList();
+    valuesList.shuffle(random);
+    return valuesList.sublist(0, math.min(maxLength, valuesList.length)).sublist(0, minLength);
   }
 }
 

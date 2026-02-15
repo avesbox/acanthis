@@ -78,6 +78,8 @@ abstract class AcanthisType<O> {
     return AcanthisParseResult<O>(value: newValue, metadata: metadataEntry);
   }
 
+  O mock([int? seed]);
+
   /// The tryParse method to try to parse the value
   /// it returns a [AcanthisParseResult]
   /// that has the following properties:
@@ -476,6 +478,13 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
       transform: transformFn,
       defaultValue: value,
     );
+  }
+  
+  @override
+  T? mock([int? seed]) {
+    final inResult = inType.mock(seed);
+    final T newValue = transformFn(inResult);
+    return newValue;
   }
 }
 

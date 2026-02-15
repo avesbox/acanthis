@@ -233,6 +233,11 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       'items': _variadic ? elements.last.toOpenApiSchema() : false,
     };
   }
+  
+  @override
+  List<dynamic> mock([int? seed]) {
+    return elements.map((e) => e.mock(seed)).toList();
+  }
 }
 
 /// Creates a new [AcanthisTuple] with the given elements.

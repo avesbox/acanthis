@@ -720,3 +720,19 @@ sizeSchema.parse('15pt'); // ❌ ValidationError
 The `template()` function takes a list of schemas that represent the placeholders in the template literal. The resulting schema will match strings that follow the pattern defined by the schemas.
 
 The placeholders can be of any type, including strings, numbers, booleans, or even complex objects.
+
+## Mocking schemas
+
+To tests if your schema works as expected, you can use the `mock()` method to generate random data that conforms to the schema. This can be useful for testing your validation logic and for generating sample data.
+
+```dart
+final userSchema = object({
+  'name': string().min(3),
+  'age': number().positive(),
+  'email': string().email(),
+});
+final mockUser = userSchema.mock();
+
+print(mockUser);
+// => { name: 'Acanthis', age: 32, email: 'test@example.com' }
+```

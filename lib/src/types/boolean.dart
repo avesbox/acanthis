@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
@@ -105,6 +107,12 @@ class AcanthisBoolean extends AcanthisType<bool> {
       };
     }
     return {'type': 'boolean'};
+  }
+  
+  @override
+  bool mock([int? seed]) {
+    final random = Random(seed);
+    return random.nextBool();
   }
 }
 

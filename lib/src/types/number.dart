@@ -336,6 +336,24 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       if (exactCheck != null) 'enum': [exactCheck.value],
     };
   }
+  
+  @override
+  T mock([int? seed]) {
+    final random = math.Random(seed);
+    final enumerated = operations.whereType<EnumeratedNumberCheck>().firstOrNull;
+    if (enumerated != null) {
+      return enumerated.values[random.nextInt(enumerated.values.length)] as T;
+    }
+    final minCheck = operations.whereType<GteNumberCheck>().firstOrNull;
+    final maxCheck = operations.whereType<LteNumberCheck>().firstOrNull;
+    final min = minCheck?.value ?? (T == int ? 0 : -1000.0);
+    final max = maxCheck?.value ?? (T == int ? 1000 : 1000.0);
+    if (T == int) {
+      return (min as int) + random.nextInt((max as int) - (min) + 1) as T;
+    } else {
+      return (min) + random.nextDouble() * ((max) - (min)) as T;
+    } 
+  }
 }
 
 typedef AcanthisNumber = AcanthisNumeric<num>;

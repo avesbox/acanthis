@@ -127,10 +127,9 @@ void main() {
     });
 
     test('pipeline mock transforms the input mock value', () {
-      final schema = literal('abcd').pipe(
-        number().integer(),
-        transform: (value) => value.length,
-      );
+      final schema = literal(
+        'abcd',
+      ).pipe(number().integer(), transform: (value) => value.length);
 
       final result = schema.mock(1);
 

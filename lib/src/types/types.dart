@@ -29,8 +29,7 @@ abstract class AcanthisType<O> {
   final O? defaultValue;
 
   late final O Function(dynamic) compiledParseInternal;
-  late final O Function(dynamic, Map<String, dynamic>)
-  compiledTryParseInternal;
+  late final O Function(dynamic, Map<String, dynamic>) compiledTryParseInternal;
 
   /// The constructor of the class
   AcanthisType({
@@ -87,10 +86,9 @@ abstract class AcanthisType<O> {
     return (value) => compiled(value as O);
   }
 
-  static O Function(dynamic, Map<String, dynamic>) _compileTryParseOperations<O>(
-    List<AcanthisOperation<O>> operations,
-    O? defaultValue,
-  ) {
+  static O Function(dynamic, Map<String, dynamic>) _compileTryParseOperations<
+    O
+  >(List<AcanthisOperation<O>> operations, O? defaultValue) {
     O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
     for (final operation in operations) {
       switch (operation) {
@@ -149,7 +147,10 @@ abstract class AcanthisType<O> {
         'Cannot use tryParse with async operations',
       );
     }
-    return AcanthisParseResult<O>(value: parseInternal(value), metadata: metadataEntry);
+    return AcanthisParseResult<O>(
+      value: parseInternal(value),
+      metadata: metadataEntry,
+    );
   }
 
   O tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
@@ -528,7 +529,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
       defaultValue: value,
     );
   }
-  
+
   @override
   T? mock([int? seed]) {
     final inResult = inType.mock(seed);

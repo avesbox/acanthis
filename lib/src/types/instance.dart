@@ -278,7 +278,7 @@ class InstanceType<T> extends AcanthisType<T> {
   Map<String, dynamic> toOpenApiSchema() {
     return toJsonSchema();
   }
-  
+
   @override
   T mock([int? seed]) {
     throw UnimplementedError('Mocking is not supported for InstanceType');

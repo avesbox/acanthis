@@ -569,7 +569,7 @@ class AcanthisString extends AcanthisType<String> {
       if (formatsChecksMap.isNotEmpty) ...formatsChecksMap,
     };
   }
-  
+
   @override
   String mock([int? seed]) {
     final random = Random(seed);
@@ -589,19 +589,25 @@ class AcanthisString extends AcanthisType<String> {
     int minLength = 0;
     int? maxLength;
 
-    final exactLengthCheck = checks.whereType<ExactStringLengthCheck>().firstOrNull;
+    final exactLengthCheck = checks
+        .whereType<ExactStringLengthCheck>()
+        .firstOrNull;
     if (exactLengthCheck != null) {
       minLength = exactLengthCheck.value;
       maxLength = exactLengthCheck.value;
     } else {
       final minLengthChecks = checks.whereType<MinStringLengthCheck>();
       if (minLengthChecks.isNotEmpty) {
-        minLength = minLengthChecks.map((check) => check.value).reduce(math.max);
+        minLength = minLengthChecks
+            .map((check) => check.value)
+            .reduce(math.max);
       }
 
       final maxLengthChecks = checks.whereType<MaxStringLengthCheck>();
       if (maxLengthChecks.isNotEmpty) {
-        maxLength = maxLengthChecks.map((check) => check.value).reduce(math.min);
+        maxLength = maxLengthChecks
+            .map((check) => check.value)
+            .reduce(math.min);
       }
     }
 
@@ -634,9 +640,12 @@ class AcanthisString extends AcanthisType<String> {
   }
 
   String _randomString(Random random, int length) {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return List.generate(length, (index) => chars[random.nextInt(chars.length)])
-        .join();
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return List.generate(
+      length,
+      (index) => chars[random.nextInt(chars.length)],
+    ).join();
   }
 }
 

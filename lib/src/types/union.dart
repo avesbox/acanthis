@@ -516,7 +516,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     ];
     return {'oneOf': schemas};
   }
-  
+
   @override
   T mock([int? seed]) {
     if (_variants.isNotEmpty) {

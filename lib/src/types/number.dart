@@ -336,11 +336,13 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       if (exactCheck != null) 'enum': [exactCheck.value],
     };
   }
-  
+
   @override
   T mock([int? seed]) {
     final random = math.Random(seed);
-    final enumerated = operations.whereType<EnumeratedNumberCheck>().firstOrNull;
+    final enumerated = operations
+        .whereType<EnumeratedNumberCheck>()
+        .firstOrNull;
     if (enumerated != null) {
       return enumerated.values[random.nextInt(enumerated.values.length)] as T;
     }
@@ -352,7 +354,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       return (min as int) + random.nextInt((max as int) - (min) + 1) as T;
     } else {
       return (min) + random.nextDouble() * ((max) - (min)) as T;
-    } 
+    }
   }
 }
 

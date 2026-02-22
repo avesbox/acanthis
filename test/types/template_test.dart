@@ -18,8 +18,10 @@ void main() {
       final schema = template(['email: ', string()]);
 
       expect(schema.parse('email: john@doe.dev').success, isTrue);
-      expect(() => schema.parse('email john@doe.dev'),
-          throwsA(isA<ValidationError>()));
+      expect(
+        () => schema.parse('email john@doe.dev'),
+        throwsA(isA<ValidationError>()),
+      );
     });
 
     test('supports literal segments', () {
@@ -38,10 +40,7 @@ void main() {
     });
 
     test('supports enums with numeric placeholders', () {
-      final schema = template([
-        number(),
-        string().enumerated(SizeUnit.values),
-      ]);
+      final schema = template([number(), string().enumerated(SizeUnit.values)]);
 
       expect(schema.parse('12px').success, isTrue);
       expect(schema.parse('3em').success, isTrue);

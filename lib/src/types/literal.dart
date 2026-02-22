@@ -79,7 +79,7 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
       'enum': [value],
     };
   }
-  
+
   @override
   T mock([int? seed]) {
     return value;

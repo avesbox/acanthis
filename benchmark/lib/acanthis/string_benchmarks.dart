@@ -4,7 +4,7 @@ import '../shared/acanthis_benchmark.dart';
 
 class LongStringValidationBenchmark extends AcanthisBenchmark {
   LongStringValidationBenchmark()
-      : super(name: 'LongStringValidationBenchmark');
+    : super(name: 'LongStringValidationBenchmark');
 
   static void main() {
     LongStringValidationBenchmark().report();
@@ -18,7 +18,7 @@ class LongStringValidationBenchmark extends AcanthisBenchmark {
 
 class FixedLengthStringValidationBenchmark extends AcanthisBenchmark {
   FixedLengthStringValidationBenchmark()
-      : super(name: 'FixedLengthStringValidationBenchmark');
+    : super(name: 'FixedLengthStringValidationBenchmark');
 
   static void main() {
     FixedLengthStringValidationBenchmark().report();
@@ -32,7 +32,7 @@ class FixedLengthStringValidationBenchmark extends AcanthisBenchmark {
 
 class EmptyStringValidationBenchmark extends AcanthisBenchmark {
   EmptyStringValidationBenchmark()
-      : super(name: 'EmptyStringValidationBenchmark');
+    : super(name: 'EmptyStringValidationBenchmark');
 
   static void main() {
     EmptyStringValidationBenchmark().report();
@@ -46,7 +46,7 @@ class EmptyStringValidationBenchmark extends AcanthisBenchmark {
 
 class EmailStringValidationBenchmark extends AcanthisBenchmark {
   EmailStringValidationBenchmark()
-      : super(name: 'EmailStringValidationBenchmark');
+    : super(name: 'EmailStringValidationBenchmark');
 
   static void main() {
     EmailStringValidationBenchmark().report();
@@ -60,7 +60,7 @@ class EmailStringValidationBenchmark extends AcanthisBenchmark {
 
 class UuidStringValidationBenchmark extends AcanthisBenchmark {
   UuidStringValidationBenchmark()
-      : super(name: 'UuidStringValidationBenchmark');
+    : super(name: 'UuidStringValidationBenchmark');
 
   static void main() {
     UuidStringValidationBenchmark().report();

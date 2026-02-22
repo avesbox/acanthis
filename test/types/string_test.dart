@@ -4,7 +4,6 @@ import 'package:test/test.dart';
 
 void main() {
   group('$AcanthisString', () {
-
     test('when creating a string validator,'
         'and the string is valid, '
         'then the result should be successful', () {

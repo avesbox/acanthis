@@ -8,24 +8,23 @@ class VineNestedObjectValidator extends AcanthisBenchmark {
     VineNestedObjectValidator().report();
   }
 
-  final validator = vine.compile(vine.object({
-    'username': vine.string(),
-    'password': vine.string(),
-    'contact': vine.object({
-      'name': vine.string(),
-      'address': vine.string().optional(),
+  final validator = vine.compile(
+    vine.object({
+      'username': vine.string(),
+      'password': vine.string(),
+      'contact': vine.object({
+        'name': vine.string(),
+        'address': vine.string().optional(),
+      }),
     }),
-  }));
+  );
 
   @override
   void run() {
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
-      'contact': {
-        'name': 'John Doe',
-        'address': '123 Main St',
-      },
+      'contact': {'name': 'John Doe', 'address': '123 Main St'},
     };
     validator.validate(payload);
   }
@@ -38,19 +37,13 @@ class VineFlatObjectValidator extends AcanthisBenchmark {
     VineFlatObjectValidator().report();
   }
 
-  final validator = vine.compile(vine.object({
-      'firstname': vine.string(),
-      'lastname': vine.string(),
-    }));
+  final validator = vine.compile(
+    vine.object({'firstname': vine.string(), 'lastname': vine.string()}),
+  );
 
   @override
   void run() {
-    
-
-    final payload = {
-      'firstname': 'John',
-      'lastname': 'Doe',
-    };
+    final payload = {'firstname': 'John', 'lastname': 'Doe'};
     validator.validate(payload);
   }
 }
@@ -62,16 +55,16 @@ class VineArrayObjectValidator extends AcanthisBenchmark {
     VineArrayObjectValidator().report();
   }
 
-      final validator = vine.compile(vine.object({
-      'contacts': vine.array(vine.object({
-        'type': vine.string(),
-        'value': vine.string().optional(),
-      })),
-    }));
+  final validator = vine.compile(
+    vine.object({
+      'contacts': vine.array(
+        vine.object({'type': vine.string(), 'value': vine.string().optional()}),
+      ),
+    }),
+  );
 
   @override
   void run() {
-
     final payload = {
       'contacts': [
         {'type': 'email', 'value': 'foo@bar.com'},

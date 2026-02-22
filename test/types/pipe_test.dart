@@ -1,7 +1,6 @@
 import 'package:acanthis/acanthis.dart';
 import 'package:test/test.dart';
 
-
 void main() {
   group('$AcanthisPipeline', () {
     test(

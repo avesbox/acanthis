@@ -215,7 +215,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       if (minDate != null) 'minimum': minDate.value.toUtc().toIso8601String(),
     };
   }
-  
+
   @override
   DateTime mock([int? seed]) {
     final random = Random(seed);
@@ -223,9 +223,10 @@ class AcanthisDate extends AcanthisType<DateTime> {
     final defaultPast = now.subtract(const Duration(days: 365 * 10));
     final defaultFuture = now.add(const Duration(days: 365 * 10));
 
-    final minDate = operations.whereType<MinDateCheck>().firstOrNull?.value ??
-        defaultPast;
-    final maxDate = operations.whereType<MaxDateCheck>().firstOrNull?.value ??
+    final minDate =
+        operations.whereType<MinDateCheck>().firstOrNull?.value ?? defaultPast;
+    final maxDate =
+        operations.whereType<MaxDateCheck>().firstOrNull?.value ??
         defaultFuture;
 
     final startMs = minDate.millisecondsSinceEpoch;

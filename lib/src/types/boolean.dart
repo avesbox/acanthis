@@ -108,7 +108,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
     }
     return {'type': 'boolean'};
   }
-  
+
   @override
   bool mock([int? seed]) {
     final random = Random(seed);

@@ -36,7 +36,6 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   bool get isPure => _localPure && _isPure && super.isPure;
-  
 
   /// Constructor of the map type
   AcanthisMap(
@@ -51,7 +50,6 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
        _localPure = isPure {
     _initializeCaches();
   }
-
 
   AcanthisMap._({
     required Map<String, AcanthisType<dynamic>> fields,
@@ -84,9 +82,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         .map((type) => type is AcanthisNullable)
         .toList(growable: false);
     _length = _keys.length;
-    _templateMap = {
-      for (final key in _keys) key: null,
-    };
+    _templateMap = {for (final key in _keys) key: null};
     _isPure =
         _types.every((type) => type.isPure && type.defaultValue == null) &&
         !_passthrough &&
@@ -212,16 +208,22 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         final fieldKey = _keys[i];
         final fieldType = _types[i];
         final passedValue = input[fieldKey] ?? _missing;
-        if (identical(passedValue, _missing) && !_isOptional[i] && !_isNullable[i]) {
+        if (identical(passedValue, _missing) &&
+            !_isOptional[i] &&
+            !_isNullable[i]) {
           _throwRequiredFieldError(fieldKey, fieldType);
         }
-        if (identical(passedValue, _missing) && _isOptional[i] && !_isNullable[i]) {
+        if (identical(passedValue, _missing) &&
+            _isOptional[i] &&
+            !_isNullable[i]) {
           continue;
         }
         if (fieldType is LazyEntry) {
-          (fieldType).call(this).parseInternal(
-            identical(passedValue, _missing) ? null : passedValue,
-          );
+          (fieldType)
+              .call(this)
+              .parseInternal(
+                identical(passedValue, _missing) ? null : passedValue,
+              );
         } else {
           fieldType.parseInternal(
             identical(passedValue, _missing) ? null : passedValue,
@@ -237,16 +239,22 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final fieldKey = _keys[i];
       final fieldType = _types[i];
       final passedValue = input[fieldKey] ?? _missing;
-      if (identical(passedValue, _missing) && !_isOptional[i] && !_isNullable[i]) {
+      if (identical(passedValue, _missing) &&
+          !_isOptional[i] &&
+          !_isNullable[i]) {
         _throwRequiredFieldError(fieldKey, fieldType);
       }
-      if (identical(passedValue, _missing) && _isOptional[i] && !_isNullable[i]) {
+      if (identical(passedValue, _missing) &&
+          _isOptional[i] &&
+          !_isNullable[i]) {
         continue;
       }
       if (fieldType is LazyEntry) {
-        parsed[fieldKey] = (fieldType).call(this).parseInternal(
-          identical(passedValue, _missing) ? null : passedValue,
-        );
+        parsed[fieldKey] = (fieldType)
+            .call(this)
+            .parseInternal(
+              identical(passedValue, _missing) ? null : passedValue,
+            );
       } else {
         parsed[fieldKey] = fieldType.parseInternal(
           identical(passedValue, _missing) ? null : passedValue,
@@ -255,7 +263,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
 
     if (_passthrough) {
-      final passthroughKeys = input.keys.toSet().difference(_fields.keys.toSet());
+      final passthroughKeys = input.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = input[key];
         if (_passthroughType != null) {
@@ -287,10 +297,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         final fieldKey = _keys[i];
         final fieldType = _types[i];
         dynamic passedValue = input[fieldKey] ?? _missing;
-        if (identical(passedValue, _missing) && fieldType.defaultValue != null) {
+        if (identical(passedValue, _missing) &&
+            fieldType.defaultValue != null) {
           passedValue = fieldType.defaultValue;
         }
-        if (identical(passedValue, _missing) && !_isOptional[i] && !_isNullable[i]) {
+        if (identical(passedValue, _missing) &&
+            !_isOptional[i] &&
+            !_isNullable[i]) {
           final checks = fieldType.operations.whereType<AcanthisCheck>();
           errors[fieldKey] = {
             'required': 'Field $fieldKey is required',
@@ -298,7 +311,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           };
           continue;
         }
-        if (identical(passedValue, _missing) && _isOptional[i] && !_isNullable[i]) {
+        if (identical(passedValue, _missing) &&
+            _isOptional[i] &&
+            !_isNullable[i]) {
           continue;
         }
         final fieldErrors = <String, dynamic>{};
@@ -306,10 +321,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             ? null
             : passedValue;
         if (fieldType is LazyEntry) {
-          (fieldType).call(this).tryParseInternal(
-            valueToParse,
-            errors: fieldErrors,
-          );
+          (fieldType)
+              .call(this)
+              .tryParseInternal(valueToParse, errors: fieldErrors);
         } else {
           fieldType.tryParseInternal(valueToParse, errors: fieldErrors);
         }
@@ -329,7 +343,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (identical(passedValue, _missing) && fieldType.defaultValue != null) {
         passedValue = fieldType.defaultValue;
       }
-      if (identical(passedValue, _missing) && !_isOptional[i] && !_isNullable[i]) {
+      if (identical(passedValue, _missing) &&
+          !_isOptional[i] &&
+          !_isNullable[i]) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         errors[fieldKey] = {
           'required': 'Field $fieldKey is required',
@@ -337,7 +353,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         };
         continue;
       }
-      if (identical(passedValue, _missing) && _isOptional[i] && !_isNullable[i]) {
+      if (identical(passedValue, _missing) &&
+          _isOptional[i] &&
+          !_isNullable[i]) {
         continue;
       }
       final fieldErrors = <String, dynamic>{};
@@ -345,10 +363,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           ? null
           : passedValue;
       final fieldValue = fieldType is LazyEntry
-          ? (fieldType).call(this).tryParseInternal(
-              valueToParse,
-              errors: fieldErrors,
-            )
+          ? (fieldType)
+                .call(this)
+                .tryParseInternal(valueToParse, errors: fieldErrors)
           : fieldType.tryParseInternal(valueToParse, errors: fieldErrors);
       parsed[fieldKey] = fieldValue;
       if (fieldErrors.isNotEmpty) {
@@ -357,7 +374,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
 
     if (_passthrough) {
-      final passthroughKeys = input.keys.toSet().difference(_fields.keys.toSet());
+      final passthroughKeys = input.keys.toSet().difference(
+        _fields.keys.toSet(),
+      );
       for (final key in passthroughKeys) {
         final objValue = input[key];
         if (_passthroughType != null) {
@@ -969,7 +988,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (constraints.isNotEmpty) ...constraints,
     };
   }
-  
+
   @override
   Map<String, V> mock([int? seed]) {
     final result = <String, V>{};
@@ -1123,7 +1142,7 @@ class LazyEntry<O> extends AcanthisType<O> {
     final schema = type.toOpenApiSchema();
     return schema;
   }
-  
+
   @override
   O mock([int? seed]) {
     throw UnimplementedError('The implementation must be done from the parent');

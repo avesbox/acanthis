@@ -366,7 +366,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       if (uniqueItems) 'uniqueItems': true,
     };
   }
-  
+
   @override
   List<T> mock([int? seed]) {
     final random = math.Random(seed);
@@ -403,7 +403,9 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final valuesList = possibleValues.toList();
     valuesList.shuffle(random);
-    return valuesList.sublist(0, math.min(maxLength, valuesList.length)).sublist(0, minLength);
+    return valuesList
+        .sublist(0, math.min(maxLength, valuesList.length))
+        .sublist(0, minLength);
   }
 }
 

@@ -25,10 +25,8 @@ class AcanthisTemplate extends AcanthisType<String> {
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  })  : parts = List.unmodifiable(segments),
-        super(
-          isAsync: isAsync ?? _segmentsAreAsync(segments, operations),
-        ) {
+  }) : parts = List.unmodifiable(segments),
+       super(isAsync: isAsync ?? _segmentsAreAsync(segments, operations)) {
     if (segments.isEmpty) {
       throw ArgumentError('Template literal must have at least one part');
     }
@@ -68,7 +66,9 @@ class AcanthisTemplate extends AcanthisType<String> {
       final schema = part.toJsonSchema();
       return '(?:${_patternForSchema(schema)})';
     }
-    throw ArgumentError('Unsupported template literal part: ${part.runtimeType}');
+    throw ArgumentError(
+      'Unsupported template literal part: ${part.runtimeType}',
+    );
   }
 
   String _patternForSchema(Map<String, dynamic> schema) {
@@ -120,7 +120,8 @@ class AcanthisTemplate extends AcanthisType<String> {
 
   String _normalizeInlinePattern(String pattern) {
     var normalized = pattern;
-    if (normalized.startsWith('/') && normalized.endsWith('/') &&
+    if (normalized.startsWith('/') &&
+        normalized.endsWith('/') &&
         normalized.length >= 2) {
       normalized = normalized.substring(1, normalized.length - 1);
     }
@@ -263,12 +264,11 @@ class AcanthisTemplate extends AcanthisType<String> {
       if (defaultValue != null) 'default': defaultValue,
     };
   }
-  
+
   @override
   String mock([int? seed]) {
     throw UnimplementedError('Mocking not implemented for template literals');
   }
 }
 
-AcanthisTemplate template(List<dynamic> parts) =>
-    AcanthisTemplate(parts);
+AcanthisTemplate template(List<dynamic> parts) => AcanthisTemplate(parts);

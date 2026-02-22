@@ -196,7 +196,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       if (defaultValue != null) 'default': defaultValue,
     };
   }
-  
+
   @override
   T? mock([int? seed]) {
     final random = Random(seed);

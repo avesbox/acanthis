@@ -4,7 +4,7 @@ import '../shared/acanthis_benchmark.dart';
 
 class LongLuthorStringValidationBenchmark extends AcanthisBenchmark {
   LongLuthorStringValidationBenchmark()
-      : super(name: 'LongLuthorStringValidationBenchmark');
+    : super(name: 'LongLuthorStringValidationBenchmark');
 
   static void main() {
     LongLuthorStringValidationBenchmark().report();
@@ -18,7 +18,7 @@ class LongLuthorStringValidationBenchmark extends AcanthisBenchmark {
 
 class FixedLuthorLengthStringValidationBenchmark extends AcanthisBenchmark {
   FixedLuthorLengthStringValidationBenchmark()
-      : super(name: 'FixedLuthorLengthStringValidationBenchmark');
+    : super(name: 'FixedLuthorLengthStringValidationBenchmark');
 
   static void main() {
     FixedLuthorLengthStringValidationBenchmark().report();
@@ -32,7 +32,7 @@ class FixedLuthorLengthStringValidationBenchmark extends AcanthisBenchmark {
 
 class EmptyLuthorStringValidationBenchmark extends AcanthisBenchmark {
   EmptyLuthorStringValidationBenchmark()
-      : super(name: 'EmptyLuthorStringValidationBenchmark');
+    : super(name: 'EmptyLuthorStringValidationBenchmark');
 
   static void main() {
     EmptyLuthorStringValidationBenchmark().report();
@@ -46,7 +46,7 @@ class EmptyLuthorStringValidationBenchmark extends AcanthisBenchmark {
 
 class EmailLuthorStringValidationBenchmark extends AcanthisBenchmark {
   EmailLuthorStringValidationBenchmark()
-      : super(name: 'EmailLuthorStringValidationBenchmark');
+    : super(name: 'EmailLuthorStringValidationBenchmark');
 
   static void main() {
     EmailLuthorStringValidationBenchmark().report();
@@ -60,7 +60,7 @@ class EmailLuthorStringValidationBenchmark extends AcanthisBenchmark {
 
 class UuidLuthorStringValidationBenchmark extends AcanthisBenchmark {
   UuidLuthorStringValidationBenchmark()
-      : super(name: 'UuidLuthorStringValidationBenchmark');
+    : super(name: 'UuidLuthorStringValidationBenchmark');
 
   static void main() {
     UuidLuthorStringValidationBenchmark().report();

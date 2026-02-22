@@ -13,18 +13,12 @@ class LuthorNestedObjectValidator extends AcanthisBenchmark {
     final validator = l.schema({
       'username': l.string(),
       'password': l.string(),
-      'contact': l.schema({
-        'name': l.string(),
-        'address': l.string(),
-      }),
+      'contact': l.schema({'name': l.string(), 'address': l.string()}),
     });
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
-      'contact': {
-        'name': 'John Doe',
-        'address': '123 Main St',
-      },
+      'contact': {'name': 'John Doe', 'address': '123 Main St'},
     };
     validator.validateSchema(payload);
   }
@@ -44,10 +38,7 @@ class LuthorFlatObjectValidator extends AcanthisBenchmark {
       'lastname': l.string(),
     });
 
-    final payload = {
-      'firstname': 'John',
-      'lastname': 'Doe',
-    };
+    final payload = {'firstname': 'John', 'lastname': 'Doe'};
     validator.validateSchema(payload);
   }
 }
@@ -62,12 +53,11 @@ class LuthorArrayObjectValidator extends AcanthisBenchmark {
   @override
   void run() {
     final validator = l.schema({
-      'contacts': l.list(validators: [
-        l.schema({
-          'type': l.string(),
-          'value': l.string(),
-        }),
-      ]),
+      'contacts': l.list(
+        validators: [
+          l.schema({'type': l.string(), 'value': l.string()}),
+        ],
+      ),
     });
 
     final payload = {

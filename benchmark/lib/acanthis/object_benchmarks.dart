@@ -8,24 +8,18 @@ class NestedObjectValidator extends AcanthisBenchmark {
     NestedObjectValidator().report();
   }
 
-      final validator = object({
-      'username': string(),
-      'password': string(),
-      'contact': object({
-        'name': string(),
-        'address': string().nullable(),
-      }),
-    });
+  final validator = object({
+    'username': string(),
+    'password': string(),
+    'contact': object({'name': string(), 'address': string().nullable()}),
+  });
 
   @override
   void run() {
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
-      'contact': {
-        'name': 'John Doe',
-        'address': '123 Main St',
-      },
+      'contact': {'name': 'John Doe', 'address': '123 Main St'},
     };
     validator.parse(payload);
   }
@@ -38,18 +32,11 @@ class FlatObjectValidator extends AcanthisBenchmark {
     FlatObjectValidator().report();
   }
 
-      final validator = object({
-      'firstname': string(),
-      'lastname': string(),
-    });
+  final validator = object({'firstname': string(), 'lastname': string()});
 
   @override
   void run() {
-
-    final payload = {
-      'firstname': 'John',
-      'lastname': 'Doe',
-    };
+    final payload = {'firstname': 'John', 'lastname': 'Doe'};
     validator.parse(payload);
   }
 }
@@ -61,12 +48,9 @@ class ArrayObjectValidator extends AcanthisBenchmark {
     ArrayObjectValidator().report();
   }
 
-    final validator = object({
-      'contacts': object({
-        'type': string(),
-        'value': string(),
-      }).list(),
-    });
+  final validator = object({
+    'contacts': object({'type': string(), 'value': string()}).list(),
+  });
 
   @override
   void run() {

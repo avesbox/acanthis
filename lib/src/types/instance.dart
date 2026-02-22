@@ -54,7 +54,7 @@ class InstanceType<T> extends AcanthisType<T> {
 
   final Map<String, Object Function(T)> _refs;
 
-  const InstanceType._({
+  InstanceType._({
     super.operations,
     List<_InstanceField<T, dynamic>> fields = const [],
     Map<String, Object Function(T)> refs = const {},
@@ -66,7 +66,7 @@ class InstanceType<T> extends AcanthisType<T> {
        _refs = refs;
 
   /// Create an empty instance validator
-  const InstanceType() : this._();
+  InstanceType() : this._();
 
   /// Add a field validator.
   /// getter extracts the property from the instance.

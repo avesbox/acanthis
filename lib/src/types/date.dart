@@ -11,7 +11,7 @@ import 'types.dart';
 
 /// A class to validate date types
 class AcanthisDate extends AcanthisType<DateTime> {
-  const AcanthisDate({
+  AcanthisDate({
     super.operations,
     super.isAsync,
     super.key,

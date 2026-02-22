@@ -8,9 +8,7 @@ class NestedObjectValidator extends AcanthisBenchmark {
     NestedObjectValidator().report();
   }
 
-  @override
-  void run() {
-    final validator = object({
+      final validator = object({
       'username': string(),
       'password': string(),
       'contact': object({
@@ -18,6 +16,9 @@ class NestedObjectValidator extends AcanthisBenchmark {
         'address': string().nullable(),
       }),
     });
+
+  @override
+  void run() {
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
@@ -37,12 +38,13 @@ class FlatObjectValidator extends AcanthisBenchmark {
     FlatObjectValidator().report();
   }
 
-  @override
-  void run() {
-    final validator = object({
+      final validator = object({
       'firstname': string(),
       'lastname': string(),
     });
+
+  @override
+  void run() {
 
     final payload = {
       'firstname': 'John',
@@ -59,8 +61,6 @@ class ArrayObjectValidator extends AcanthisBenchmark {
     ArrayObjectValidator().report();
   }
 
-  @override
-  void run() {
     final validator = object({
       'contacts': object({
         'type': string(),
@@ -68,6 +68,8 @@ class ArrayObjectValidator extends AcanthisBenchmark {
       }).list(),
     });
 
+  @override
+  void run() {
     final payload = {
       'contacts': [
         {'type': 'email', 'value': 'foo@bar.com'},

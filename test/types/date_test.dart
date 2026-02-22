@@ -5,9 +5,6 @@ import 'package:acanthis/acanthis.dart' as acanthis;
 
 void main() {
   group('$AcanthisDate', () {
-    test("Can be created using `const`", () {
-      const AcanthisDate();
-    });
     test('when creating a date validator,'
         'and the date is valid, '
         'then the result should be successful', () {

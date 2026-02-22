@@ -5,9 +5,6 @@ import 'package:acanthis/acanthis.dart' as acanthis;
 
 void main() {
   group('$AcanthisNumber', () {
-    test("Can be created using `const`", () {
-      const AcanthisNumber();
-    });
     test('when creating a number validator,'
         'and the number is valid, '
         'then the result should be successful', () {

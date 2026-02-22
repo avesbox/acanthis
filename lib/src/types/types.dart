@@ -28,14 +28,118 @@ abstract class AcanthisType<O> {
 
   final O? defaultValue;
 
+  late final O Function(dynamic) compiledParseInternal;
+  late final O Function(dynamic, Map<String, dynamic>)
+  compiledTryParseInternal;
+
   /// The constructor of the class
-  const AcanthisType({
+  AcanthisType({
     List<AcanthisOperation<O>> operations = const [],
     this.isAsync = false,
     this.key = '',
     this.metadataEntry,
     this.defaultValue,
-  }) : __operations = operations;
+  }) : __operations = operations,
+       compiledParseInternal = _compileParseOperations<O>(operations),
+       compiledTryParseInternal = _compileTryParseOperations<O>(
+         operations,
+         defaultValue,
+       );
+
+  static O Function(dynamic) _compileParseOperations<O>(
+    List<AcanthisOperation<O>> operations,
+  ) {
+    O Function(O) compiled = (value) => value;
+    for (final operation in operations) {
+      switch (operation) {
+        case CustomCauseCheck<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value) {
+            final newValue = previous(value);
+            final cause = current.cause(newValue);
+            if (cause != null) {
+              throw ValidationError(cause, key: current.name);
+            }
+            return newValue;
+          };
+          break;
+        case AcanthisCheck<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value) {
+            final newValue = previous(value);
+            if (!current(newValue)) {
+              throw ValidationError(current.error, key: current.name);
+            }
+            return newValue;
+          };
+          break;
+        case AcanthisTransformation<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value) => current(previous(value));
+          break;
+        default:
+          break;
+      }
+    }
+    return (value) => compiled(value as O);
+  }
+
+  static O Function(dynamic, Map<String, dynamic>) _compileTryParseOperations<O>(
+    List<AcanthisOperation<O>> operations,
+    O? defaultValue,
+  ) {
+    O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
+    for (final operation in operations) {
+      switch (operation) {
+        case CustomCauseCheck<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value, errors) {
+            final newValue = previous(value, errors);
+            final cause = current.cause(newValue);
+            if (cause != null) {
+              errors[current.name] = cause;
+            }
+            return newValue;
+          };
+          break;
+        case AcanthisCheck<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value, errors) {
+            final newValue = previous(value, errors);
+            if (!current(newValue)) {
+              errors[current.name] = current.error;
+            }
+            return newValue;
+          };
+          break;
+        case AcanthisTransformation<O>():
+          final previous = compiled;
+          final current = operation;
+          compiled = (value, errors) => current(previous(value, errors));
+          break;
+        default:
+          break;
+      }
+    }
+    return (value, errors) {
+      final typedValue = value as O;
+      final initialErrorsLength = errors.length;
+      final newValue = compiled(typedValue, errors);
+      final hasLocalErrors = errors.length != initialErrorsLength;
+      return hasLocalErrors ? (defaultValue ?? newValue) : newValue;
+    };
+  }
+
+  bool get isPure => operations.whereType<AcanthisTransformation>().isEmpty;
+
+  O parseInternal(dynamic value) {
+    return compiledParseInternal(value);
+  }
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
@@ -45,37 +149,11 @@ abstract class AcanthisType<O> {
         'Cannot use tryParse with async operations',
       );
     }
-    if (operations.isEmpty) {
-      return AcanthisParseResult(
-        value: value,
-        errors: {},
-        success: true,
-        metadata: metadataEntry,
-      );
-    }
-    O newValue = value;
-    for (var operation in operations) {
-      switch (operation) {
-        case AcanthisCheck<O>():
-          if (operation is CustomCauseCheck<O>) {
-            final cause = operation.cause(newValue);
-            if (cause != null) {
-              throw ValidationError(cause, key: operation.name);
-            }
-            break;
-          }
-          if (!operation(newValue)) {
-            throw ValidationError(operation.error, key: operation.name);
-          }
-          break;
-        case AcanthisTransformation<O>():
-          newValue = operation(newValue);
-          break;
-        default:
-          break;
-      }
-    }
-    return AcanthisParseResult<O>(value: newValue, metadata: metadataEntry);
+    return AcanthisParseResult<O>(value: parseInternal(value), metadata: metadataEntry);
+  }
+
+  O tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    return compiledTryParseInternal(value, errors);
   }
 
   O mock([int? seed]);
@@ -92,37 +170,8 @@ abstract class AcanthisType<O> {
         'Cannot use tryParse with async operations',
       );
     }
-    final errors = <String, String>{};
-    if (operations.isEmpty) {
-      return AcanthisParseResult(
-        value: value,
-        errors: errors,
-        success: true,
-        metadata: metadataEntry,
-      );
-    }
-    O newValue = value;
-    for (final operation in operations) {
-      switch (operation) {
-        case AcanthisCheck<O>():
-          if (operation is CustomCauseCheck<O>) {
-            final cause = operation.cause(newValue);
-            if (cause != null) {
-              errors[operation.name] = cause;
-            }
-            break;
-          }
-          if (!operation(newValue)) {
-            errors[operation.name] = operation.error;
-          }
-          break;
-        case AcanthisTransformation<O>():
-          newValue = operation(newValue);
-          break;
-        default:
-          break;
-      }
-    }
+    final errors = <String, dynamic>{};
+    final newValue = tryParseInternal(value, errors: errors);
     final success = errors.isEmpty;
     return AcanthisParseResult(
       value: success ? newValue : defaultValue ?? newValue,
@@ -357,7 +406,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   final T Function(O value) transformFn;
 
   /// The constructor of the class
-  const AcanthisPipeline({
+  AcanthisPipeline({
     required this.inType,
     required this.outType,
     required T Function(O value) transform,

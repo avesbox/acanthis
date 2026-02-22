@@ -9,7 +9,7 @@ import 'package:nanoid2/nanoid2.dart';
 import 'types.dart';
 
 class AcanthisBoolean extends AcanthisType<bool> {
-  const AcanthisBoolean({
+  AcanthisBoolean({
     super.operations,
     super.isAsync,
     super.key,

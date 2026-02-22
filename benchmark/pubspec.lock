@@ -15,7 +15,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.5.0"
+    version: "1.5.2"
   analyzer:
     dependency: transitive
     description:
@@ -172,10 +172,10 @@ packages:
     dependency: "direct main"
     description:
       name: luthor
-      sha256: aeb27426c99330b8aa4ece853835bc656ca41dd16f25802aa6ab74faba497a29
+      sha256: "0909bfcb3bba9fda658ef7beba66ddb57cba512bea97ee2e461169de006c8de0"
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.1"
+    version: "0.17.0"
   matcher:
     dependency: transitive
     description:
@@ -388,10 +388,10 @@ packages:
     dependency: "direct main"
     description:
       name: vine
-      sha256: c6399f214657d6514da51f722f6b6fa46dd38c55dde779717a5a172864d6400c
+      sha256: "416ef3c8e7427344b5987e0f2a82cc165c6b46d33233044e96331f5193d370b7"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.8.0"
   vm_service:
     dependency: transitive
     description:

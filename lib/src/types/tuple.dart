@@ -8,7 +8,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   final bool _variadic;
 
-  const AcanthisTuple(
+  AcanthisTuple(
     this.elements, {
     super.operations,
     super.isAsync,

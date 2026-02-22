@@ -8,16 +8,17 @@ class VineNestedObjectValidator extends AcanthisBenchmark {
     VineNestedObjectValidator().report();
   }
 
+  final validator = vine.compile(vine.object({
+    'username': vine.string(),
+    'password': vine.string(),
+    'contact': vine.object({
+      'name': vine.string(),
+      'address': vine.string().optional(),
+    }),
+  }));
+
   @override
   void run() {
-    final validator = vine.compile(vine.object({
-      'username': vine.string(),
-      'password': vine.string(),
-      'contact': vine.object({
-        'name': vine.string(),
-        'address': vine.string().optional(),
-      }),
-    }));
     final payload = {
       'username': 'John Doe',
       'password': 'secret',
@@ -37,12 +38,14 @@ class VineFlatObjectValidator extends AcanthisBenchmark {
     VineFlatObjectValidator().report();
   }
 
-  @override
-  void run() {
-    final validator = vine.compile(vine.object({
+  final validator = vine.compile(vine.object({
       'firstname': vine.string(),
       'lastname': vine.string(),
     }));
+
+  @override
+  void run() {
+    
 
     final payload = {
       'firstname': 'John',
@@ -59,14 +62,15 @@ class VineArrayObjectValidator extends AcanthisBenchmark {
     VineArrayObjectValidator().report();
   }
 
-  @override
-  void run() {
-    final validator = vine.compile(vine.object({
+      final validator = vine.compile(vine.object({
       'contacts': vine.array(vine.object({
         'type': vine.string(),
         'value': vine.string().optional(),
       })),
     }));
+
+  @override
+  void run() {
 
     final payload = {
       'contacts': [

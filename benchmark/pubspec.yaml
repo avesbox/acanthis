@@ -5,15 +5,15 @@ publish_to: none
 # repository: https://github.com/my_org/my_repo
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.0
 
 # Add regular dependencies here.
 dependencies:
-  luthor: ^0.13.1
+  luthor: ^0.17.0
   benchmark_harness: ^2.3.1
   acanthis: 
     path: ../
-  vine: ^1.1.0
+  vine: ^1.8.0
   
 
 dev_dependencies:

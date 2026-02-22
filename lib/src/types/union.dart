@@ -14,7 +14,7 @@ class AcanthisUnion<T> extends AcanthisType<T> {
   final List<AcanthisType<T>> _types;
   final List<AcanthisVariant<T>> _variants;
 
-  const AcanthisUnion._({
+  AcanthisUnion._({
     required List<AcanthisType<T>> types,
     required List<AcanthisVariant<T>> variants,
     super.operations = const [],

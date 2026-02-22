@@ -1,19 +1,9 @@
 import 'package:acanthis/acanthis.dart';
 import 'package:test/test.dart';
 
-DateTime _transformDateTime(DateTime value) {
-  return value;
-}
 
 void main() {
   group('$AcanthisPipeline', () {
-    test("Can be created using `const`", () {
-      const AcanthisPipeline(
-        inType: AcanthisDate(),
-        outType: AcanthisDate(),
-        transform: _transformDateTime,
-      );
-    });
     test(
       'when creating a pipeline to convert a string to a date, and the string is a parsable string, then the result should be successful',
       () {

@@ -11,7 +11,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   /// The element of the nullable
   final AcanthisType<T> element;
 
-  const AcanthisNullable(
+  AcanthisNullable(
     this.element, {
     super.defaultValue,
     super.operations,

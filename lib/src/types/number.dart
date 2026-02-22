@@ -11,7 +11,7 @@ import 'types.dart';
 
 /// A class to validate number types
 class AcanthisNumeric<T extends num> extends AcanthisType<T> {
-  const AcanthisNumeric({
+  AcanthisNumeric({
     super.isAsync,
     super.operations,
     super.key,

@@ -14,15 +14,69 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   /// The element of the list
   final AcanthisType<T> element;
 
+  final bool _localPure;
+
+  @override
+  bool get isPure =>
+      _localPure &&
+      element.isPure &&
+      element.defaultValue == null &&
+      defaultValue == null &&
+      super.isPure;
+
   /// Constructor of the list type
-  const AcanthisList(
+  AcanthisList(
     this.element, {
     super.operations,
     super.isAsync,
+    bool isPure = true,
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  });
+  }) : _localPure = isPure;
+
+  @override
+  List<T> parseInternal(covariant dynamic value) {
+    final raw = value as List<dynamic>;
+    if (isPure) {
+      for (var i = 0; i < raw.length; i++) {
+        element.parseInternal(raw[i]);
+      }
+      return super.parseInternal(raw.cast<T>());
+    }
+    final parsed = List<T?>.filled(raw.length, null);
+    for (var i = 0; i < raw.length; i++) {
+      parsed[i] = element.parseInternal(raw[i]);
+    }
+    return super.parseInternal(parsed.cast<T>());
+  }
+
+  @override
+  List<T> tryParseInternal(
+    covariant dynamic value, {
+    required Map<String, dynamic> errors,
+  }) {
+    final raw = value as List<dynamic>;
+    if (isPure) {
+      for (var i = 0; i < raw.length; i++) {
+        final elementErrors = <String, dynamic>{};
+        element.tryParseInternal(raw[i], errors: elementErrors);
+        if (elementErrors.isNotEmpty) {
+          errors[i.toString()] = elementErrors;
+        }
+      }
+      return super.tryParseInternal(raw.cast<T>(), errors: errors);
+    }
+    final parsed = List<T?>.filled(raw.length, null);
+    for (var i = 0; i < raw.length; i++) {
+      final elementErrors = <String, dynamic>{};
+      parsed[i] = element.tryParseInternal(raw[i], errors: elementErrors);
+      if (elementErrors.isNotEmpty) {
+        errors[i.toString()] = elementErrors;
+      }
+    }
+    return super.tryParseInternal(parsed.cast<T>(), errors: errors);
+  }
 
   @override
   Future<AcanthisParseResult<List<T>>> parseAsync(
@@ -66,12 +120,9 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     if (isAsync) {
       throw AsyncValidationException('Cannot use parse with async operations');
     }
-    return super.parse(
-      List.generate(
-        value.length,
-        (index) => element.parse(value[index]).value,
-        growable: false,
-      ),
+    return AcanthisParseResult<List<T>>(
+      value: parseInternal(value),
+      metadata: metadataEntry,
     );
   }
 
@@ -83,23 +134,14 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
         'Cannot use tryParse with async operations',
       );
     }
-    final parsed = <T>[];
     final errors = <String, dynamic>{};
-    for (var i = 0; i < value.length; i++) {
-      final parsedElement = element.tryParse(value[i]);
-      parsed.add(parsedElement.value);
-      if (parsedElement.errors.isNotEmpty) {
-        errors[i.toString()] = parsedElement.errors;
-      }
-    }
-    final result = super.tryParse(parsed);
-    final mergedErrors = {...errors, ...result.errors};
-    final success = mergedErrors.isEmpty;
+    final parsed = tryParseInternal(value, errors: errors);
+    final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: success ? result.value : defaultValue ?? result.value,
-      errors: mergedErrors,
+      value: success ? parsed : defaultValue ?? parsed,
+      errors: errors,
       success: success,
-      metadata: result.metadata,
+      metadata: metadataEntry,
     );
   }
 
@@ -192,6 +234,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: [...operations, check],
       isAsync: true,
+      isPure: _localPure,
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
@@ -204,6 +247,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: [...operations, check],
       isAsync: isAsync,
+      isPure: _localPure,
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
@@ -218,6 +262,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: [...operations, transformation],
       isAsync: isAsync,
+      isPure: false,
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
@@ -230,6 +275,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: operations,
       isAsync: isAsync,
+      isPure: _localPure,
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
@@ -247,6 +293,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       element,
       operations: operations,
       isAsync: isAsync,
+      isPure: _localPure,
       key: key,
       metadataEntry: metadata,
       defaultValue: defaultValue,

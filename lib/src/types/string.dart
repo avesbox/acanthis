@@ -13,7 +13,7 @@ import 'types.dart';
 
 /// A class to validate string types
 class AcanthisString extends AcanthisType<String> {
-  const AcanthisString({
+  AcanthisString({
     super.isAsync,
     super.operations,
     super.key,

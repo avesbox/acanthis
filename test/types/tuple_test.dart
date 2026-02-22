@@ -4,9 +4,6 @@ import 'package:test/test.dart';
 
 void main() {
   group('$AcanthisTuple', () {
-    test("Can be created using `const`", () {
-      const AcanthisTuple([]);
-    });
     test('when creating a tuple validator,'
         'and the tuple is valid, '
         'then the result should be successful', () {

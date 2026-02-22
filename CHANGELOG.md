@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3
+
+- perf: improve general performances
+
 ## 1.5.2
 
 - feat: add `AcanthisType#mock` to generate mocks values from the schema.

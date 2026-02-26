@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.4
+
+- fix: Prevent nullable to be treated always like a pure type and use type purity to determine if the schema is pure or not, allowing for more complex schemas to be nullable without losing their purity.
+
 ## 1.5.3
 
 - perf: improve general performances

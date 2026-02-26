@@ -230,6 +230,24 @@ void main() {
       expect(resultParse.value['key'], 'VALUE');
     });
 
+    test('when creating a map validator with nullable transformed fields,'
+        'and all the elements in the map are valid, '
+        'then the nullable field values should be transformed', () {
+      final map = acanthis.object({
+        'name': acanthis.string().min(3).max(100).toUpperCase().nullable(),
+      });
+
+      final result = map.tryParse({'name': 'John Doe'});
+
+      expect(result.success, true);
+      expect(result.value['name'], 'JOHN DOE');
+
+      final resultParse = map.parse({'name': 'John Doe'});
+
+      expect(resultParse.success, true);
+      expect(resultParse.value['name'], 'JOHN DOE');
+    });
+
     test('when creating a map validator for a complex object,'
         'and the map is valid, '
         'then the result should be successful', () {

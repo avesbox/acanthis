@@ -19,6 +19,21 @@ class User {
   }
 }
 
+AcanthisMap<dynamic> get registerSchema => object({
+  'name': string().min(3).max(100).toUpperCase(),
+  'businessName': string().min(3).max(150).toUpperCase(),
+  'mobileNumber': string().length(10),
+  'email': string().email(),
+  'password': string().min(6).max(128),
+});
+AcanthisMap<dynamic> get updateSchema => object({
+  'name': string().min(3).max(100).toUpperCase().nullable(),
+  'businessName': string().min(3).max(150).toUpperCase().nullable(),
+  'mobileNumber': string().length(10).nullable(),
+  'email': string().email().nullable(),
+  'password': string().min(6).max(128).nullable(),
+});
+
 abstract class Payment {}
 
 class CreditCard extends Payment {
@@ -184,4 +199,12 @@ void main(List<String> arguments) async {
   final literalTemplate = template(['user_', literal(5), '_end']);
   print(literalTemplate.pattern);
   print(literalTemplate.parse('user_5_end'));
+  final res = updateSchema.tryParse({
+    'name': 'John Doe',
+    'businessName': 'Acme Corp',
+    'mobileNumber': '1234567890',
+    'email': 'john.doe@example.com',
+    'password': 'password123',
+  });
+  print(res.value);
 }

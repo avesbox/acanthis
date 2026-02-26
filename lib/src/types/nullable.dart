@@ -11,6 +11,27 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   /// The element of the nullable
   final AcanthisType<T> element;
 
+  @override
+  bool get isPure => element.isPure && super.isPure;
+
+  @override
+  T? parseInternal(dynamic value) {
+    if (value == null) {
+      return defaultValue;
+    }
+    final elementValue = element.parseInternal(value);
+    return super.parseInternal(elementValue);
+  }
+
+  @override
+  T? tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    if (value == null) {
+      return defaultValue;
+    }
+    final elementValue = element.tryParseInternal(value, errors: errors);
+    return super.tryParseInternal(elementValue, errors: errors);
+  }
+
   AcanthisNullable(
     this.element, {
     super.defaultValue,

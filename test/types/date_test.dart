@@ -322,5 +322,29 @@ void main() {
       expect(result['title'], 'Future Date');
       expect(result['examples'], ['2023-10-01T00:00:00.000']);
     });
+
+    test('when a date field inside an object receives a valid ISO 8601 string, '
+        'then tryParse should succeed and coerce to DateTime', () {
+      final schema = acanthis.object({
+        'name': acanthis.string(),
+        'close_at': acanthis.date(),
+      });
+
+      final result = schema.tryParse({
+        'name': 'test',
+        'close_at': '2026-06-10T10:20:52+00:00',
+      });
+
+      expect(result.success, true);
+    });
+
+    test('when a date field inside an object receives an invalid string, '
+        'then tryParse should fail without throwing', () {
+      final schema = acanthis.object({'close_at': acanthis.date()});
+
+      final result = schema.tryParse({'close_at': 'not-a-date'});
+
+      expect(result.success, false);
+    });
   });
 }

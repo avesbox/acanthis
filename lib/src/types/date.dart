@@ -134,6 +134,20 @@ class AcanthisDate extends AcanthisType<DateTime> {
   }
 
   @override
+  DateTime tryParseInternal(
+    dynamic value, {
+    required Map<String, dynamic> errors,
+  }) {
+    try {
+      final date = _convertToDate(value);
+      return super.tryParseInternal(date, errors: errors);
+    } on ValidationError catch (e) {
+      errors['date'] = e.message;
+      return defaultValue ?? DateTime.now();
+    }
+  }
+
+  @override
   AcanthisDate withAsyncCheck(AcanthisAsyncCheck<DateTime> check) {
     return AcanthisDate(
       operations: [...operations, check],

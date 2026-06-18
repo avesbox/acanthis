@@ -68,7 +68,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
         'Invalid value: $value, expected coercible integer value',
       );
     }
-    if (T == double) {
+    if (T.toString() == 'double') {
       if (value is num && value.isFinite) {
         return value.toDouble() as T;
       }

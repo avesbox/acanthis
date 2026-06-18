@@ -38,26 +38,6 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   }
 
   @override
-  AcanthisParseResult<T> parse(dynamic value) {
-    return super.parse(value);
-  }
-
-  @override
-  Future<AcanthisParseResult<T>> parseAsync(dynamic value) async {
-    return super.parseAsync(value);
-  }
-
-  @override
-  AcanthisParseResult<T> tryParse(dynamic value) {
-    return super.tryParse(value);
-  }
-
-  @override
-  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
-    return super.tryParseAsync(value);
-  }
-
-  @override
   AcanthisType<T> meta(MetadataEntry<T> metadata) {
     throw UnimplementedError();
   }

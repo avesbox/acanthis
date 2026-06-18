@@ -485,7 +485,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(dynamic value) async {
+  Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(
+    dynamic value,
+  ) async {
     final input = Map<String, dynamic>.from(value as Map);
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
@@ -1063,7 +1065,10 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> parseAsync(dynamic value, [AcanthisMap? parent]) {
+  Future<AcanthisParseResult<O>> parseAsync(
+    dynamic value, [
+    AcanthisMap? parent,
+  ]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1072,7 +1077,10 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> tryParseAsync(dynamic value, [AcanthisMap? parent]) {
+  Future<AcanthisParseResult<O>> tryParseAsync(
+    dynamic value, [
+    AcanthisMap? parent,
+  ]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;

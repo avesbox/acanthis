@@ -86,9 +86,10 @@ abstract class AcanthisType<O> {
     return compiled;
   }
 
-  static O Function(O, Map<String, dynamic>) _compileTryParseOperations<
-    O
-  >(List<AcanthisOperation<O>> operations, O? defaultValue) {
+  static O Function(O, Map<String, dynamic>) _compileTryParseOperations<O>(
+    List<AcanthisOperation<O>> operations,
+    O? defaultValue,
+  ) {
     O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
     for (final operation in operations) {
       switch (operation) {

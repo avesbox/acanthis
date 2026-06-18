@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- feat: add coercion support for all types, allowing for automatic type conversion when parsing values. This feature enables more flexible and user-friendly validation by accepting different input formats and converting them to the expected type.
+
 ## 1.5.4
 
 - fix: Prevent nullable to be treated always like a pure type and use type purity to determine if the schema is pure or not, allowing for more complex schemas to be nullable without losing their purity.

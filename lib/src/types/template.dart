@@ -175,7 +175,10 @@ class AcanthisTemplate extends AcanthisType<String> {
   }
 
   @override
-  String tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+  String tryParseInternal(
+    dynamic value, {
+    required Map<String, dynamic> errors,
+  }) {
     final coerced = super.tryParseInternal(value, errors: errors);
     if (errors.isNotEmpty) {
       return coerced;

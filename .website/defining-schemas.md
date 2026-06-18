@@ -736,3 +736,32 @@ final mockUser = userSchema.mock();
 print(mockUser);
 // => { name: 'Acanthis', age: 32, email: 'test@example.com' }
 ```
+
+## Type Coercion
+
+Type coercion allows you to automatically convert values from one type to another during validation. This can be useful when you want to ensure that your data conforms to a specific type without manually transforming it.
+
+To enable type coercion, you can use the `coerce()` method on a schema. This method will attempt to convert the input value to the expected type before validation.
+
+```dart
+final ageSchema = number().coerce();
+
+ageSchema.parse('25'); // ✅ returns 25 as a number
+ageSchema.parse('25.5'); // ✅ returns 25.5 as a number
+ageSchema.parse('invalid'); // ❌ throws ValidationError
+```
+
+### `coerce()` and Unions
+
+When using `coerce()` with union types, the coercion will follow the order of the types defined in the union. The first type that can successfully coerce the value will be used.
+
+```dart
+final unionSchema = union([
+  number().coerce(),
+  string(),
+]);
+
+unionSchema.parse('42'); // ✅ returns 42 as a number
+unionSchema.parse('hello'); // ✅ returns 'hello' as a string
+unionSchema.parse(true); // ❌ throws ValidationError
+```

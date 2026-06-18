@@ -43,7 +43,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   /// override of the [parse] method from [AcanthisType]
   @override
-  AcanthisParseResult<T?> parse(T? value) {
+  AcanthisParseResult<T?> parse(dynamic value) {
     if (isAsync) {
       throw ValidationError('Cannot use parse on async type');
     }
@@ -56,7 +56,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   /// override of the [tryParse] method from [AcanthisType]
   @override
-  AcanthisParseResult<T?> tryParse(T? value) {
+  AcanthisParseResult<T?> tryParse(dynamic value) {
     if (isAsync) {
       throw ValidationError('Cannot use tryParse on async type');
     }
@@ -74,7 +74,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   }
 
   @override
-  Future<AcanthisParseResult<T?>> parseAsync(T? value) async {
+  Future<AcanthisParseResult<T?>> parseAsync(dynamic value) async {
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }
@@ -83,7 +83,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
   }
 
   @override
-  Future<AcanthisParseResult<T?>> tryParseAsync(T? value) async {
+  Future<AcanthisParseResult<T?>> tryParseAsync(dynamic value) async {
     if (value == null) {
       return AcanthisParseResult(value: defaultValue);
     }

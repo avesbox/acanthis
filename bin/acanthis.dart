@@ -207,4 +207,14 @@ void main(List<String> arguments) async {
     'password': 'password123',
   });
   print(res.value);
+  final schema = AcanthisType.object({
+    'name': .string(),
+    'close_at': .date().coerce(),
+  });
+
+  final v = schema.tryParse({
+    'name': 'test',
+    'close_at': '2026-06-10T10:20:52+00:00',
+  });
+  print(v.value['close_at'].runtimeType); // DateTime object
 }

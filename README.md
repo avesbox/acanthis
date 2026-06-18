@@ -18,7 +18,7 @@ Contributions are welcome! If you want to contribute to Acanthis, you can open a
 
 ## License
 
-Acanthis is licensed under the MIT License. You can read the full license [here](https://github.com/avesbox/acanthis/blob/main/LICENSE)
+Acanthis is licensed under the MIT License. You can read the [MIT license](https://github.com/avesbox/acanthis/blob/main/LICENSE)
 
 ## Credits
 

@@ -11,6 +11,10 @@ import 'types.dart';
 class AcanthisTemplate extends AcanthisType<String> {
   /// Ordered list of literal strings or other acanthis types.
   final List<dynamic> parts;
+  final bool coercionEnabled;
+
+  @override
+  bool get isPure => !coercionEnabled && super.isPure;
 
   late final String _pattern = _buildPattern();
 
@@ -25,6 +29,7 @@ class AcanthisTemplate extends AcanthisType<String> {
     super.key,
     super.metadataEntry,
     super.defaultValue,
+    this.coercionEnabled = false,
   }) : parts = List.unmodifiable(segments),
        super(isAsync: isAsync ?? _segmentsAreAsync(segments, operations)) {
     if (segments.isEmpty) {
@@ -48,6 +53,32 @@ class AcanthisTemplate extends AcanthisType<String> {
   }
 
   bool _matches(String value) => _regExp.hasMatch(value);
+
+  AcanthisTemplate coerce() {
+    return AcanthisTemplate(
+      parts,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: true,
+    );
+  }
+
+  @override
+  String coerceInput(dynamic value) {
+    if (!coercionEnabled) {
+      return super.coerceInput(value);
+    }
+    return switch (value) {
+      String() => value,
+      num() || bool() || DateTime() => value.toString(),
+      _ => throw ValidationError(
+        'Invalid type: ${value.runtimeType}, expected coercible string value',
+      ),
+    };
+  }
 
   String _buildPattern() {
     final buffer = StringBuffer('^');
@@ -135,49 +166,25 @@ class AcanthisTemplate extends AcanthisType<String> {
   }
 
   @override
-  AcanthisParseResult<String> parse(String value) {
-    if (!_matches(value)) {
+  String parseInternal(dynamic value) {
+    final coerced = coerceInput(value);
+    if (!_matches(coerced)) {
       throw ValidationError('Value does not match template literal');
     }
-    return super.parse(value);
+    return super.parseInternal(coerced);
   }
 
   @override
-  AcanthisParseResult<String> tryParse(String value) {
-    if (!_matches(value)) {
-      return AcanthisParseResult(
-        value: defaultValue ?? value,
-        errors: const {
-          'templateLiteral': 'Value does not match template literal',
-        },
-        success: false,
-        metadata: metadataEntry,
-      );
+  String tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    final coerced = super.tryParseInternal(value, errors: errors);
+    if (errors.isNotEmpty) {
+      return coerced;
     }
-    return super.tryParse(value);
-  }
-
-  @override
-  Future<AcanthisParseResult<String>> parseAsync(String value) async {
-    if (!_matches(value)) {
-      throw ValidationError('Value does not match template literal');
+    if (!_matches(coerced)) {
+      errors['templateLiteral'] = 'Value does not match template literal';
+      return defaultValue ?? coerced;
     }
-    return super.parseAsync(value);
-  }
-
-  @override
-  Future<AcanthisParseResult<String>> tryParseAsync(String value) async {
-    if (!_matches(value)) {
-      return AcanthisParseResult(
-        value: defaultValue ?? value,
-        errors: const {
-          'templateLiteral': 'Value does not match template literal',
-        },
-        success: false,
-        metadata: metadataEntry,
-      );
-    }
-    return super.tryParseAsync(value);
+    return coerced;
   }
 
   @override
@@ -189,6 +196,7 @@ class AcanthisTemplate extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -201,6 +209,7 @@ class AcanthisTemplate extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -215,6 +224,7 @@ class AcanthisTemplate extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -232,6 +242,7 @@ class AcanthisTemplate extends AcanthisType<String> {
       key: k,
       metadataEntry: metadata,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -244,6 +255,7 @@ class AcanthisTemplate extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
+      coercionEnabled: coercionEnabled,
     );
   }
 

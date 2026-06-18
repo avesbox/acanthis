@@ -210,6 +210,33 @@ void main() {
       expect(() => number.parse(1), throwsA(TypeMatcher<ValidationError>()));
     });
 
+    test('when coercion is enabled on an integer validator,'
+        'and the input is a numeric string, '
+        'then the parsed value should become an integer', () {
+      final schema = acanthis.integer().coerce().gte(10);
+
+      final result = schema.tryParse('42');
+
+      expect(result.success, true);
+      expect(result.value, 42);
+      expect(schema.parse('42').value, 42);
+    });
+
+    test('when coercion is enabled on an integer validator,'
+        'and the input is not coercible, '
+        'then tryParse should fail without throwing', () {
+      final schema = acanthis.integer().coerce();
+
+      final result = schema.tryParse('four');
+
+      expect(result.success, false);
+      expect(result.errors.containsKey('type'), true);
+      expect(
+        () => schema.parse('four'),
+        throwsA(TypeMatcher<ValidationError>()),
+      );
+    });
+
     test('when creating a number validator with an integer check,'
         'and the number is an integer, '
         'then the result should be successful', () {

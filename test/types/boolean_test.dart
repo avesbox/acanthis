@@ -144,5 +144,28 @@ void main() {
 
       expect(resultParse.success, true);
     });
+
+    test('when coercion is enabled,'
+        'and the input is a boolean-like string, '
+        'then the parsed value should become a boolean', () {
+      final schema = boolean().coerce().isTrue();
+
+      final result = schema.tryParse('true');
+
+      expect(result.success, true);
+      expect(result.value, true);
+      expect(schema.parse(1).value, true);
+    });
+
+    test('when coercion is enabled,'
+        'and the input is not coercible, '
+        'then tryParse should return an error', () {
+      final schema = boolean().coerce();
+
+      final result = schema.tryParse('truthy');
+
+      expect(result.success, false);
+      expect(result.errors.containsKey('type'), true);
+    });
   });
 }

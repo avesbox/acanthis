@@ -28,15 +28,16 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }) : _variadic = variadic;
 
   @override
-  Future<AcanthisParseResult<List>> parseAsync(List value) async {
-    if (value.length != elements.length && !_variadic) {
+  Future<AcanthisParseResult<List>> parseAsync(dynamic value) async {
+    final raw = value as List;
+    if (raw.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
     }
     final parsed = <dynamic>[];
-    for (var i = 0; i < value.length; i++) {
+    for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = await element.parseAsync(value[i]);
+        final parsedElement = await element.parseAsync(raw[i]);
         parsed.add(parsedElement.value);
       } on TypeError catch (e) {
         throw ValidationError(e.toString());
@@ -46,20 +47,21 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  Future<AcanthisParseResult<List>> tryParseAsync(List value) async {
-    if (value.length != elements.length && !_variadic) {
+  Future<AcanthisParseResult<List>> tryParseAsync(dynamic value) async {
+    final raw = value as List;
+    if (raw.length != elements.length && !_variadic) {
       return AcanthisParseResult(
-        value: value,
+        value: raw,
         errors: {'tuple': 'Value must have ${elements.length} elements'},
         success: false,
       );
     }
     final parsed = <dynamic>[];
     final errors = <String, dynamic>{};
-    for (var i = 0; i < value.length; i++) {
+    for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = await element.tryParseAsync(value[i]);
+        final parsedElement = await element.tryParseAsync(raw[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
           errors[i.toString()] = parsedElement.errors;
@@ -82,15 +84,16 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  AcanthisParseResult<List<dynamic>> parse(List<dynamic> value) {
-    if (value.length != elements.length && !_variadic) {
+  AcanthisParseResult<List<dynamic>> parse(dynamic value) {
+    final raw = value as List<dynamic>;
+    if (raw.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
     }
     final parsed = <dynamic>[];
-    for (var i = 0; i < value.length; i++) {
+    for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = element.parse(value[i]);
+        final parsedElement = element.parse(raw[i]);
         parsed.add(parsedElement.value);
       } on TypeError catch (e) {
         throw ValidationError(e.toString());
@@ -100,20 +103,21 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   }
 
   @override
-  AcanthisParseResult<List<dynamic>> tryParse(List<dynamic> value) {
-    if (value.length != elements.length && !_variadic) {
+  AcanthisParseResult<List<dynamic>> tryParse(dynamic value) {
+    final raw = value as List<dynamic>;
+    if (raw.length != elements.length && !_variadic) {
       return AcanthisParseResult(
-        value: value,
+        value: raw,
         errors: {'tuple': 'Value must have ${elements.length} elements'},
         success: false,
       );
     }
     final parsed = <dynamic>[];
     final errors = <String, dynamic>{};
-    for (var i = 0; i < value.length; i++) {
+    for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = element.tryParse(value[i]);
+        final parsedElement = element.tryParse(raw[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
           errors[i.toString()] = parsedElement.errors;

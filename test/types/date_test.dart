@@ -199,6 +199,16 @@ void main() {
       expect(resultParse.value, DateTime(2021, 1, 2));
     });
 
+    test('when parsing a date-like string,'
+        'then the parsed value should be converted to DateTime', () {
+      final schema = acanthis.date();
+
+      final result = schema.tryParse('2026-06-10T10:20:52+00:00');
+
+      expect(result.success, true);
+      expect(result.value, DateTime.parse('2026-06-10T10:20:52+00:00'));
+    });
+
     test('when creating a date validator,'
         'and use the list method, '
         'and all the values are valid, '

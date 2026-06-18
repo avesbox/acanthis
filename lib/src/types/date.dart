@@ -11,52 +11,48 @@ import 'types.dart';
 
 /// A class to validate date types
 class AcanthisDate extends AcanthisType<DateTime> {
+  final bool coercionEnabled;
+
+  @override
+  bool get isPure => !coercionEnabled && super.isPure;
+
   AcanthisDate({
     super.operations,
     super.isAsync,
     super.key,
     super.metadataEntry,
     super.defaultValue,
+    this.coercionEnabled = true,
   });
 
   @override
-  AcanthisParseResult<DateTime> parse(dynamic value) {
-    final date = _convertToDate(value);
-    return super.parse(date);
+  String get inputErrorKey => 'date';
+
+  AcanthisDate coerce() {
+    return AcanthisDate(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: true,
+    );
   }
 
   @override
-  Future<AcanthisParseResult<DateTime>> parseAsync(dynamic value) async {
-    final date = _convertToDate(value);
-    return super.parseAsync(date);
-  }
-
-  @override
-  Future<AcanthisParseResult<DateTime>> tryParseAsync(dynamic value) async {
-    try {
-      final date = _convertToDate(value);
-      return super.tryParseAsync(date);
-    } on ValidationError catch (e) {
-      return AcanthisParseResult(
-        errors: {'date': e.message},
-        value: DateTime.now(),
-        success: false,
-      );
+  DateTime coerceInput(dynamic value) {
+    if (!coercionEnabled) {
+      return super.coerceInput(value);
     }
+    return _convertToDate(value);
   }
 
   @override
-  AcanthisParseResult<DateTime> tryParse(dynamic value) {
-    try {
-      final date = _convertToDate(value);
-      return super.tryParse(date);
-    } on ValidationError catch (e) {
-      return AcanthisParseResult(
-        errors: {'date': e.message},
-        value: DateTime.now(),
-        success: false,
-      );
+  DateTime valueOnFailure(dynamic value) {
+    if (defaultValue != null) {
+      return defaultValue as DateTime;
     }
+    return value is DateTime ? value : DateTime.now();
   }
 
   DateTime _convertToDate(dynamic value) {
@@ -141,6 +137,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -152,6 +149,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -165,6 +163,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -190,6 +189,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
       metadataEntry: metadata,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -201,6 +201,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
+      coercionEnabled: coercionEnabled,
     );
   }
 

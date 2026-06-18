@@ -216,6 +216,18 @@ void main() {
       );
     });
 
+    test('when coercion is enabled,'
+        'and the input is numeric, '
+        'then the parsed value should become a string', () {
+      final schema = acanthis.string().coerce();
+
+      final result = schema.tryParse(123);
+
+      expect(result.success, true);
+      expect(result.value, '123');
+      expect(schema.parse(true).value, 'true');
+    });
+
     test('when creating a string validator with a length check,'
         'and the string length is not the same, '
         'then the result should be unsuccessful', () {

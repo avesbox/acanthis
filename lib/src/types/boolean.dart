@@ -6,16 +6,61 @@ import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:acanthis/src/validators/boolean.dart';
 import 'package:nanoid2/nanoid2.dart';
 
+import '../exceptions/validation_error.dart';
 import 'types.dart';
 
 class AcanthisBoolean extends AcanthisType<bool> {
+  final bool coercionEnabled;
+
+  @override
+  bool get isPure => !coercionEnabled && super.isPure;
+
   AcanthisBoolean({
     super.operations,
     super.isAsync,
     super.key,
     super.metadataEntry,
     super.defaultValue,
+    this.coercionEnabled = false,
   });
+
+  AcanthisBoolean coerce() {
+    return AcanthisBoolean(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: true,
+    );
+  }
+
+  @override
+  bool coerceInput(dynamic value) {
+    if (!coercionEnabled) {
+      return super.coerceInput(value);
+    }
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      if (value == 1) return true;
+      if (value == 0) return false;
+    }
+    if (value is String) {
+      switch (value.trim().toLowerCase()) {
+        case 'true':
+        case '1':
+          return true;
+        case 'false':
+        case '0':
+          return false;
+      }
+    }
+    throw ValidationError(
+      'Invalid value: $value, expected coercible boolean value',
+    );
+  }
 
   /// Add a check to the boolean to check if it is true
   AcanthisBoolean isTrue({String? message}) {
@@ -34,6 +79,8 @@ class AcanthisBoolean extends AcanthisType<bool> {
       isAsync: true,
       key: key,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -44,6 +91,8 @@ class AcanthisBoolean extends AcanthisType<bool> {
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -56,6 +105,8 @@ class AcanthisBoolean extends AcanthisType<bool> {
       key: key,
       isAsync: isAsync,
       metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -79,6 +130,8 @@ class AcanthisBoolean extends AcanthisType<bool> {
       isAsync: isAsync,
       key: key,
       metadataEntry: metadata,
+      defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -90,6 +143,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
+      coercionEnabled: coercionEnabled,
     );
   }
 

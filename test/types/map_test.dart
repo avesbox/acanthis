@@ -68,6 +68,21 @@ void main() {
       expect(resultParse.success, true);
     });
 
+    test('when a nested field enables coercion,'
+        'and the input contains string and numeric values, '
+        'then the nested fields should be coerced during parsing', () {
+      final schema = acanthis.object({
+        'age': acanthis.integer().coerce(),
+        'active': acanthis.boolean().coerce(),
+      });
+
+      final result = schema.tryParse({'age': '42', 'active': 'true'});
+
+      expect(result.success, true);
+      expect(result.value['age'], 42);
+      expect(result.value['active'], true);
+    });
+
     test('when creating a map validator with the omit property,'
         'and the parse value does not contains a validated key, '
         'then the result should be successful', () {

@@ -141,6 +141,16 @@ void main() {
       expect(resultParse.success, true);
     });
 
+    test('when a coercive schema appears first in a union,'
+        'then it should win according to declaration order', () {
+      final u = union([string().coerce(), integer()]);
+
+      final result = u.tryParse(7);
+
+      expect(result.success, true);
+      expect(result.value, '7');
+    });
+
     test('when creating a typed union validator, '
         'and use the variant validator to validate subtypes of the main type, '
         'then the result should be successful', () {

@@ -16,35 +16,45 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   }
 
   @override
-  AcanthisParseResult<T> parse(T value) {
-    if (value == this.value) {
-      return AcanthisParseResult(value: value, success: true);
+  T parseInternal(dynamic value) {
+    final typedValue = coerceInput(value);
+    if (typedValue == this.value) {
+      return typedValue;
     }
     throw ValidationError('Value does not match literal');
   }
 
   @override
-  Future<AcanthisParseResult<T>> parseAsync(T value) async {
-    if (value == this.value) {
-      return AcanthisParseResult(value: value, success: true);
+  T tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    final typedValue = super.tryParseInternal(value, errors: errors);
+    if (errors.isNotEmpty) {
+      return typedValue;
     }
-    throw ValidationError('Value does not match literal');
+    if (typedValue == this.value) {
+      return typedValue;
+    }
+    errors['literal'] = 'Value does not match literal';
+    return defaultValue ?? typedValue;
   }
 
   @override
-  AcanthisParseResult<T> tryParse(T value) {
-    if (value == this.value) {
-      return AcanthisParseResult(value: value, success: true);
-    }
-    return AcanthisParseResult(value: value, success: false);
+  AcanthisParseResult<T> parse(dynamic value) {
+    return super.parse(value);
   }
 
   @override
-  Future<AcanthisParseResult<T>> tryParseAsync(T value) async {
-    if (value == this.value) {
-      return AcanthisParseResult(value: value, success: true);
-    }
-    return AcanthisParseResult(value: value, success: false);
+  Future<AcanthisParseResult<T>> parseAsync(dynamic value) async {
+    return super.parseAsync(value);
+  }
+
+  @override
+  AcanthisParseResult<T> tryParse(dynamic value) {
+    return super.tryParse(value);
+  }
+
+  @override
+  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
+    return super.tryParseAsync(value);
   }
 
   @override

@@ -79,25 +79,23 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> parseAsync(
-    covariant List<dynamic> value,
-  ) async {
+  Future<AcanthisParseResult<List<T>>> parseAsync(dynamic value) async {
+    final raw = value as List<dynamic>;
     final parsed = <T>[];
-    for (var i = 0; i < value.length; i++) {
-      final parsedElement = await element.parseAsync(value[i]);
+    for (var i = 0; i < raw.length; i++) {
+      final parsedElement = await element.parseAsync(raw[i]);
       parsed.add(parsedElement.value);
     }
     return await super.parseAsync(parsed);
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> tryParseAsync(
-    covariant List<dynamic> value,
-  ) async {
+  Future<AcanthisParseResult<List<T>>> tryParseAsync(dynamic value) async {
+    final raw = value as List<dynamic>;
     final parsed = <T>[];
     final errors = <String, dynamic>{};
-    for (var i = 0; i < value.length; i++) {
-      final parsedElement = await element.tryParseAsync(value[i]);
+    for (var i = 0; i < raw.length; i++) {
+      final parsedElement = await element.tryParseAsync(raw[i]);
       parsed.add(parsedElement.value);
       if (parsedElement.errors.isNotEmpty) {
         errors[i.toString()] = parsedElement.errors;
@@ -116,7 +114,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Override of [parse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> parse(covariant List<dynamic> value) {
+  AcanthisParseResult<List<T>> parse(dynamic value) {
     if (isAsync) {
       throw AsyncValidationException('Cannot use parse with async operations');
     }
@@ -128,7 +126,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> tryParse(covariant List<dynamic> value) {
+  AcanthisParseResult<List<T>> tryParse(dynamic value) {
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use tryParse with async operations',

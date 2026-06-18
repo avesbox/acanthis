@@ -47,6 +47,13 @@ void main() {
       expect(schema.parse('1.5rem').success, isTrue);
       expect(schema.tryParse('12kg').success, isFalse);
     });
+
+    test('supports coercion before template matching', () {
+      final schema = template(['id_', literal(5)]).coerce();
+
+      expect(schema.parse('id_5').success, isTrue);
+      expect(schema.tryParse(5).success, isFalse);
+    });
   });
 }
 

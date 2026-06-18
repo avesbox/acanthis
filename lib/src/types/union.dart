@@ -10,6 +10,11 @@ import 'variant.dart';
 /// A union that can validate a value against multiple element types
 /// and/or guarded variants.
 /// Parsing succeeds with the first matching element / variant.
+///
+/// Matching order is declaration-based and stable:
+/// guarded variants are evaluated first in the order they were declared,
+/// then plain types are evaluated in the order they were declared.
+/// This is especially relevant when coercive schemas are mixed into a union.
 class AcanthisUnion<T> extends AcanthisType<T> {
   final List<AcanthisType<T>> _types;
   final List<AcanthisVariant<T>> _variants;

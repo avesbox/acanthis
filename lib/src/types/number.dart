@@ -1,3 +1,5 @@
+import 'dart:core';
+import 'dart:core' as core;
 import 'dart:math' as math;
 
 import 'package:acanthis/src/operations/checks.dart';
@@ -7,17 +9,92 @@ import 'package:acanthis/src/validators/common.dart';
 import 'package:acanthis/src/validators/number.dart';
 import 'package:nanoid2/nanoid2.dart';
 
+import '../exceptions/validation_error.dart';
 import 'types.dart';
 
 /// A class to validate number types
 class AcanthisNumeric<T extends num> extends AcanthisType<T> {
+  final bool coercionEnabled;
+
+  @override
+  bool get isPure => !coercionEnabled && super.isPure;
+
   AcanthisNumeric({
     super.isAsync,
     super.operations,
     super.key,
     super.metadataEntry,
     super.defaultValue,
+    this.coercionEnabled = false,
   });
+
+  AcanthisNumeric<T> coerce() {
+    return AcanthisNumeric<T>(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: true,
+    );
+  }
+
+  @override
+  T coerceInput(dynamic value) {
+    if (!coercionEnabled) {
+      return super.coerceInput(value);
+    }
+    if (value is T) {
+      return value;
+    }
+    if (T == int) {
+      if (value is num && value.isFinite && value == value.roundToDouble()) {
+        return value.toInt() as T;
+      }
+      if (value is String) {
+        final trimmed = value.trim();
+        final parsedInt = int.tryParse(trimmed);
+        if (parsedInt != null) {
+          return parsedInt as T;
+        }
+        final parsedDouble = core.double.tryParse(trimmed);
+        if (parsedDouble != null &&
+            parsedDouble.isFinite &&
+            parsedDouble == parsedDouble.roundToDouble()) {
+          return parsedDouble.toInt() as T;
+        }
+      }
+      throw ValidationError(
+        'Invalid value: $value, expected coercible integer value',
+      );
+    }
+    if (T == double) {
+      if (value is num && value.isFinite) {
+        return value.toDouble() as T;
+      }
+      if (value is String) {
+        final parsed = core.double.tryParse(value.trim());
+        if (parsed != null && parsed.isFinite) {
+          return parsed as T;
+        }
+      }
+      throw ValidationError(
+        'Invalid value: $value, expected coercible double value',
+      );
+    }
+    if (value is num) {
+      return value as T;
+    }
+    if (value is String) {
+      final parsed = core.num.tryParse(value.trim());
+      if (parsed != null) {
+        return parsed as T;
+      }
+    }
+    throw ValidationError(
+      'Invalid value: $value, expected coercible numeric value',
+    );
+  }
 
   /// Add a check to the number to check if it is less than or equal to [value]
   AcanthisNumeric<T> lte(
@@ -190,6 +267,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -201,6 +279,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -214,6 +293,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -299,6 +379,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       key: key,
       metadataEntry: metadata,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -310,6 +391,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
+      coercionEnabled: coercionEnabled,
     );
   }
 

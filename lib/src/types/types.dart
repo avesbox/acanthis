@@ -28,8 +28,8 @@ abstract class AcanthisType<O> {
 
   final O? defaultValue;
 
-  late final O Function(dynamic) compiledParseInternal;
-  late final O Function(dynamic, Map<String, dynamic>) compiledTryParseInternal;
+  late final O Function(O) compiledParseInternal;
+  late final O Function(O, Map<String, dynamic>) compiledTryParseInternal;
 
   /// The constructor of the class
   AcanthisType({
@@ -45,7 +45,7 @@ abstract class AcanthisType<O> {
          defaultValue,
        );
 
-  static O Function(dynamic) _compileParseOperations<O>(
+  static O Function(O) _compileParseOperations<O>(
     List<AcanthisOperation<O>> operations,
   ) {
     O Function(O) compiled = (value) => value;
@@ -83,10 +83,10 @@ abstract class AcanthisType<O> {
           break;
       }
     }
-    return (value) => compiled(value as O);
+    return compiled;
   }
 
-  static O Function(dynamic, Map<String, dynamic>) _compileTryParseOperations<
+  static O Function(O, Map<String, dynamic>) _compileTryParseOperations<
     O
   >(List<AcanthisOperation<O>> operations, O? defaultValue) {
     O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
@@ -124,8 +124,7 @@ abstract class AcanthisType<O> {
           break;
       }
     }
-    return (value, errors) {
-      final typedValue = value as O;
+    return (typedValue, errors) {
       final initialErrorsLength = errors.length;
       final newValue = compiled(typedValue, errors);
       final hasLocalErrors = errors.length != initialErrorsLength;
@@ -135,13 +134,36 @@ abstract class AcanthisType<O> {
 
   bool get isPure => operations.whereType<AcanthisTransformation>().isEmpty;
 
+  @protected
+  O coerceInput(dynamic value) {
+    return value as O;
+  }
+
+  @protected
+  String get inputErrorKey => 'type';
+
+  @protected
+  O valueOnFailure(dynamic value) {
+    if (defaultValue != null) {
+      return defaultValue as O;
+    }
+    if (value is O) {
+      return value;
+    }
+    return mock();
+  }
+
+  String _invalidTypeMessage(dynamic value) {
+    return 'Invalid type: ${value.runtimeType}, expected $O';
+  }
+
   O parseInternal(dynamic value) {
-    return compiledParseInternal(value);
+    return compiledParseInternal(coerceInput(value));
   }
 
   /// The parse method to parse the value
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
-  AcanthisParseResult<O> parse(O value) {
+  AcanthisParseResult<O> parse(dynamic value) {
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use tryParse with async operations',
@@ -154,7 +176,15 @@ abstract class AcanthisType<O> {
   }
 
   O tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
-    return compiledTryParseInternal(value, errors);
+    try {
+      return compiledTryParseInternal(coerceInput(value), errors);
+    } on ValidationError catch (e) {
+      errors[e.key.isNotEmpty ? e.key : inputErrorKey] = e.message;
+      return valueOnFailure(value);
+    } on TypeError {
+      errors[inputErrorKey] = _invalidTypeMessage(value);
+      return valueOnFailure(value);
+    }
   }
 
   O mock([int? seed]);
@@ -165,7 +195,7 @@ abstract class AcanthisType<O> {
   /// - success: A boolean that indicates if the parsing was successful or not.
   /// - value: The value of the parsing. If the parsing was successful, this will contain the parsed value.
   /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
-  AcanthisParseResult<O> tryParse(O value) {
+  AcanthisParseResult<O> tryParse(dynamic value) {
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use tryParse with async operations',
@@ -184,16 +214,17 @@ abstract class AcanthisType<O> {
 
   /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
   /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
-  Future<AcanthisParseResult<O>> parseAsync(O value) async {
+  Future<AcanthisParseResult<O>> parseAsync(dynamic value) async {
+    final typedValue = coerceInput(value);
     if (operations.isEmpty) {
       return AcanthisParseResult(
-        value: value,
+        value: typedValue,
         errors: {},
         success: true,
         metadata: metadataEntry,
       );
     }
-    O newValue = value;
+    O newValue = typedValue;
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
@@ -229,17 +260,37 @@ abstract class AcanthisType<O> {
   /// - success: A boolean that indicates if the parsing was successful or not.
   /// - value: The value of the parsing. If the parsing was successful, this will contain the parsed value.
   /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
-  Future<AcanthisParseResult<O>> tryParseAsync(O value) async {
+  Future<AcanthisParseResult<O>> tryParseAsync(dynamic value) async {
     final errors = <String, String>{};
+    final O typedValue;
+    try {
+      typedValue = coerceInput(value);
+    } on ValidationError catch (e) {
+      errors[e.key.isNotEmpty ? e.key : inputErrorKey] = e.message;
+      return AcanthisParseResult(
+        value: valueOnFailure(value),
+        errors: errors,
+        success: false,
+        metadata: metadataEntry,
+      );
+    } on TypeError {
+      errors[inputErrorKey] = _invalidTypeMessage(value);
+      return AcanthisParseResult(
+        value: valueOnFailure(value),
+        errors: errors,
+        success: false,
+        metadata: metadataEntry,
+      );
+    }
     if (operations.isEmpty) {
       return AcanthisParseResult(
-        value: value,
+        value: typedValue,
         errors: errors,
         success: true,
         metadata: metadataEntry,
       );
     }
-    O newValue = value;
+    O newValue = typedValue;
     for (var operation in operations) {
       switch (operation) {
         case AcanthisCheck<O>():
@@ -415,40 +466,59 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   }) : transformFn = transform;
 
   @override
-  AcanthisParseResult<T?> parse(dynamic value) {
-    var inResult = inType.parse(value);
+  bool get isPure => false;
+
+  @override
+  T? parseInternal(dynamic value) {
+    final inResult = inType.parse(value);
     final T newValue;
     try {
       newValue = transformFn(inResult.value);
     } catch (e) {
       throw ValidationError('Error transforming the value from $O -> $T: $e');
     }
-    var outResult = outType.parse(newValue);
-    return outResult;
+    return outType.parse(newValue).value;
   }
 
   @override
-  AcanthisParseResult<T?> tryParse(dynamic value) {
-    var inResult = inType.tryParse(value);
+  T? tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    final inResult = inType.tryParse(value);
     if (!inResult.success) {
-      return AcanthisParseResult(
-        value: defaultValue,
-        errors: inResult.errors,
-        success: false,
-      );
+      errors.addAll(inResult.errors);
+      return defaultValue;
     }
     final T newValue;
     try {
       newValue = transformFn(inResult.value);
     } catch (e) {
-      return AcanthisParseResult(
-        value: defaultValue,
-        errors: {'transform': 'Error transforming the value from $O -> $T'},
-        success: false,
-      );
+      errors['transform'] = 'Error transforming the value from $O -> $T';
+      return defaultValue;
     }
-    var outResult = outType.tryParse(newValue);
-    return outResult;
+    final outResult = outType.tryParse(newValue);
+    if (outResult.errors.isNotEmpty) {
+      errors.addAll(outResult.errors);
+    }
+    return outResult.value;
+  }
+
+  @override
+  AcanthisParseResult<T?> parse(dynamic value) {
+    return AcanthisParseResult<T?>(
+      value: parseInternal(value),
+      metadata: metadataEntry,
+    );
+  }
+
+  @override
+  AcanthisParseResult<T?> tryParse(dynamic value) {
+    final errors = <String, dynamic>{};
+    final parsed = tryParseInternal(value, errors: errors);
+    return AcanthisParseResult(
+      value: parsed,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: metadataEntry,
+    );
   }
 
   @override

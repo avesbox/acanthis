@@ -8,18 +8,50 @@ import 'package:acanthis/src/validators/string.dart';
 import 'package:nanoid2/nanoid2.dart' as n;
 
 import 'dart:convert' as convert;
+import '../exceptions/validation_error.dart';
 import '../registries/metadata_registry.dart';
 import 'types.dart';
 
 /// A class to validate string types
 class AcanthisString extends AcanthisType<String> {
+  final bool coercionEnabled;
+
+  @override
+  bool get isPure => !coercionEnabled && super.isPure;
+
   AcanthisString({
     super.isAsync,
     super.operations,
     super.key,
     super.metadataEntry,
     super.defaultValue,
+    this.coercionEnabled = false,
   });
+
+  AcanthisString coerce() {
+    return AcanthisString(
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+      coercionEnabled: true,
+    );
+  }
+
+  @override
+  String coerceInput(dynamic value) {
+    if (!coercionEnabled) {
+      return super.coerceInput(value);
+    }
+    return switch (value) {
+      String() => value,
+      num() || bool() || DateTime() => value.toString(),
+      _ => throw ValidationError(
+        'Invalid type: ${value.runtimeType}, expected coercible string value',
+      ),
+    };
+  }
 
   /// Add a check to the string to check if it is a valid email
   AcanthisString email({String? message}) {
@@ -366,6 +398,7 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -377,6 +410,7 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -390,6 +424,7 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -503,6 +538,7 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
       metadataEntry: metadata,
       defaultValue: defaultValue,
+      coercionEnabled: coercionEnabled,
     );
   }
 
@@ -514,6 +550,7 @@ class AcanthisString extends AcanthisType<String> {
       key: key,
       metadataEntry: metadataEntry,
       defaultValue: value,
+      coercionEnabled: coercionEnabled,
     );
   }
 

@@ -98,7 +98,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     throw ValidationError('${validationErrors.join('.\n')}.');
   }
 
-  void _validateDependenciesThrow(Map<String, V> value) {
+  void _validateDependenciesThrow(Map<String, dynamic> value) {
     if (_dependencies.isEmpty) {
       return;
     }
@@ -129,7 +129,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   void _validateDependenciesTry(
-    Map<String, V> value,
+    Map<String, dynamic> value,
     Map<String, dynamic> errors,
   ) {
     if (_dependencies.isEmpty) {
@@ -160,7 +160,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
   }
 
-  dynamic _keyQuery(String key, Map<String, V> value) {
+  dynamic _keyQuery(String key, Map<String, dynamic> value) {
     final keys = key.split('.');
     dynamic result = value;
     for (var k in keys) {
@@ -202,7 +202,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   Map<String, V> parseInternal(dynamic value) {
-    final input = value as Map<String, V>;
+    final input = Map<String, dynamic>.from(value as Map);
     if (isPure) {
       for (int i = 0; i < _length; i++) {
         final fieldKey = _keys[i];
@@ -231,7 +231,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         }
       }
       _validateDependenciesThrow(input);
-      return super.parseInternal(input);
+      return super.parseInternal(input.cast<String, V>());
     }
 
     final parsed = Map<String, V>.of(_templateMap as Map<String, V>);
@@ -291,7 +291,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     dynamic value, {
     required Map<String, dynamic> errors,
   }) {
-    final input = value as Map<String, V>;
+    final input = Map<String, dynamic>.from(value as Map);
     if (isPure) {
       for (int i = 0; i < _length; i++) {
         final fieldKey = _keys[i];
@@ -332,7 +332,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         }
       }
       _validateDependenciesTry(input, errors);
-      return super.tryParseInternal(input, errors: errors);
+      return super.tryParseInternal(input.cast<String, V>(), errors: errors);
     }
 
     final parsed = Map<String, V>.of(_templateMap as Map<String, V>);
@@ -406,16 +406,15 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  Future<AcanthisParseResult<Map<String, V>>> parseAsync(
-    Map<String, V> value,
-  ) async {
+  Future<AcanthisParseResult<Map<String, V>>> parseAsync(dynamic value) async {
+    final input = Map<String, dynamic>.from(value as Map);
     final parsed = <String, V>{};
     // Parse each field
     for (var entry in _fields.entries) {
       final fieldType = entry.value;
       final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[entry.key];
+      final passedValue = input[entry.key];
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = [
@@ -436,11 +435,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     // Batch passthrough logic
     if (_passthrough) {
-      final passthroughKeys = value.keys.toSet().difference(
+      final passthroughKeys = input.keys.toSet().difference(
         _fields.keys.toSet(),
       );
       for (final key in passthroughKeys) {
-        final objValue = value[key];
+        final objValue = input[key];
         if (_passthroughType != null) {
           try {
             final parsedValue = await _passthroughType.parseAsync(objValue);
@@ -461,11 +460,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       for (var dependency in _dependencies) {
         queryCache.putIfAbsent(
           dependency.dependendsOn,
-          () => _keyQuery(dependency.dependendsOn, value),
+          () => _keyQuery(dependency.dependendsOn, input),
         );
         queryCache.putIfAbsent(
           dependency.dependent,
-          () => _keyQuery(dependency.dependent, value),
+          () => _keyQuery(dependency.dependent, input),
         );
         final dependFrom = queryCache[dependency.dependendsOn];
         final dependTo = queryCache[dependency.dependent];
@@ -486,16 +485,15 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(
-    Map<String, V> value,
-  ) async {
+  Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(dynamic value) async {
+    final input = Map<String, dynamic>.from(value as Map);
     final parsed = <String, V>{};
     final errors = <String, dynamic>{};
     for (final entry in _fields.entries) {
       final fieldType = entry.value;
       final isOptional = _optionalFields.contains(entry.key);
       final isNullable = fieldType is AcanthisNullable;
-      final passedValue = value[entry.key];
+      final passedValue = input[entry.key];
       if (passedValue == null && !isOptional && !isNullable) {
         final checks = fieldType.operations.whereType<AcanthisCheck>();
         final validationErrors = {
@@ -519,11 +517,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
     // Batch passthrough logic
     if (_passthrough) {
-      final passthroughKeys = value.keys.toSet().difference(
+      final passthroughKeys = input.keys.toSet().difference(
         _fields.keys.toSet(),
       );
       for (final key in passthroughKeys) {
-        final objValue = value[key];
+        final objValue = input[key];
         if (_passthroughType != null) {
           try {
             final parsedValue = await _passthroughType.tryParseAsync(objValue);
@@ -547,11 +545,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       for (var dependency in _dependencies) {
         queryCache.putIfAbsent(
           dependency.dependendsOn,
-          () => _keyQuery(dependency.dependendsOn, value),
+          () => _keyQuery(dependency.dependendsOn, input),
         );
         queryCache.putIfAbsent(
           dependency.dependent,
-          () => _keyQuery(dependency.dependent, value),
+          () => _keyQuery(dependency.dependent, input),
         );
         final dependFrom = queryCache[dependency.dependendsOn];
         final dependTo = queryCache[dependency.dependent];
@@ -582,13 +580,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<Map<String, V>> tryParse(Map<String, V> value) {
+  AcanthisParseResult<Map<String, V>> tryParse(dynamic value) {
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use tryParse with async operations',
       );
     }
-    return super.tryParse(value as dynamic);
+    return super.tryParse(value);
   }
 
   /// Add a field dependency to the map to validate the map based on the [condition]
@@ -1047,7 +1045,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  AcanthisParseResult<O> parse(O value, [AcanthisMap? parent]) {
+  AcanthisParseResult<O> parse(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1056,7 +1054,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  AcanthisParseResult<O> tryParse(O value, [AcanthisMap? parent]) {
+  AcanthisParseResult<O> tryParse(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1065,7 +1063,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> parseAsync(O value, [AcanthisMap? parent]) {
+  Future<AcanthisParseResult<O>> parseAsync(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1074,7 +1072,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> tryParseAsync(O value, [AcanthisMap? parent]) {
+  Future<AcanthisParseResult<O>> tryParseAsync(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;

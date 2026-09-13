@@ -1,5 +1,27 @@
-# https://dart.dev/guides/libraries/private-files
-# Created by `dart pub`
+# Dart-generated state and build output.
 .dart_tool/
+.packages
+.pub/
+/build/
+/coverage/
+/pubspec.lock
 
-coverage/**
+# Local logs, editor state, and operating-system files.
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Website dependencies and generated output.
+node_modules/
+.website/.vitepress/cache/
+.website/.vitepress/dist/
+
+# Local benchmark runs. Keep curated baseline evidence and benchmark sources.
+/benchmark/continuous_*.json
+/benchmark/library_comparison_*.json
+/benchmark/*.exe
+/benchmark/*.aot
+/benchmark/*.snapshot

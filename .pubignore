@@ -1,1 +1,27 @@
-/benchmark/**
+# Development-only repository content.
+/.github/
+/.website/
+/benchmark/
+/coverage/
+/doc/
+/test/
+/tool/
+/bin/
+/ROADMAP.md
+/CODE_OF_CONDUCT.md
+/analysis_options.yaml
+/.gitignore
+
+# Generated state, lockfiles, local configuration, and build output.
+.dart_tool/
+.packages
+.pub/
+node_modules/
+build/
+pubspec.lock
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

@@ -47,6 +47,9 @@ class EmailStringCheck extends AcanthisCheck<String> {
 
 /// String Check for Maximum String Length validation.
 class MaxStringLengthCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final int value;
 
   MaxStringLengthCheck(
@@ -69,6 +72,9 @@ class MaxStringLengthCheck extends AcanthisCheck<String> {
 
 /// String Check for Minimum String Length validation.
 class MinStringLengthCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final int value;
 
   MinStringLengthCheck(
@@ -91,6 +97,9 @@ class MinStringLengthCheck extends AcanthisCheck<String> {
 
 /// String Check for Exact String Length validation.
 class ExactStringLengthCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final int value;
 
   ExactStringLengthCheck(
@@ -164,6 +173,9 @@ class UncompromisedStringCheck extends AcanthisAsyncCheck<String> {
 
 /// String Check for Full Letters String validation.
 class PatternLettersStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -183,6 +195,9 @@ class PatternLettersStringChecks extends AcanthisCheck<String> {
 
 /// String Check for Full Digits String validation.
 class PatternDigitsStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -202,6 +217,9 @@ class PatternDigitsStringChecks extends AcanthisCheck<String> {
 
 /// String Check for Full Alphanumeric String validation.
 class PatternAlphanumericStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -223,6 +241,9 @@ class PatternAlphanumericStringChecks extends AcanthisCheck<String> {
 
 /// String Check for Full Alphanumeric with Spaces String validation.
 class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -248,6 +269,9 @@ class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
 
 /// String Check for Full Special Characters String validation.
 class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -271,6 +295,9 @@ class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
 
 /// String Check for Full All Characters String validation.
 class PatternAllCharactersStringChecks extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'strict': strict};
+
   final bool strict;
 
   final RegExp regExp;
@@ -412,6 +439,9 @@ class PatternHexColorStringChecks extends AcanthisCheck<String> {
 
 /// String Check for enumerated String validation.
 class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'enumValues': enumValues};
+
   final List<T> enumValues;
   final String Function(String name)? nameTransformer;
 
@@ -438,6 +468,9 @@ class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
 
 /// String Check for contained String validation.
 class ContainedStringCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'values': values};
+
   final Iterable<String> values;
 
   ContainedStringCheck({
@@ -482,6 +515,9 @@ class NotEmptyStringCheck extends AcanthisCheck<String> {
 
 /// String check for containing a specific substring.
 class ContainsStringCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final String value;
 
   ContainsStringCheck(
@@ -504,6 +540,9 @@ class ContainsStringCheck extends AcanthisCheck<String> {
 
 /// String check for starting with a specific substring.
 class StartsWithStringCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final String value;
 
   StartsWithStringCheck(
@@ -526,6 +565,9 @@ class StartsWithStringCheck extends AcanthisCheck<String> {
 
 /// String check for ending with a specific substring.
 class EndsWithStringCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final String value;
 
   EndsWithStringCheck(
@@ -629,6 +671,9 @@ class DateTimeStringCheck extends AcanthisCheck<String> {
 
 /// String check fo a generic pattern using a regular expression.
 class PatternStringCheck extends AcanthisCheck<String> {
+  @override
+  Map<String, Object?> get parameters => {'regExp': regExp};
+
   final Pattern regExp;
 
   PatternStringCheck(

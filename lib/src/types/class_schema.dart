@@ -51,12 +51,10 @@ class ClassSchemaBuilder<I, T> {
     if (_mapper == null) {
       throw StateError('ClassSchemaBuilder: map() not provided');
     }
+    final input = _input!;
+    final mapper = _mapper!;
     final out = _output ?? instance<T>();
-    return _input!.pipe<T>(
-      out,
-      transform: (v) => _mapper!(v),
-      defaultValue: _defaultOutput,
-    );
+    return input.pipe<T>(out, transform: mapper, defaultValue: _defaultOutput);
   }
 }
 

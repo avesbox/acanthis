@@ -1,5 +1,48 @@
 # JSON Schema
 
+## Audited input and output contracts
+
+Use `exportJsonSchema` to target JSON Schema 2020-12 with an explicit contract:
+
+```dart
+final schema = object({
+  'name': string().notEmpty().withDefault('guest'),
+  'score': number().gte(0).lte(100),
+});
+final input = schema.exportJsonSchema(mode: AcanthisSchemaMode.input);
+final output = schema.exportJsonSchema(mode: AcanthisSchemaMode.output);
+```
+
+The input contract accepts omitted defaulted fields and nulls replaced by valid
+defaults. The output contract describes the parsed values, including inserted
+defaults and stripped unknown properties. This API supports structural JSON
+schemas, numeric bounds and enumeration, scalar equality, boolean checks,
+nonempty strings, and list lengths. Repeated constraints are combined with
+`allOf`; overlapping unions use `anyOf`.
+
+Stable recursive objects export through local `$defs` and `$ref`:
+
+```dart
+final tree = object({
+  'value': number().gte(0),
+  'children': lazy((parent) => parent.list()),
+});
+final exported = tree.exportJsonSchema(mode: AcanthisSchemaMode.input);
+```
+
+Lazy callbacks must reuse stable schemas. Rebuilding the parent on every level
+is rejected after 64 active schema levels. Use deterministic callbacks and
+configure the parent before recursion.
+
+Unsupported behavior throws `AcanthisSchemaExportException` with a schema path
+and reason. General string length checks remain unsupported because Dart counts
+UTF-16 units and JSON Schema counts Unicode code points. Other exclusions include
+coercion, transformations, custom/async checks, formats, regexes, Dart int/double
+representation checks, `multipleOf`, object property counts, and list uniqueness.
+These APIs describe JSON values, not arbitrary Dart objects.
+
+## Legacy best-effort export
+
 To convert an Acanthis schema to JSON Schema, you can use the `toJsonSchema` method.
 
 ```dart
@@ -49,7 +92,7 @@ final schema = object({
 
 ## Nullable Types
 
-Nullable types are converted to JSON Schema using the `oneOf` keyword. This means that the schema will accept either the type or `null`. For example:
+Nullable types are converted to JSON Schema using the `anyOf` keyword. This means that the schema will accept either the type or `null`. For example:
 
 ```dart
 final schema = object({

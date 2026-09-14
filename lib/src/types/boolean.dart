@@ -57,9 +57,7 @@ class AcanthisBoolean extends AcanthisType<bool> {
           return false;
       }
     }
-    throw ValidationError(
-      'Invalid value: $value, expected coercible boolean value',
-    );
+    throw ValidationError('Invalid value: expected coercible boolean value');
   }
 
   /// Add a check to the boolean to check if it is true

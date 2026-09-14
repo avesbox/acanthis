@@ -64,9 +64,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
           return parsedDouble.toInt() as T;
         }
       }
-      throw ValidationError(
-        'Invalid value: $value, expected coercible integer value',
-      );
+      throw ValidationError('Invalid value: expected coercible integer value');
     }
     if (T.toString() == 'double') {
       if (value is num && value.isFinite) {
@@ -78,9 +76,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
           return parsed as T;
         }
       }
-      throw ValidationError(
-        'Invalid value: $value, expected coercible double value',
-      );
+      throw ValidationError('Invalid value: expected coercible double value');
     }
     if (value is num) {
       return value as T;
@@ -91,9 +87,7 @@ class AcanthisNumeric<T extends num> extends AcanthisType<T> {
         return parsed as T;
       }
     }
-    throw ValidationError(
-      'Invalid value: $value, expected coercible numeric value',
-    );
+    throw ValidationError('Invalid value: expected coercible numeric value');
   }
 
   /// Add a check to the number to check if it is less than or equal to [value]

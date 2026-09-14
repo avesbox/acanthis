@@ -1,114 +1,129 @@
-# Basic Usage
+---
+title: Quick start
+description: Define your first Acanthis schema, validate input, and handle errors in Dart.
+---
 
-This page will walk you through the basics of creating and using schemas with Acanthis. We will cover the following topics:
+# Your first validation {#basic-usage}
 
-- Creating a schema
-- Parsing data
+Build a small account schema, validate an input, and handle both success and failure. [Install Acanthis](/introduction#installation) before you begin.
 
-For the complete Acanthis schema API, please refer to [Defining schemas](/defining-schemas).
+## Define a schema {#defining-a-schema}
 
-## Defining a schema
-
-A schema is a blueprint for validating data, before we do anything else, we need to define one. For this example, we will create a schema for a user object.
+Start with an object. Each key describes a field, and each field has its own schema and checks.
 
 ```dart
 import 'package:acanthis/acanthis.dart';
 
-final userSchema = object({
-  'name': string().min(3),
-  'age': number().positive(),
+final account = object({
+  'name': string().min(2),
   'email': string().email(),
+  'age': integer().gte(18),
 });
 ```
 
-## Parsing data
+This schema expects a name with at least two characters, an email address, and an integer age of 18 or more. Object fields are required by default; unknown keys are stripped. See [objects](/schemas/objects) for optional fields and passthrough behavior.
 
-Once we have defined a schema, we can use it to parse data.
+## Validate input {#parsing-data}
+
+Use `tryParse()` when invalid data is an expected part of your workflow, such as a user filling in a form.
+
+```dart
+final result = account.tryParse({
+  'name': 'Ada',
+  'email': 'ada@example.com',
+  'age': 28,
+});
+
+if (result.success) {
+  print(result.value['name']); // Ada
+} else {
+  for (final issue in result.issues) {
+    print('${issue.jsonPointer}: ${issue.message}');
+  }
+}
+```
+
+`tryParse()` returns an `AcanthisParseResult`. Check `success` before treating its `value` as valid data: a failed result can still contain a recovery value.
+
+## Handle invalid data
+
+Each issue identifies the field that failed and the reason. Use the typed path or JSON pointer to associate messages with your UI.
+
+```dart
+final invalid = account.tryParse({
+  'name': 'Ada',
+  'email': 'not-an-email',
+  'age': 28,
+});
+
+print(invalid.success); // false
+print(invalid.issues.first.jsonPointer); // /email
+print(invalid.issues.first.code); // email
+```
+
+For custom messages or localization, continue to [custom error messages](/error-customization) and [results and issues](/validation-results).
+
+## Choose a parsing method
+
+| When you need… | Use | On invalid input |
+| --- | --- | --- |
+| A result you can inspect | `tryParse(input)` | Returns an unsuccessful result with issues |
+| Validation to stop the operation | `parse(input)` | Throws `ValidationError` |
+| Typed success and failure branches | `validate(input)` | Returns `AcanthisInvalid` |
+| Any of the above with async checks | `tryParseAsync`, `parseAsync`, or `validateAsync` | Same behavior, wrapped in a `Future` |
 
 ### `parse()`
 
-`T parse(T value)`
-
-Parses the value and returns a new instance of parsed value of type `T`.
+Read the validated data from `.value`. `parse()` returns a result wrapper, not the raw value.
 
 ```dart
-userSchema.parse({
-  'name': 'Francesco',
-  'age': 32,
-  'email': 'test@example.com',
-});
-// => { name: Francesco, age: 32, email: test@example.com }
+try {
+  final result = account.parse({
+    'name': 'Ada',
+    'email': 'not-an-email',
+    'age': 28,
+  });
+  print(result.value);
+} on ValidationError catch (error) {
+  print(error.message);
+}
 ```
-
-If the value is invalid, a `ValidationError` will be thrown.
-
-```dart
-userSchema.parse({
-  'name': 'Francesco',
-  'age': -32,
-  'email': 'test@example.com',
-});
-// => ValidationError: {'age': 'Value must be positive'}
-```
-
-::: info
-If you use any of the `AsyncCheck`, then you need to use the `parseAsync` method instead of `parse`.
-:::
 
 ### `tryParse()`
 
-`AcanthisParseResult tryParse(T value)`
-
-To avoid throwing exceptions, you can use the `tryParse` method. This method will return an `AcanthisParseResult` object that contains the result of the parsing.
-
-```dart
-userSchema.tryParse({
-  'name': 'Francesco',
-  'age': 32,
-  'email': 'test@example.com',
-});
-// => AcanthisParseResult(success: true, value: { name: Francesco, age: 32, email: test@example.com }, errors: {}, metadata: null)
-
-userSchema.parse({
-  'name': 'Francesco',
-  'age': -32,
-  'email': 'test@example.com',
-});
-// => AcanthisParseResult(success: false, value: null, errors: { age: 'Value must be positive' }, metadata: null)
-```
-
-::: info
-If you use any of the `AsyncCheck`, then you need to use the `tryParseAsync` method instead of `tryParse`.
-:::
+Use the result’s `success`, `value`, and `issues` fields as shown above. `errors` is also available for compatibility; [structured issues](/validation-results#structured-diagnostics) preserve more detail.
 
 ### `parseAsync()`
 
-`Future<T> parseAsync(T value)`
-
-This method behaves exactly like `parse`, but it returns a `Future` that resolves to the parsed value.
+Schemas with async refinements require an async parsing method. Awaiting `parseAsync()` returns an `AcanthisParseResult`, just like `parse()`.
 
 ```dart
-userSchema.parseAsync({
-  'name': 'Francesco',
-  'age': 32,
-  'email': 'test@example.com',
-});
-// => Future<{ name: Francesco, age: 32, email: test@example.com }>
+final name = string().refineAsync(
+  onCheck: (value) async => value != 'admin',
+  name: 'reservedName',
+  error: 'Choose a different name',
+);
+
+final result = await name.parseAsync('Ada');
+print(result.value); // Ada
 ```
 
 ### `tryParseAsync()`
 
-`Future<AcanthisParseResult> tryParseAsync(T value)`
-
-This method behaves exactly like `tryParse`, but it returns a `Future` that resolves to the `AcanthisParseResult` object.
+Use this to collect validation issues from a schema with async checks.
 
 ```dart
-userSchema.tryParseAsync({
-  'name': 'Francesco',
-  'age': 32,
-  'email': 'test@example.com',
-});
-// => Future<AcanthisParseResult(success: true, value: { name: Francesco, age: 32, email: test@example.com }, errors: {}, metadata: null)>
+final result = await name.tryParseAsync('admin');
+print(result.success); // false
 ```
 
-Now that the basics are covered, you can now jump to the [Defining schemas](/defining-schemas) page to learn more about all the validators usable in your schemas.
+::: tip Async checks
+Calling a synchronous parsing method on a schema with async checks throws `AsyncValidationException`. Non-throwing parsing handles validation failures; it does not suppress arbitrary exceptions from your callbacks.
+:::
+
+## Keep going
+
+<div class="doc-cards">
+<a href="/defining-schemas.html"><strong>Build richer schemas →</strong><span>Explore objects, lists, unions, and custom checks.</span></a>
+<a href="/validation-results.html"><strong>Work with results →</strong><span>Use typed outcomes, issue paths, and formatters.</span></a>
+</div>

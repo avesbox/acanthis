@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// List checks for Min Items
 class MinItemsListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'minItems': minItems};
+
   final int minItems;
 
   MinItemsListCheck(
@@ -24,6 +27,9 @@ class MinItemsListCheck<T> extends AcanthisCheck<List<T>> {
 
 /// List checks for Max Items
 class MaxItemsListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'maxItems': maxItems};
+
   final int maxItems;
 
   MaxItemsListCheck(
@@ -46,6 +52,9 @@ class MaxItemsListCheck<T> extends AcanthisCheck<List<T>> {
 
 /// List checks for Length Items
 class LengthListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'length': length};
+
   final int length;
 
   LengthListCheck(
@@ -80,6 +89,9 @@ class UniqueItemsListCheck<T> extends AcanthisCheck<List<T>> {
 }
 
 class ContainsListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'item': item};
+
   final T item;
 
   ContainsListCheck(
@@ -101,6 +113,9 @@ class ContainsListCheck<T> extends AcanthisCheck<List<T>> {
 }
 
 class AnyOfListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'items': items};
+
   final List<T> items;
 
   AnyOfListCheck(
@@ -122,6 +137,9 @@ class AnyOfListCheck<T> extends AcanthisCheck<List<T>> {
 }
 
 class EveryOfListCheck<T> extends AcanthisCheck<List<T>> {
+  @override
+  Map<String, Object?> get parameters => {'items': items};
+
   final List<T> items;
 
   EveryOfListCheck(

@@ -1,3 +1,4 @@
+import 'package:acanthis/src/issue_sink.dart';
 import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
@@ -11,25 +12,41 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   AcanthisTuple(
     this.elements, {
     super.operations,
-    super.isAsync,
+    bool isAsync = false,
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  }) : _variadic = false;
+  }) : _variadic = false,
+       super(isAsync: isAsync || elements.any((element) => element.isAsync));
 
   AcanthisTuple._(
     this.elements, {
     super.operations,
-    super.isAsync,
+    bool isAsync = false,
     super.key,
-    bool variadic = false,
+    this._variadic = false,
     super.metadataEntry,
     super.defaultValue,
-  }) : _variadic = variadic;
+  }) : super(isAsync: isAsync || elements.any((element) => element.isAsync));
+
+  @override
+  List<dynamic> parseInternal(dynamic value) => parse(value).value;
+
+  @override
+  List<dynamic> tryParseInternal(
+    dynamic value, {
+    required Map<String, dynamic> errors,
+  }) {
+    value ??= defaultValue;
+    final result = tryParse(value);
+    errors.addAll(result.errors);
+    return result.value;
+  }
 
   @override
   Future<AcanthisParseResult<List>> parseAsync(dynamic value) async {
-    final raw = value as List;
+    value ??= defaultValue;
+    final raw = value as List<dynamic>;
     if (raw.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
     }
@@ -48,29 +65,41 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   Future<AcanthisParseResult<List>> tryParseAsync(dynamic value) async {
-    final raw = value as List;
+    value ??= defaultValue;
+    if (value is! List) {
+      return AcanthisParseResult(
+        value: defaultValue ?? [],
+        success: false,
+        errors: IssueSink.single('type', 'Invalid type: expected List'),
+      );
+    }
+    final raw = value;
     if (raw.length != elements.length && !_variadic) {
       return AcanthisParseResult(
         value: raw,
-        errors: {'tuple': 'Value must have ${elements.length} elements'},
+        errors: IssueSink.single(
+          'tuple',
+          'Value must have ${elements.length} elements',
+          parameters: {'length': elements.length},
+        ),
         success: false,
       );
     }
     final parsed = <dynamic>[];
-    final errors = <String, dynamic>{};
+    final errors = IssueSink();
     for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
         final parsedElement = await element.tryParseAsync(raw[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
-          errors[i.toString()] = parsedElement.errors;
+          errors.addChild(i, parsedElement.errors);
         }
-      } on TypeError catch (e) {
-        errors[i.toString()] = e.toString();
+      } on TypeError {
+        errors.addIssue('type', 'Invalid tuple element type', path: [i]);
       }
     }
-    final result = await super.tryParseAsync(parsed);
+    final result = await super.tryParseAsyncOperations(parsed);
     if (result.errors.isNotEmpty) {
       errors.addAll(result.errors);
     }
@@ -85,6 +114,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
 
   @override
   AcanthisParseResult<List<dynamic>> parse(dynamic value) {
+    value ??= defaultValue;
     final raw = value as List<dynamic>;
     if (raw.length != elements.length && !_variadic) {
       throw ValidationError('Value must have ${elements.length} elements');
@@ -99,43 +129,62 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
         throw ValidationError(e.toString());
       }
     }
-    return super.parse(parsed);
+    return AcanthisParseResult(
+      value: super.parseInternal(parsed),
+      metadata: metadataEntry,
+    );
   }
 
   @override
   AcanthisParseResult<List<dynamic>> tryParse(dynamic value) {
-    final raw = value as List<dynamic>;
+    value ??= defaultValue;
+    if (isAsync) {
+      throw AsyncValidationException(
+        'Cannot use tryParse with async operations',
+      );
+    }
+    if (value is! List) {
+      return AcanthisParseResult(
+        value: defaultValue ?? [],
+        success: false,
+        errors: IssueSink.single('type', 'Invalid type: expected List'),
+      );
+    }
+    final raw = value;
     if (raw.length != elements.length && !_variadic) {
       return AcanthisParseResult(
         value: raw,
-        errors: {'tuple': 'Value must have ${elements.length} elements'},
+        errors: IssueSink.single(
+          'tuple',
+          'Value must have ${elements.length} elements',
+          parameters: {'length': elements.length},
+        ),
         success: false,
       );
     }
     final parsed = <dynamic>[];
-    final errors = <String, dynamic>{};
+    final errors = IssueSink();
     for (var i = 0; i < raw.length; i++) {
       try {
         final element = i < elements.length ? elements[i] : elements.last;
         final parsedElement = element.tryParse(raw[i]);
         parsed.add(parsedElement.value);
         if (parsedElement.errors.isNotEmpty) {
-          errors[i.toString()] = parsedElement.errors;
+          errors.addChild(i, parsedElement.errors);
         }
-      } on TypeError catch (e) {
-        errors[i.toString()] = e.toString();
+      } on TypeError {
+        errors.addIssue('type', 'Invalid tuple element type', path: [i]);
       }
     }
-    final result = super.tryParse(parsed);
-    if (result.errors.isNotEmpty) {
-      errors.addAll(result.errors);
-    }
+    final valueWithOperations = super.tryParseInternal(parsed, errors: errors);
     final success = errors.isEmpty;
     return AcanthisParseResult(
-      value: success ? result.value : defaultValue ?? result.value,
+      value: success
+          ? valueWithOperations
+          : defaultValue ?? valueWithOperations,
       errors: errors,
       success: success,
-      metadata: result.metadata,
+      metadata: metadataEntry,
     );
   }
 

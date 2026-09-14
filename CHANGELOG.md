@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.0.0
+
+- feat: extend audited input/output JSON Schema 2020-12 and OpenAPI 3.1 exports with numeric bounds, scalar equality/enumeration, boolean checks, nonempty strings, list lengths, and stable recursive object references. Keep repeated constraints conjunctive and diagnose unaudited semantics explicitly.
+- test: verify 1,620 runtime/input pairs and successful outputs with independent JSON Schema and OpenAPI validators; add a repeatable export audit runner.
+
+- breaking: separate required nullable fields from optional presence; validate defaults for absent/null input consistently across execution modes. Preserve nullable nulls and keep invalid-input recovery unsuccessful.
+- breaking: `partial()` now preserves omission, nullability and unknown-key policy; add `patch()` alias and suppress defaults only for omitted PATCH fields.
+- feat: add explicit strip/preserve/reject unknown-key policies and structural input/output exports for JSON Schema 2020-12 and OpenAPI 3.1, with diagnostics for unsupported behavior.
+- fix: preserve defaulted field values in live recovery without repeating transformations; validate pipeline defaults on their output side.
+
+- fix: export ordinary OpenAPI unions using `anyOf` so inputs matching multiple branches remain valid.
+- docs: record native issue compatibility, an executable presence/default/export audit, and selected-field rule design before changing live scheduling.
+
+- test: add reproducible differential validation and lifecycle benchmarks for JIT/AOT, invalid inputs, large unions, transformed outputs, live updates, controlled async callbacks, and separate allocation/CPU profiling.
+- feat: add `mockSeeded` with a documented supported subset, validation guarantees, resource limits and explained failures; bound the legacy list mock loop.
+- fix: align sync/async recovery output, nested stripping, absent optional fields, and container sharing. Type-failure fallback mocking now uses a fixed seed for reproducible recovery.
+
+- feat: emit ordered structured issues directly, retaining duplicate failures, typed data paths, constraint parameters, and nested union branch diagnostics. Add field/tree/JSON formatters and presentation-time message resolvers; keep `errors` as a lossy compatibility projection.
+- fix: finalize the unreleased 2.0 path contract (`/account/email`, without a trailing check name), preserve diagnostics across async composition and live updates, and omit input values from built-in coercion messages. Missing dependencies use a stable `dependency` code.
+
+- perf: reuse input maps and typed lists when validation leaves them unchanged. Parsed values can now share identity with their input; transformations, coercion, defaults, and unknown-key stripping retain their output handling.
+
+- feat: add `watch` and `watchAsync` extensions on object schemas for synchronous and asynchronous live validation sessions. Synchronous sessions expose `explain(field)`; update deltas report executed fields and whether full validation ran.
+- feat: add `validate`/`validateAsync`, typed validation outcomes, and structured issues with paths and JSON pointers.
+- perf: specialize eligible object schemas with inline primitive checks and flattened nested validation.
+- fix: execute object and list transformations once through async entry points, propagate nested stripped output without mutating input, and report invalid map/list inputs through non-throwing APIs.
+- breaking: require Dart 3.13 or later. Parsed maps/lists may share input identity; copy the returned container explicitly when independent mutable output is required. Unknown properties are stripped at every object level unless that level uses passthrough.
+- chore: update dependencies to ensure compatibility with the latest versions of Dart and Flutter, improving overall stability and performance of the library.
+- fix: resolve issues with asynchronous validation in sessions, ensuring that all asynchronous checks are properly handled and that validation results are accurate and reliable.
+
 ## 1.6.0
 
 - feat: add coercion support for all types, allowing for automatic type conversion when parsing values. This feature enables more flexible and user-friendly validation by accepting different input formats and converting them to the expected type.

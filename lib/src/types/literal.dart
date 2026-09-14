@@ -1,3 +1,4 @@
+import 'package:acanthis/src/issue_sink.dart';
 import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
@@ -8,15 +9,23 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   final T value;
 
   /// Creates a new instance of [AcanthisLiteral].
-  AcanthisLiteral(this.value, {super.defaultValue});
+  AcanthisLiteral(
+    this.value, {
+    super.operations,
+    super.isAsync,
+    super.key,
+    super.metadataEntry,
+    super.defaultValue,
+  });
 
   @override
   Map<String, dynamic> toJsonSchema() {
-    return {'type': 'literal', 'value': value};
+    return {'const': value};
   }
 
   @override
   T parseInternal(dynamic value) {
+    value ??= defaultValue;
     final typedValue = coerceInput(value);
     if (typedValue == this.value) {
       return typedValue;
@@ -26,6 +35,7 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
 
   @override
   T tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    value ??= defaultValue;
     final typedValue = super.tryParseInternal(value, errors: errors);
     if (errors.isNotEmpty) {
       return typedValue;
@@ -33,39 +43,115 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
     if (typedValue == this.value) {
       return typedValue;
     }
-    errors['literal'] = 'Value does not match literal';
+    errors.addIssue(
+      'literal',
+      'Value does not match literal',
+      parameters: {'expected': this.value},
+    );
     return defaultValue ?? typedValue;
   }
 
   @override
-  AcanthisType<T> meta(MetadataEntry<T> metadata) {
-    throw UnimplementedError();
+  Future<AcanthisParseResult<T>> parseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return parse(value);
+    final typedValue = coerceInput(value);
+    if (typedValue != this.value) {
+      throw ValidationError('Value does not match literal');
+    }
+    return super.parseAsync(typedValue);
   }
 
   @override
-  AcanthisType<T> withAsyncCheck(AcanthisAsyncCheck<T> check) {
-    throw UnimplementedError();
+  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return tryParse(value);
+    final result = await super.tryParseAsyncOperations(value);
+    if (!result.success || result.value == this.value) return result;
+    return AcanthisParseResult(
+      value: defaultValue ?? result.value,
+      errors: IssueSink.single(
+        'literal',
+        'Value does not match literal',
+        parameters: {'expected': this.value},
+      ),
+      success: false,
+      metadata: metadataEntry,
+    );
   }
 
   @override
-  AcanthisType<T> withCheck(AcanthisCheck<T> check) {
-    throw UnimplementedError();
+  AcanthisLiteral<T> meta(MetadataEntry<T> metadata) {
+    return AcanthisLiteral(
+      value,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadata,
+      defaultValue: defaultValue,
+    );
   }
 
   @override
-  AcanthisType<T> withTransformation(AcanthisTransformation<T> transformation) {
-    throw UnimplementedError();
+  AcanthisLiteral<T> withAsyncCheck(AcanthisAsyncCheck<T> check) {
+    return AcanthisLiteral(
+      value,
+      operations: [...operations, check],
+      isAsync: true,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+    );
+  }
+
+  @override
+  AcanthisLiteral<T> withCheck(AcanthisCheck<T> check) {
+    return AcanthisLiteral(
+      value,
+      operations: [...operations, check],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+    );
+  }
+
+  @override
+  AcanthisLiteral<T> withTransformation(
+    AcanthisTransformation<T> transformation,
+  ) {
+    return AcanthisLiteral(
+      value,
+      operations: [...operations, transformation],
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+    );
   }
 
   @override
   AcanthisType<T> withDefault(T value) {
-    return AcanthisLiteral(value, defaultValue: value);
+    return AcanthisLiteral(
+      this.value,
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: value,
+    );
   }
 
   @override
   Map<String, dynamic> toOpenApiSchema() {
     return {
-      'type': 'literal',
+      'type': switch (value) {
+        String() => 'string',
+        bool() => 'boolean',
+        int() => 'integer',
+        num() => 'number',
+        _ => 'string',
+      },
       'enum': [value],
     };
   }

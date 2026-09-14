@@ -1,6 +1,32 @@
 # Open API Schema
 
-Acanthis can also generate Open API schemas from the defined types. The Open API schema generation follows the Open API Specification (OAS) version 3.1.
+## Audited OpenAPI 3.1 export
+
+Use `exportOpenApiSchema` to generate an OpenAPI 3.1 Schema Object:
+
+```dart
+final schema = object({
+  'name': string().notEmpty(),
+  'score': number().gte(0).nullable(),
+});
+final input = schema.exportOpenApiSchema(mode: AcanthisSchemaMode.input);
+final output = schema.exportOpenApiSchema(mode: AcanthisSchemaMode.output);
+```
+
+This API uses the same [audited contract and supported subset](/json-schema#audited-input-and-output-contracts)
+as JSON Schema 2020-12. Nullable values and overlapping unions use `anyOf`;
+unsupported checks or transformations throw an exception with a schema path.
+Input and output modes account for defaults and unknown-key policies.
+
+The result is a standalone Schema Object, not a complete OpenAPI document.
+Recursive references use local `$defs`. When embedding that resource inside a
+larger document, preserve a separate schema resource or rebase its references
+to the document location.
+
+## Legacy best-effort export
+
+The `toOpenApiSchema` API is retained for compatibility. It uses legacy keywords
+such as `nullable`; use the explicit API above for an audited OpenAPI 3.1 contract.
 
 To convert an Acanthis type to an Open API schema, you can use the `toOpenApiSchema` method. For example:
 

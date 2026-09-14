@@ -1,3 +1,4 @@
+import 'package:acanthis/src/issue_sink.dart';
 import 'package:acanthis/src/exceptions/validation_error.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/operation.dart';
@@ -167,6 +168,7 @@ class AcanthisTemplate extends AcanthisType<String> {
 
   @override
   String parseInternal(dynamic value) {
+    value ??= defaultValue;
     final coerced = coerceInput(value);
     if (!_matches(coerced)) {
       throw ValidationError('Value does not match template literal');
@@ -179,15 +181,38 @@ class AcanthisTemplate extends AcanthisType<String> {
     dynamic value, {
     required Map<String, dynamic> errors,
   }) {
+    value ??= defaultValue;
     final coerced = super.tryParseInternal(value, errors: errors);
     if (errors.isNotEmpty) {
       return coerced;
     }
     if (!_matches(coerced)) {
-      errors['templateLiteral'] = 'Value does not match template literal';
+      errors.addIssue(
+        'templateLiteral',
+        'Value does not match template literal',
+        parameters: {'pattern': pattern},
+      );
       return defaultValue ?? coerced;
     }
     return coerced;
+  }
+
+  @override
+  Future<AcanthisParseResult<String>> tryParseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return tryParse(value);
+    final result = await super.tryParseAsyncOperations(value);
+    if (!result.success || _matches(result.value)) return result;
+    return AcanthisParseResult(
+      value: defaultValue ?? result.value,
+      errors: IssueSink.single(
+        'templateLiteral',
+        'Value does not match template literal',
+        parameters: {'pattern': pattern},
+      ),
+      success: false,
+      metadata: metadataEntry,
+    );
   }
 
   @override

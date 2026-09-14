@@ -1,0 +1,4051 @@
+[
+  {
+    "schema": "required",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "nullable",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "nullable": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        }
+      },
+      "null": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "optional",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {}
+        },
+        "tryParse": {
+          "success": true,
+          "value": {}
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {}
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "optional_nullable",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "nullable": true
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {}
+        },
+        "tryParse": {
+          "success": true,
+          "value": {}
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {}
+        }
+      },
+      "null": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": null
+          }
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "default",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "null": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "optional_default",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "null": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "nullable_default",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "string",
+              "default": "fallback"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "nullable": true,
+          "default": "fallback"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "null": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "fallback"
+          }
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "fallback"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "invalid_default",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "x"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "minLength"
+            }
+          ]
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "passthrough",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid",
+            "extra": 42
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "typed_passthrough",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {},
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "required"
+            }
+          ]
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "throws": "ValidationError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "valid",
+            "extra": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "extra"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "ValidationError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "valid",
+            "extra": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "extra"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "valid",
+            "extra": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "extra"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "ValidationError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "valid",
+            "extra": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "extra"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "schema": "partial",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {}
+        },
+        "tryParse": {
+          "success": true,
+          "value": {}
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {}
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema": "deep_partial",
+    "jsonSchema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "openApi": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": []
+    },
+    "cases": {
+      "absent": {
+        "parse": {
+          "success": true,
+          "value": {}
+        },
+        "tryParse": {
+          "success": true,
+          "value": {}
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {}
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {}
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {}
+        }
+      },
+      "null": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "wrong_type": {
+        "parse": {
+          "throws": "TypeError"
+        },
+        "tryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "parseAsync": {
+          "throws": "TypeError"
+        },
+        "tryParseAsync": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "genericTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        },
+        "asyncParse": {
+          "throws": "TypeError"
+        },
+        "asyncTryParse": {
+          "success": false,
+          "value": {
+            "value": "7b2pMVuTFt"
+          },
+          "issues": [
+            {
+              "path": [
+                "value"
+              ],
+              "code": "type"
+            }
+          ]
+        }
+      },
+      "short": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "a"
+          }
+        }
+      },
+      "valid": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      },
+      "extra": {
+        "parse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "parseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "tryParseAsync": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "genericTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        },
+        "asyncTryParse": {
+          "success": true,
+          "value": {
+            "value": "valid"
+          }
+        }
+      }
+    }
+  }
+]

@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Common checks for Exact values.
 class ExactCheck<T> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final T value;
 
   ExactCheck({

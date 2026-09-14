@@ -1,3 +1,5 @@
+import 'package:acanthis/src/issue_sink.dart';
+
 import 'dart:math';
 
 import 'package:acanthis/acanthis.dart';
@@ -10,14 +12,19 @@ import 'package:nanoid2/nanoid2.dart';
 class AcanthisNullable<T> extends AcanthisType<T?> {
   /// The element of the nullable
   final AcanthisType<T> element;
+  final bool _explicitDefault;
+
+  @override
+  bool get hasDefault => _explicitDefault || defaultValue != null;
 
   @override
   bool get isPure => element.isPure && super.isPure;
 
   @override
   T? parseInternal(dynamic value) {
+    value ??= defaultValue;
     if (value == null) {
-      return defaultValue;
+      return super.parseInternal(null);
     }
     final elementValue = element.parseInternal(value);
     return super.parseInternal(elementValue);
@@ -25,58 +32,68 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   @override
   T? tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    value ??= defaultValue;
     if (value == null) {
-      return defaultValue;
+      return super.tryParseInternal(null, errors: errors);
     }
+    final initialCount = errors.issueCount;
     final elementValue = element.tryParseInternal(value, errors: errors);
-    return super.tryParseInternal(elementValue, errors: errors);
+    final parsed = super.tryParseInternal(elementValue, errors: errors);
+    return errors.issueCount == initialCount ? parsed : defaultValue ?? parsed;
   }
 
   AcanthisNullable(
     this.element, {
-    super.defaultValue,
+    T? defaultValue,
+    bool hasDefault = false,
     super.operations,
-    super.isAsync,
+    bool isAsync = false,
     super.key,
     super.metadataEntry,
-  });
+  }) : _explicitDefault = hasDefault,
+       super(
+         defaultValue: hasDefault
+             ? defaultValue
+             : defaultValue ?? element.defaultValue,
+         isAsync: isAsync || element.isAsync,
+       );
 
   /// override of the [parse] method from [AcanthisType]
   @override
   AcanthisParseResult<T?> parse(dynamic value) {
+    value ??= defaultValue;
     if (isAsync) {
       throw ValidationError('Cannot use parse on async type');
     }
-    if (value == null) {
-      return AcanthisParseResult(value: defaultValue);
-    }
-    final elementResult = element.parse(value);
-    return super.parse(elementResult.value);
+    return AcanthisParseResult(
+      value: parseInternal(value),
+      metadata: metadataEntry,
+    );
   }
 
   /// override of the [tryParse] method from [AcanthisType]
   @override
   AcanthisParseResult<T?> tryParse(dynamic value) {
+    value ??= defaultValue;
     if (isAsync) {
       throw ValidationError('Cannot use tryParse on async type');
     }
-    if (value == null) {
-      return AcanthisParseResult(value: defaultValue);
-    }
-    final elementResult = element.tryParse(value);
-    final result = super.tryParse(elementResult.value);
+    final errors = IssueSink();
+    final parsed = tryParseInternal(value, errors: errors);
     return AcanthisParseResult(
-      value: result.value,
-      errors: {...result.errors, ...elementResult.errors},
-      success: result.success && elementResult.success,
-      metadata: result.metadata,
+      value: errors.isEmpty ? parsed : defaultValue ?? parsed,
+      errors: errors,
+      success: errors.isEmpty,
+      metadata: metadataEntry,
     );
   }
 
   @override
   Future<AcanthisParseResult<T?>> parseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return parse(value);
     if (value == null) {
-      return AcanthisParseResult(value: defaultValue);
+      return super.parseAsync(null);
     }
     final elementResult = await element.parseAsync(value);
     return await super.parseAsync(elementResult.value);
@@ -84,22 +101,21 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   @override
   Future<AcanthisParseResult<T?>> tryParseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return tryParse(value);
     if (value == null) {
-      return AcanthisParseResult(value: defaultValue);
+      return super.tryParseAsyncOperations(null);
     }
     final elementResult = await element.tryParseAsync(value);
-    final result = await super.tryParseAsync(elementResult.value);
+    final result = await super.tryParseAsyncOperations(elementResult.value);
     return AcanthisParseResult(
-      value: result.value,
-      errors: {...result.errors, ...elementResult.errors},
+      value: result.success && elementResult.success
+          ? result.value
+          : defaultValue ?? result.value,
+      errors: IssueSink.of(elementResult.errors)..addAll(result.errors),
       success: result.success && elementResult.success,
       metadata: result.metadata,
     );
-  }
-
-  @override
-  AcanthisNullable nullable({T? defaultValue}) {
-    return this;
   }
 
   @override
@@ -107,6 +123,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(
       element,
       defaultValue: defaultValue,
+      hasDefault: hasDefault,
       operations: [...operations, check],
       isAsync: true,
       key: key,
@@ -119,6 +136,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(
       element,
       defaultValue: defaultValue,
+      hasDefault: hasDefault,
       operations: [...operations, check],
       isAsync: isAsync,
       key: key,
@@ -133,6 +151,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(
       element,
       defaultValue: defaultValue,
+      hasDefault: hasDefault,
       operations: [...operations, transformation],
       isAsync: isAsync,
       key: key,
@@ -190,6 +209,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(
       element,
       defaultValue: defaultValue,
+      hasDefault: hasDefault,
       operations: operations,
       isAsync: isAsync,
       key: key,
@@ -202,6 +222,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
     return AcanthisNullable(
       element,
       defaultValue: value,
+      hasDefault: true,
       operations: operations,
       isAsync: isAsync,
       key: key,

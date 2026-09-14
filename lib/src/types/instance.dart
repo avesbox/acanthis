@@ -56,14 +56,13 @@ class InstanceType<T> extends AcanthisType<T> {
 
   InstanceType._({
     super.operations,
-    List<_InstanceField<T, dynamic>> fields = const [],
-    Map<String, Object Function(T)> refs = const {},
+    this._fields = const [],
+    this._refs = const {},
     super.isAsync,
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  }) : _fields = fields,
-       _refs = refs;
+  });
 
   /// Create an empty instance validator
   InstanceType() : this._();

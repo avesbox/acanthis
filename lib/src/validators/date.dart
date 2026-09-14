@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Date checks for Min Date
 class MinDateCheck extends AcanthisCheck<DateTime> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final DateTime value;
 
   MinDateCheck(
@@ -24,6 +27,9 @@ class MinDateCheck extends AcanthisCheck<DateTime> {
 
 /// Date checks for Max Date
 class MaxDateCheck extends AcanthisCheck<DateTime> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final DateTime value;
 
   MaxDateCheck(
@@ -46,6 +52,9 @@ class MaxDateCheck extends AcanthisCheck<DateTime> {
 
 /// Date checks for difference from now
 class DiffersFromNowCheck extends AcanthisCheck<DateTime> {
+  @override
+  Map<String, Object?> get parameters => {'difference': difference};
+
   final Duration difference;
 
   DiffersFromNowCheck(
@@ -68,6 +77,12 @@ class DiffersFromNowCheck extends AcanthisCheck<DateTime> {
 
 /// Date checks for difference from a specific date
 class DiffersFromCheck extends AcanthisCheck<DateTime> {
+  @override
+  Map<String, Object?> get parameters => {
+    'fromDate': fromDate,
+    'difference': difference,
+  };
+
   final DateTime fromDate;
   final Duration difference;
 

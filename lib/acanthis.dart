@@ -18,3 +18,8 @@ export 'src/exceptions/validation_error.dart';
 export 'src/exceptions/async_exception.dart';
 export 'src/exceptions/build_validator_exception.dart';
 export 'src/registries/metadata_registry.dart';
+export 'src/results.dart';
+export 'src/live.dart';
+export 'src/seeded_mock.dart';
+
+export 'src/schema_export.dart';

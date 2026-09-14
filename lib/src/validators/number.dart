@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Number check for less than or equal to a value.
 class LteNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final T value;
 
   LteNumberCheck(
@@ -24,6 +27,9 @@ class LteNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for greater than or equal to a value.
 class GteNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final T value;
 
   GteNumberCheck(
@@ -46,6 +52,9 @@ class GteNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for between two values.
 class BetweenNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'min': min, 'max': max};
+
   final T min;
   final T max;
 
@@ -70,6 +79,9 @@ class BetweenNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for Greater than a value.
 class GtNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final T value;
 
   GtNumberCheck(
@@ -92,6 +104,9 @@ class GtNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for Less than a value.
 class LtNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final T value;
 
   LtNumberCheck(
@@ -158,6 +173,9 @@ class NonNegativeNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for multiple of a value.
 class MultipleOfCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'value': value};
+
   final int value;
 
   MultipleOfCheck(
@@ -246,6 +264,9 @@ class NotNaNNumberCheck<T extends num> extends AcanthisCheck<T> {
 
 /// Number check for enumerated values.
 class EnumeratedNumberCheck<T extends num> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'values': values};
+
   final List<T> values;
 
   EnumeratedNumberCheck(

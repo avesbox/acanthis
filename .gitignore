@@ -20,8 +20,10 @@ node_modules/
 .website/.vitepress/dist/
 
 # Local benchmark runs. Keep curated baseline evidence and benchmark sources.
-/benchmark/continuous_*.json
-/benchmark/library_comparison_*.json
-/benchmark/*.exe
-/benchmark/*.aot
-/benchmark/*.snapshot
+/benchmark/**/continuous_*.json
+/benchmark/**/library_comparison_*.json
+/benchmark/**/*.exe
+/benchmark/**/*.aot
+/benchmark/**/*.snapshot
+/benchmark/baselines/**/*.json
+

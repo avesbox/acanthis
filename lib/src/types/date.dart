@@ -70,7 +70,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       date = DateTime.tryParse(value);
     }
     if (date == null) {
-      throw ValidationError('Invalid date format: $value');
+      throw ValidationError('Invalid date format');
     }
     return date;
   }

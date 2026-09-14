@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Map checks for Max Properties
 class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
+  @override
+  Map<String, Object?> get parameters => {'constraintValue': constraintValue};
+
   final int constraintValue;
 
   MaxPropertiesCheck({
@@ -24,6 +27,9 @@ class MaxPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 
 /// Map checks for Min Properties
 class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
+  @override
+  Map<String, Object?> get parameters => {'constraintValue': constraintValue};
+
   final int constraintValue;
 
   MinPropertiesCheck({
@@ -46,6 +52,9 @@ class MinPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
 
 /// Map checks for Length Properties
 class LengthPropertiesCheck<V> extends AcanthisCheck<Map<String, V>> {
+  @override
+  Map<String, Object?> get parameters => {'constraintValue': constraintValue};
+
   final int constraintValue;
 
   LengthPropertiesCheck({

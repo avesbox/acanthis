@@ -4,7 +4,7 @@
 
 Acanthis is a simple and easy to use validation library for Dart. It is inspired by [Zod](https://github.com/colinhacks/zod) although it is not a port of it. Acanthis is tailored to the Dart language and its features and is type-safe and composable.
 
-[Get Started](https://acanthis.avesbox.com/introduction.html) | [Pub.dev](https://pub.dev/packages/acanthis)
+[Get Started](https://acanthis.dev/introduction.html) | [Pub.dev](https://pub.dev/packages/acanthis)
 
 ## Why Acanthis?
 

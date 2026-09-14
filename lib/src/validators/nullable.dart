@@ -2,6 +2,9 @@ import 'package:acanthis/src/operations/checks.dart';
 
 /// Nullable check for Enumerated values.
 class EnumeratedNullableCheck<T> extends AcanthisCheck<T> {
+  @override
+  Map<String, Object?> get parameters => {'values': values};
+
   final List<T> values;
 
   EnumeratedNullableCheck(

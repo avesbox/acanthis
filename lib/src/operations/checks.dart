@@ -10,8 +10,18 @@ abstract class AcanthisCheck<O> extends AcanthisOperation<O> {
   /// The name of the check
   final String name;
 
+  /// Stable diagnostic code; custom checks can override independently of name.
+  String get code => name.isEmpty ? 'custom' : name;
+
+  /// Schema constraints only. Never include the value being validated.
+  final Map<String, Object?> parameters;
+
   /// The constructor of the class
-  const AcanthisCheck({this.error = '', this.name = ''});
+  const AcanthisCheck({
+    this.error = '',
+    this.name = '',
+    this.parameters = const {},
+  });
 
   @override
   bool call(O value);
@@ -26,8 +36,18 @@ abstract class AcanthisAsyncCheck<O> extends AcanthisOperation<O> {
   /// The name of the check
   final String name;
 
+  /// Stable diagnostic code; custom checks can override independently of name.
+  String get code => name.isEmpty ? 'custom' : name;
+
+  /// Schema constraints only. Never include the value being validated.
+  final Map<String, Object?> parameters;
+
   /// The constructor of the class
-  const AcanthisAsyncCheck({this.error = '', this.name = ''});
+  const AcanthisAsyncCheck({
+    this.error = '',
+    this.name = '',
+    this.parameters = const {},
+  });
 
   @override
   Future<bool> call(O value);
@@ -39,7 +59,12 @@ final class CustomCheck<T> extends AcanthisCheck<T> {
   final bool Function(T) check;
 
   /// The constructor of the class
-  const CustomCheck(this.check, {super.error = '', super.name = ''});
+  const CustomCheck(
+    this.check, {
+    super.error = '',
+    super.name = '',
+    super.parameters,
+  });
 
   @override
   bool call(T value) {
@@ -57,7 +82,7 @@ final class CustomCauseCheck<T> extends AcanthisCheck<T> {
   final String? Function(T) check;
 
   /// The constructor of the class
-  const CustomCauseCheck(this.check, {super.name = ''});
+  const CustomCauseCheck(this.check, {super.name = '', super.parameters});
 
   @override
   bool call(T value) {
@@ -84,7 +109,12 @@ final class CustomAsyncCheck<T> extends AcanthisAsyncCheck<T> {
   final Future<bool> Function(T) check;
 
   /// The constructor of the class
-  const CustomAsyncCheck(this.check, {super.error = '', super.name = ''});
+  const CustomAsyncCheck(
+    this.check, {
+    super.error = '',
+    super.name = '',
+    super.parameters,
+  });
 
   @override
   Future<bool> call(T value) async {

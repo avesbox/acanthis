@@ -1,9 +1,12 @@
+import 'package:acanthis/src/results.dart';
+import 'package:acanthis/src/issue_sink.dart';
 import 'package:acanthis/src/exceptions/validation_error.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:acanthis/src/types/types.dart';
 import 'package:nanoid2/nanoid2.dart';
+
 import '../exceptions/async_exception.dart';
 import 'variant.dart';
 
@@ -19,16 +22,18 @@ class AcanthisUnion<T> extends AcanthisType<T> {
   final List<AcanthisType<T>> _types;
   final List<AcanthisVariant<T>> _variants;
 
+  List<AcanthisType<T>> get alternatives => List.unmodifiable(_types);
+  bool get hasGuards => _variants.isNotEmpty;
+
   AcanthisUnion._({
-    required List<AcanthisType<T>> types,
-    required List<AcanthisVariant<T>> variants,
+    required this._types,
+    required this._variants,
     super.operations = const [],
     super.isAsync,
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  }) : _types = types,
-       _variants = variants;
+  });
 
   factory AcanthisUnion(List<dynamic> elements) {
     final types = <AcanthisType<T>>[];
@@ -57,97 +62,47 @@ class AcanthisUnion<T> extends AcanthisType<T> {
   }
 
   AcanthisParseResult<T> _applyOwnOperations(AcanthisParseResult<T> base) {
-    if (!base.success) return base;
-    if (operations.isEmpty) return base;
-    T newValue = base.value;
-    for (final op in operations) {
-      switch (op) {
-        case AcanthisCheck<T>():
-          if (op is CustomCauseCheck<T>) {
-            final cause = op.cause(newValue);
-            if (cause != null) {
-              return AcanthisParseResult(
-                value: newValue,
-                errors: {op.name: cause},
-                success: false,
-                metadata: metadataEntry,
-              );
-            }
-            break;
-          }
-          if (!op(newValue)) {
-            return AcanthisParseResult(
-              value: newValue,
-              errors: {op.name: op.error},
-              success: false,
-              metadata: metadataEntry,
-            );
-          }
-          break;
-        case AcanthisTransformation<T>():
-          newValue = op(newValue);
-          break;
-        case AcanthisAsyncCheck<T>():
-          // Should not happen in sync path (guarded by isAsync)
-          throw AsyncValidationException(
-            'Async check encountered in sync parse',
-          );
-        default:
-          break;
-      }
-    }
+    final errors = IssueSink();
+    final value = compiledTryParseInternal(base.value, errors);
     return AcanthisParseResult(
-      value: newValue,
-      errors: const {},
-      success: true,
+      value: value,
+      errors: errors,
+      success: errors.isEmpty,
       metadata: metadataEntry,
     );
   }
 
   @override
   AcanthisParseResult<T> parse(dynamic value) {
+    value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use parse() with async union; use parseAsync()',
       );
     }
-    // Try guarded variants first (in order)
-    for (final v in _variants) {
-      if (v.guard(value)) {
-        try {
-          final r = v.schema.tryParse(value);
-          if (r.success) {
-            return _applyOwnOperations(
-              AcanthisParseResult<T>(
-                value: r.value,
-                success: true,
-                metadata: metadataEntry,
-              ),
-            );
-          }
-        } catch (_) {}
-      }
+    final result = tryParse(value);
+    if (!result.success) {
+      throw ValidationError(
+        result.errors['union']?.toString() ?? 'Value does not match union',
+      );
     }
-    // Then plain types
-    for (final t in _types) {
-      try {
-        final r = t.parse(value);
-        if (r.success) {
-          return _applyOwnOperations(
-            AcanthisParseResult<T>(
-              value: r.value,
-              success: true,
-              metadata: metadataEntry,
-            ),
-          );
-        }
-      } catch (_) {}
-    }
-    throw ValidationError('Value does not match any union entry');
+    return result;
+  }
+
+  @override
+  T parseInternal(dynamic value) => parse(value).value;
+
+  @override
+  T tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
+    value ??= defaultValue;
+    final result = tryParse(value);
+    errors.addAll(result.errors);
+    return result.value;
   }
 
   @override
   Future<AcanthisParseResult<T>> parseAsync(dynamic value) async {
+    value ??= defaultValue;
     // Try guarded variants
     for (final v in _variants) {
       if (v.guard(value)) {
@@ -252,122 +207,18 @@ class AcanthisUnion<T> extends AcanthisType<T> {
     throw ValidationError('Value does not match any union entry');
   }
 
-  @override
-  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
-    final errors = <String, String>{};
-    int idx = 0;
-    // Variants
-    for (final v in _variants) {
-      if (v.guard(value)) {
-        try {
-          final r = v.schema.isAsync
-              ? await v.schema.tryParseAsync(value)
-              : v.schema.tryParse(value);
-          if (r.success) {
-            // Apply own ops asynchronously
-            T newVal = r.value;
-            for (final op in operations) {
-              switch (op) {
-                case AcanthisCheck<T>():
-                  if (op is CustomCauseCheck<T>) {
-                    final cause = op.cause(newVal);
-                    if (cause != null) {
-                      errors[op.name] = cause;
-                    }
-                    break;
-                  }
-                  if (!op(newVal)) {
-                    errors[op.name] = op.error;
-                  }
-                  break;
-                case AcanthisTransformation<T>():
-                  newVal = op(newVal);
-                  break;
-                case AcanthisAsyncCheck<T>():
-                  if (!(await op(newVal))) {
-                    errors[op.name] = op.error;
-                  }
-                  break;
-                default:
-                  break;
-              }
-            }
-            if (errors.isEmpty) {
-              return AcanthisParseResult<T>(
-                value: newVal,
-                success: true,
-                metadata: metadataEntry,
-              );
-            }
-            return AcanthisParseResult<T>(
-              value: defaultValue ?? newVal,
-              success: false,
-              errors: errors,
-              metadata: metadataEntry,
-            );
-          } else {
-            errors[v.name.isEmpty ? 'variant[$idx]' : v.name] =
-                'Failed variant schema';
-          }
-        } catch (_) {}
-      }
-      idx++;
-    }
-    // Plain types
-    idx = 0;
-    for (final t in _types) {
-      try {
-        final r = t.isAsync ? await t.tryParseAsync(value) : t.tryParse(value);
-        if (r.success) {
-          T newVal = r.value;
-          for (final op in operations) {
-            switch (op) {
-              case AcanthisCheck<T>():
-                if (op is CustomCauseCheck<T>) {
-                  final cause = op.cause(newVal);
-                  if (cause != null) {
-                    errors[op.name] = cause;
-                  }
-                  break;
-                }
-                if (!op(newVal)) {
-                  errors[op.name] = op.error;
-                }
-                break;
-              case AcanthisTransformation<T>():
-                newVal = op(newVal);
-                break;
-              case AcanthisAsyncCheck<T>():
-                if (!(await op(newVal))) {
-                  errors[op.name] = op.error;
-                }
-                break;
-              default:
-                break;
-            }
-          }
-          if (errors.isEmpty) {
-            return AcanthisParseResult<T>(
-              value: newVal,
-              success: true,
-              metadata: metadataEntry,
-            );
-          }
-          return AcanthisParseResult<T>(
-            value: defaultValue ?? newVal,
-            success: false,
-            errors: errors,
-            metadata: metadataEntry,
-          );
-        } else {
-          errors['type[$idx]'] = 'Failed type schema';
-        }
-      } catch (_) {}
-      idx++;
-    }
-    errors['union'] = 'Value does not match any union entry';
-    return AcanthisParseResult<T>(
-      value: defaultValue ?? value,
+  AcanthisParseResult<T> _failedUnion(
+    dynamic value,
+    List<List<AcanthisIssue>> branches,
+  ) {
+    final errors = IssueSink()
+      ..addIssue(
+        'union',
+        'Value does not match any union entry',
+        branches: branches,
+      );
+    return AcanthisParseResult(
+      value: valueOnFailure(value),
       errors: errors,
       success: false,
       metadata: metadataEntry,
@@ -375,61 +226,65 @@ class AcanthisUnion<T> extends AcanthisType<T> {
   }
 
   @override
+  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
+    value ??= defaultValue;
+    if (!isAsync) return tryParse(value);
+    final branches = <List<AcanthisIssue>>[];
+    for (final variant in _variants) {
+      if (!variant.guard(value)) {
+        branches.add([
+          AcanthisIssue(
+            path: [],
+            code: 'variantGuard',
+            message: 'Variant guard did not match',
+            parameters: {'name': variant.name},
+          ),
+        ]);
+        continue;
+      }
+      final result = await variant.schema.tryParseAsync(value);
+      if (result.success) return tryParseAsyncOperations(result.value);
+      branches.add(result.issues);
+    }
+    for (final type in _types) {
+      final result = await type.tryParseAsync(value);
+      if (result.success) return tryParseAsyncOperations(result.value);
+      branches.add(result.issues);
+    }
+    return _failedUnion(value, branches);
+  }
+
+  @override
   AcanthisParseResult<T> tryParse(dynamic value) {
+    value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException(
         'Cannot use tryParse() with async union; use tryParseAsync()',
       );
     }
-    final errors = <String, String>{};
-    int idx = 0;
-    for (final v in _variants) {
-      if (v.guard(value)) {
-        try {
-          final r = v.schema.tryParse(value);
-          if (r.success) {
-            final applied = _applyOwnOperations(
-              AcanthisParseResult<T>(
-                value: r.value,
-                success: true,
-                metadata: metadataEntry,
-              ),
-            );
-            return applied;
-          } else {
-            errors[v.name.isEmpty ? 'variant[$idx]' : v.name] =
-                'Failed variant schema';
-          }
-        } catch (_) {}
+    final branches = <List<AcanthisIssue>>[];
+    for (final variant in _variants) {
+      if (!variant.guard(value)) {
+        branches.add([
+          AcanthisIssue(
+            path: [],
+            code: 'variantGuard',
+            message: 'Variant guard did not match',
+            parameters: {'name': variant.name},
+          ),
+        ]);
+        continue;
       }
-      idx++;
+      final result = variant.schema.tryParse(value);
+      if (result.success) return _applyOwnOperations(result);
+      branches.add(result.issues);
     }
-    idx = 0;
-    for (final t in _types) {
-      try {
-        final r = t.tryParse(value);
-        if (r.success) {
-          final applied = _applyOwnOperations(
-            AcanthisParseResult<T>(
-              value: r.value,
-              success: true,
-              metadata: metadataEntry,
-            ),
-          );
-          return applied;
-        } else {
-          errors['type[$idx]'] = 'Failed type schema';
-        }
-      } catch (_) {}
-      idx++;
+    for (final type in _types) {
+      final result = type.tryParse(value);
+      if (result.success) return _applyOwnOperations(result);
+      branches.add(result.issues);
     }
-    errors['union'] = 'Value does not match any union entry';
-    return AcanthisParseResult<T>(
-      value: defaultValue ?? value,
-      errors: errors,
-      success: false,
-      metadata: metadataEntry,
-    );
+    return _failedUnion(value, branches);
   }
 
   @override
@@ -519,7 +374,8 @@ class AcanthisUnion<T> extends AcanthisType<T> {
       ..._variants.map((v) => v.schema.toOpenApiSchema()),
       ..._types.map((t) => t.toOpenApiSchema()),
     ];
-    return {'oneOf': schemas};
+    // Alternatives may overlap; successful parsing requires at least one match.
+    return {'anyOf': schemas};
   }
 
   @override

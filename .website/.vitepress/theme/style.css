@@ -1,163 +1,73 @@
-/**
- * Customize default theme styling by overriding CSS variables:
- * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
- */
-
- @tailwind base;
- @tailwind components;
- @tailwind utilities;
-
- :root {
-  --vp-c-brand: #c52233;
-  --vp-c-brand-light: #a7333f;
-  --vp-c-brand-lighter: #df7373;
-  --vp-c-brand-lightest: #e4b1ab;
-  --vp-c-brand-dark: #a51c30;
-  --vp-c-brand-darker: #74121d;
-  --vp-c-brand-dimm: rgba(165, 28, 48, 0.08);
-}
-
-.VPNavBar:not(.home.top) .divider-line, .VPNavBar:not(.has-sidebar):not(.home.top) .divider {
-	background-color: transparent !important;
-}
-.VPNavBar:not(.has-sidebar):not(.home) {
-	background-color: var(--vp-nav-bg-color) !important;
-}
-.VPNavBar:not(.has-sidebar).top {
-	background-color: transparent !important;
-}
-
-/**
- * Colors
- *
- * Each colors have exact same color scale system with 3 levels of solid
- * colors with different brightness, and 1 soft color.
- * 
- * - `XXX-1`: The most solid color used mainly for colored text. It must
- *   satisfy the contrast ratio against when used on top of `XXX-soft`.
- *
- * - `XXX-2`: The color used mainly for hover state of the button.
- *
- * - `XXX-3`: The color for solid background, such as bg color of the button.
- *   It must satisfy the contrast ratio with pure white (#ffffff) text on
- *   top of it.
- *
- * - `XXX-soft`: The color used for subtle background such as custom container
- *   or badges. It must satisfy the contrast ratio when putting `XXX-1` colors
- *   on top of it.
- *
- *   The soft color must be semi transparent alpha channel. This is crucial
- *   because it allows adding multiple "soft" colors on top of each other
- *   to create a accent, such as when having inline code block inside
- *   custom containers.
- *
- * - `default`: The color used purely for subtle indication without any
- *   special meanings attched to it such as bg color for menu hover state.
- *
- * - `brand`: Used for primary brand colors, such as link text, button with
- *   brand theme, etc.
- *
- * - `tip`: Used to indicate useful information. The default theme uses the
- *   brand color for this by default.
- *
- * - `warning`: Used to indicate warning to the users. Used in custom
- *   container, badges, etc.
- *
- * - `danger`: Used to show error, or dangerous message to the users. Used
- *   in custom container, badges, etc.
- * -------------------------------------------------------------------------- */
-
- :root {
-  --vp-c-default-1: var(--vp-c-gray-1);
-  --vp-c-default-2: var(--vp-c-gray-2);
-  --vp-c-default-3: var(--vp-c-gray-3);
-  --vp-c-default-soft: var(--vp-c-gray-soft);
-
-  --vp-c-brand-1: var(--vp-c-brand-lighter);
-  --vp-c-brand-2: var(--vp-c-brand-light);
-  --vp-c-brand-3: var(--vp-c-brand);
-  --vp-c-brand-soft: var(--vp-c-brand-dimm);
-
-  --vp-c-tip-1: var(--vp-c-brand-1);
-  --vp-c-tip-2: var(--vp-c-brand-2);
-  --vp-c-tip-3: var(--vp-c-brand-3);
-  --vp-c-tip-soft: var(--vp-c-brand-soft);
-
-  --vp-c-warning-1: var(--vp-c-yellow-1);
-  --vp-c-warning-2: var(--vp-c-yellow-2);
-  --vp-c-warning-3: var(--vp-c-yellow-3);
-  --vp-c-warning-soft: var(--vp-c-yellow-soft);
-
-  --vp-c-danger-1: var(--vp-c-red-1);
-  --vp-c-danger-2: var(--vp-c-red-2);
-  --vp-c-danger-3: var(--vp-c-red-3);
-  --vp-c-danger-soft: var(--vp-c-red-soft);
-}
-
-/**
- * Component: Button
- * -------------------------------------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --vp-button-brand-border: transparent;
-  --vp-button-brand-text: var(--vp-c-white);
-  --vp-button-brand-bg: var(--vp-c-brand-3);
-  --vp-button-brand-hover-border: transparent;
-  --vp-button-brand-hover-text: var(--vp-c-white);
-  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
-  --vp-button-brand-active-border: transparent;
-  --vp-button-brand-active-text: var(--vp-c-white);
-  --vp-button-brand-active-bg: var(--vp-c-brand-1);
+  --vp-c-brand-1: #a51c30;
+  --vp-c-brand-2: #b42238;
+  --vp-c-brand-3: #b42238;
+  --vp-c-brand-soft: rgba(165, 28, 48, .07);
+  --vp-c-bg: #fcfaf7;
+  --vp-c-bg-alt: #f4f0ea;
+  --vp-c-bg-elv: #fffdfa;
+  --vp-c-bg-soft: #f5f1ec;
+  --vp-c-text-1: #302b29;
+  --vp-c-text-2: #615853;
+  --vp-c-text-3: #746a64;
+  --vp-c-divider: #e4ddd5;
+  --vp-c-gutter: #e4ddd5;
+  --vp-code-block-bg: #f3efe9;
+  --vp-code-tab-bg: #f3efe9;
+  --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vp-button-brand-bg: #b42238;
+  --vp-button-brand-hover-bg: #94182a;
+  --vp-button-brand-text: #fff;
+  --vp-button-brand-hover-text: #fff;
+  --vp-sidebar-width: 272px;
 }
 
-/**
- * Component: Home
- * -------------------------------------------------------------------------- */
-
-:root {
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(
-    120deg,
-    var(--vp-c-brand-dark) 30%,
-    var(--vp-c-brand) 70%
-  );
-
-  --vp-home-hero-image-background-image: linear-gradient(
-    -45deg,
-    var(--vp-c-brand-dark) 50%,
-    var(--vp-c-brand) 50%
-  );
-  --vp-home-hero-image-filter: blur(44px);
+.dark {
+  --vp-c-brand-1: #ffa3af;
+  --vp-c-brand-2: #f18899;
+  --vp-c-brand-3: #bd3048;
+  --vp-c-brand-soft: rgba(241, 136, 153, .12);
+  --vp-c-bg: #201d1e;
+  --vp-c-bg-alt: #191718;
+  --vp-c-bg-elv: #292526;
+  --vp-c-bg-soft: #2a2527;
+  --vp-c-text-1: #f3eae5;
+  --vp-c-text-2: #c4b7b2;
+  --vp-c-text-3: #a69994;
+  --vp-c-divider: #403639;
+  --vp-c-gutter: #403639;
+  --vp-code-block-bg: #272325;
+  --vp-code-tab-bg: #272325;
 }
 
-@media (min-width: 640px) {
-  :root {
-    --vp-home-hero-image-filter: blur(56px);
-  }
+.VPNavBarTitle .logo { height: 36px; width: 36px; object-fit: contain; }
+.VPNavBarTitle .title { gap: 9px; letter-spacing: -.03em; }
+.VPSidebarItem.level-0 > .item > .text { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.VPSidebarItem.is-active > .item { background: var(--vp-c-brand-soft); border-radius: 6px; }
+.VPSidebarItem.level-1 > .item { padding-left: 10px; }
+.vp-doc h1 { font-size: clamp(30px, 4vw, 40px); line-height: 1.18; letter-spacing: -.04em; }
+.vp-doc h2 { margin-top: 40px; padding-top: 28px; letter-spacing: -.025em; }
+.vp-doc p, .vp-doc li { line-height: 1.8; }
+.vp-doc > div > h1 + p { color: var(--vp-c-text-2); font-size: 18px; line-height: 1.75; }
+.vp-doc div[class*='language-'] { border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+.vp-doc table { font-size: 14px; }
+.vp-doc th { text-align: left; white-space: normal; }
+.vp-doc a { text-underline-offset: 3px; }
+:where(a, button, input):focus-visible { outline: 3px solid var(--vp-c-brand-1); outline-offset: 4px; }
+
+.doc-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 28px 0; }
+.vp-doc .doc-cards a { display: flex; flex-direction: column; gap: 8px; padding: 20px; color: var(--vp-c-text-1); background: var(--vp-c-bg-elv); border: 1px solid var(--vp-c-divider); border-radius: 10px; text-decoration: none; transition: border-color .15s, background .15s; }
+.vp-doc .doc-cards a:hover { border-color: var(--vp-c-brand-1); background: var(--vp-c-brand-soft); }
+.doc-cards strong { font-size: 16px; line-height: 1.4; }
+.doc-cards span { color: var(--vp-c-text-2); font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 639px) {
+  .doc-cards { grid-template-columns: 1fr; }
 }
-
-@media (min-width: 960px) {
-  :root {
-    --vp-home-hero-image-filter: blur(68px);
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
 }
-
-/**
- * Component: Custom Block
- * -------------------------------------------------------------------------- */
-
-:root {
-  --vp-custom-block-tip-border: transparent;
-  --vp-custom-block-tip-text: var(--vp-c-text-1);
-  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
-  --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
-}
-
-/**
- * Component: Algolia
- * -------------------------------------------------------------------------- */
-
-.DocSearch {
-  --docsearch-primary-color: var(--vp-c-brand-1) !important;
-}
-

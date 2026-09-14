@@ -9,6 +9,22 @@ class _Record {
 }
 
 void main() {
+  test('overlapping union uses inclusive OpenAPI alternatives', () async {
+    final branches = [string(), string().min(2)];
+    final schema = union<String>(branches);
+    // Both branches accept this value: oneOf would incorrectly reject it.
+    expect(
+      branches.where((branch) => branch.tryParse('Ada').success),
+      hasLength(2),
+    );
+    expect(schema.parse('Ada').value, 'Ada');
+    expect((await schema.parseAsync('Ada')).value, 'Ada');
+    expect(schema.toOpenApiSchema(), {
+      'anyOf': branches.map((branch) => branch.toOpenApiSchema()).toList(),
+    });
+    expect(schema.toOpenApiSchema(), schema.toJsonSchema());
+    expect(schema.tryParse(42).success, isFalse);
+  });
   group('AcanthisType.toOpenApiSchema', () {
     test('boolean exposes literal enums when pinned', () {
       expect(boolean().toOpenApiSchema(), equals({'type': 'boolean'}));
@@ -121,7 +137,7 @@ void main() {
       expect(
         literal('ready').toOpenApiSchema(),
         equals({
-          'type': 'literal',
+          'type': 'string',
           'enum': ['ready'],
         }),
       );
@@ -225,11 +241,10 @@ void main() {
       expect(
         schema,
         equals({
-          'oneOf': [
+          'anyOf': [
             {
               'type': 'string',
-              'pattern':
-                  r'^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$',
+              'pattern': r'^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$',
               'format': 'uuid',
             },
             {'type': 'string', 'minLength': 3},

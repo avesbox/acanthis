@@ -1,9 +1,11 @@
+import 'package:acanthis/src/results.dart' show singleIssueParameter;
 import 'package:acanthis/src/operations/checks.dart';
 
 /// List checks for Min Items
 class MinItemsListCheck<T> extends AcanthisCheck<List<T>> {
   @override
-  Map<String, Object?> get parameters => {'minItems': minItems};
+  Map<String, Object?> get parameters =>
+      singleIssueParameter('minItems', minItems);
 
   final int minItems;
 
@@ -28,7 +30,8 @@ class MinItemsListCheck<T> extends AcanthisCheck<List<T>> {
 /// List checks for Max Items
 class MaxItemsListCheck<T> extends AcanthisCheck<List<T>> {
   @override
-  Map<String, Object?> get parameters => {'maxItems': maxItems};
+  Map<String, Object?> get parameters =>
+      singleIssueParameter('maxItems', maxItems);
 
   final int maxItems;
 
@@ -53,7 +56,7 @@ class MaxItemsListCheck<T> extends AcanthisCheck<List<T>> {
 /// List checks for Length Items
 class LengthListCheck<T> extends AcanthisCheck<List<T>> {
   @override
-  Map<String, Object?> get parameters => {'length': length};
+  Map<String, Object?> get parameters => singleIssueParameter('length', length);
 
   final int length;
 

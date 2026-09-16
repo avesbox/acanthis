@@ -72,7 +72,7 @@ class IssueSink extends MapBase<String, dynamic> {
   @override
   void addAll(Map<String, dynamic> other) {
     _issues.addAll(
-      other is IssueSink ? other.issues : issuesFromLegacyErrors(other),
+      other is IssueSink ? other._issues : issuesFromLegacyErrors(other),
     );
   }
 }
@@ -106,11 +106,12 @@ extension IssueEmission on Map<String, dynamic> {
   void addChild(Object segment, Map<String, dynamic> child) {
     if (this is IssueSink) {
       final issues = child is IssueSink
-          ? child.issues
+          ? (identical(child, this) ? child.issues : child._issues)
           : issuesFromLegacyErrors(child);
-      (this as IssueSink)._issues.addAll(
-        issues.map((issue) => issue.prefixed(segment)),
-      );
+      final target = (this as IssueSink)._issues;
+      for (final issue in issues) {
+        target.add(issue.prefixed(segment));
+      }
     } else {
       this[segment.toString()] = Map<String, dynamic>.of(child);
     }

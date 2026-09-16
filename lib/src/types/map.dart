@@ -22,6 +22,9 @@ enum AcanthisUnknownKeys { strip, preserve, reject }
 /// A class to validate map types
 class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   final Map<String, AcanthisType> _fields;
+  // Private construction cannot produce a subclass. Public construction still
+  // checks the exact runtime type before bypassing overridable parsing hooks.
+  final bool _builtIn;
 
   /// The fields of the map
   Map<String, AcanthisType> get fields => UnmodifiableMapView(_fields);
@@ -36,7 +39,9 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   final bool _localPure;
   late final List<String> _keys;
   late final List<AcanthisType> _types;
-  late final List<bool> _isOptional;
+  late final List<bool> _isOptional = _keys
+      .map((key) => _optionalFields.contains(key))
+      .toList(growable: false);
   final bool _patch;
   final bool _rejectUnknownKeys;
 
@@ -65,7 +70,38 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     // Typed maps currently expose a lazy cast view in their pure path. Keep
     // that behavior, including when a cast error is observed, on that path.
     if (V != dynamic) return null;
-    if (runtimeType != (AcanthisMap<dynamic>)) return null;
+    if (!_builtIn && runtimeType != (AcanthisMap<dynamic>)) return null;
+    if (!isPure ||
+        isAsync ||
+        hasOperations ||
+        _dependencies.isNotEmpty ||
+        _optionalFields.isNotEmpty) {
+      return null;
+    }
+    final flatKinds = List<int>.filled(_length, 0);
+    for (var i = 0; i < _length; i++) {
+      final child = _types[i];
+      if (child.hasOperations) return null;
+      final type = child.runtimeType;
+      if (type == (AcanthisMap<dynamic>)) return _compileNestedObjectTypePlan();
+      final kind = type == AcanthisString
+          ? 1
+          : type == AcanthisBoolean
+          ? 2
+          : type == (AcanthisNumeric<int>)
+          ? 3
+          : type == (AcanthisNumeric<double>)
+          ? 4
+          : type == (AcanthisNumeric<num>)
+          ? 5
+          : -1;
+      if (kind == -1) return null;
+      flatKinds[i] = kind;
+    }
+    return _ObjectTypePlan(_keys, flatKinds, const [], const [], 1, const []);
+  }
+
+  _ObjectTypePlan? _compileNestedObjectTypePlan() {
     final keys = <String>[];
     final kinds = <int>[];
     final parents = <int>[];
@@ -76,7 +112,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     bool append(AcanthisMap schema, int parent) {
       if (!schema.isPure ||
           schema.isAsync ||
-          schema.operations.isNotEmpty ||
+          schema.hasOperations ||
           schema._dependencies.isNotEmpty ||
           schema._optionalFields.isNotEmpty) {
         return false;
@@ -86,7 +122,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         if (!child.isPure ||
             child.isAsync ||
             child.hasDefault ||
-            child.operations.isNotEmpty) {
+            child.hasOperations) {
           return false;
         }
         final type = child.runtimeType;
@@ -157,7 +193,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.key,
     super.metadataEntry,
     bool isPure = true,
-  }) : _passthrough = false,
+  }) : _builtIn = false,
+       _passthrough = false,
        _passthroughType = null,
        _patch = false,
        _rejectUnknownKeys = false,
@@ -182,7 +219,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  }) : _fields = fields,
+  }) : _builtIn = true,
+       _fields = fields,
        _localPure = isPure,
        super(isAsync: isAsync || fields.values.any((field) => field.isAsync)) {
     _initializeCaches();
@@ -190,10 +228,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   void _initializeCaches() {
     _keys = _fields.keys.toList(growable: false);
-    _types = _keys.map((key) => _fields[key]!).toList(growable: false);
-    _isOptional = _keys
-        .map((key) => _optionalFields.contains(key))
-        .toList(growable: false);
+    _types = _fields.values.toList(growable: false);
     _length = _keys.length;
     _isPure =
         _types.every((type) => type.isPure && !type.hasDefault) &&
@@ -1369,8 +1404,13 @@ class _ObjectTypePlan {
 }
 
 /// Create a map of [fields]
-AcanthisMap object(Map<String, AcanthisType> fields) =>
-    AcanthisMap<dynamic>(fields);
+AcanthisMap object(Map<String, AcanthisType> fields) => AcanthisMap<dynamic>._(
+  fields: fields,
+  passthrough: false,
+  passthroughType: null,
+  dependencies: const [],
+  optionalFields: const {},
+);
 
 @immutable
 class _Dependency {

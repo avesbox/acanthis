@@ -1,9 +1,10 @@
+import 'package:acanthis/src/results.dart' show singleIssueParameter;
 import 'package:acanthis/src/operations/checks.dart';
 
 /// Number check for less than or equal to a value.
 class LteNumberCheck<T extends num> extends AcanthisCheck<T> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final T value;
 
@@ -28,7 +29,7 @@ class LteNumberCheck<T extends num> extends AcanthisCheck<T> {
 /// Number check for greater than or equal to a value.
 class GteNumberCheck<T extends num> extends AcanthisCheck<T> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final T value;
 
@@ -80,7 +81,7 @@ class BetweenNumberCheck<T extends num> extends AcanthisCheck<T> {
 /// Number check for Greater than a value.
 class GtNumberCheck<T extends num> extends AcanthisCheck<T> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final T value;
 
@@ -105,7 +106,7 @@ class GtNumberCheck<T extends num> extends AcanthisCheck<T> {
 /// Number check for Less than a value.
 class LtNumberCheck<T extends num> extends AcanthisCheck<T> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final T value;
 
@@ -174,7 +175,7 @@ class NonNegativeNumberCheck<T extends num> extends AcanthisCheck<T> {
 /// Number check for multiple of a value.
 class MultipleOfCheck<T extends num> extends AcanthisCheck<T> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final int value;
 

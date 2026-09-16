@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:collection';
 
 import 'package:meta/meta.dart';
 
@@ -14,15 +15,11 @@ class AcanthisIssue {
     required this.message,
     Map<String, Object?> parameters = const {},
     List<List<AcanthisIssue>> branches = const [],
-  }) : path = List.unmodifiable(path),
-       parameters = Map.unmodifiable(
-         parameters.map(
-           (key, value) => MapEntry(key, freezeIssueParameter(value)),
-         ),
-       ),
-       branches = List.unmodifiable(
-         branches.map(List<AcanthisIssue>.unmodifiable),
-       ) {
+  }) : path = path.isEmpty ? const [] : List.unmodifiable(path),
+       parameters = _freezeParameters(parameters),
+       branches = branches.isEmpty
+           ? const []
+           : List.unmodifiable(branches.map(List<AcanthisIssue>.unmodifiable)) {
     if (path.any((part) => part is! String && part is! int)) {
       throw ArgumentError('Issue paths accept only strings and integers');
     }
@@ -36,16 +33,35 @@ class AcanthisIssue {
   /// Failed union branches, in evaluation order. Paths are absolute from root.
   final List<List<AcanthisIssue>> branches;
 
-  AcanthisIssue prefixed(Object segment) => AcanthisIssue(
-    path: [segment, ...path],
-    code: code,
-    message: message,
-    parameters: parameters,
-    branches: [
-      for (final branch in branches)
-        [for (final issue in branch) issue.prefixed(segment)],
-    ],
-  );
+  // All members passed here are already frozen. Prefixing must not freeze
+  // constraint metadata again at every level of an object/list path.
+  AcanthisIssue._frozen({
+    required this.path,
+    required this.code,
+    required this.message,
+    required this.parameters,
+    required this.branches,
+  });
+
+  AcanthisIssue prefixed(Object segment) {
+    if (segment is! String && segment is! int) {
+      throw ArgumentError('Issue paths accept only strings and integers');
+    }
+    return AcanthisIssue._frozen(
+      path: _PrefixedIssuePath(segment, path),
+      code: code,
+      message: message,
+      parameters: parameters,
+      branches: branches.isEmpty
+          ? const []
+          : List.unmodifiable([
+              for (final branch in branches)
+                List<AcanthisIssue>.unmodifiable([
+                  for (final issue in branch) issue.prefixed(segment),
+                ]),
+            ]),
+    );
+  }
 
   String formatMessage({AcanthisMessageResolver? resolver}) =>
       resolver?.call(code, parameters) ?? message;
@@ -94,6 +110,63 @@ class AcanthisIssue {
       Iterable.generate(left.length)
           .every((index) => left[index] == right[index]);
 }
+
+// Both the prefix and tail are immutable. A path can therefore share its tail
+// instead of copying an array whenever a parent attaches a diagnostic.
+class _PrefixedIssuePath extends ListBase<Object> {
+  final Object _segment;
+  final List<Object> _tail;
+  _PrefixedIssuePath(this._segment, this._tail);
+
+  @override
+  int get length => _tail.length + 1;
+  @override
+  set length(int value) => throw UnsupportedError('Issue paths are immutable');
+  @override
+  void operator []=(int index, Object value) =>
+      throw UnsupportedError('Issue paths are immutable');
+  @override
+  Object operator [](int index) {
+    if (index == 0) return _segment;
+    return _tail[index - 1];
+  }
+}
+
+// Most built-in constraints have a single scalar parameter. Store that frozen
+// entry directly instead of allocating and copying two hash maps per failure.
+class _SingleIssueParameter extends UnmodifiableMapBase<String, Object?> {
+  final String _key;
+  final Object? _value;
+  _SingleIssueParameter(this._key, this._value);
+
+  @override
+  Object? operator [](Object? key) => key == _key ? _value : null;
+  @override
+  Iterable<String> get keys => [_key];
+  @override
+  int get length => 1;
+  @override
+  bool get isEmpty => false;
+  @override
+  bool containsKey(Object? key) => key == _key;
+}
+
+Map<String, Object?> _freezeParameters(Map<String, Object?> parameters) {
+  if (parameters is _SingleIssueParameter) return parameters;
+  if (parameters.isEmpty) return const {};
+  if (parameters.length == 1) {
+    final key = parameters.keys.first;
+    return _SingleIssueParameter(key, freezeIssueParameter(parameters[key]));
+  }
+  return Map.unmodifiable(
+    parameters.map((key, value) => MapEntry(key, freezeIssueParameter(value))),
+  );
+}
+
+/// Frozen scalar constraint metadata shared by immutable built-in checks.
+@internal
+Map<String, Object?> singleIssueParameter(String key, Object? value) =>
+    _SingleIssueParameter(key, freezeIssueParameter(value));
 
 /// Return null to use the schema's fallback message.
 typedef AcanthisMessageResolver = String? Function(

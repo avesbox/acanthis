@@ -1,3 +1,5 @@
+import 'package:acanthis/src/results.dart' show singleIssueParameter;
+
 import 'dart:convert' as convert;
 import 'dart:io';
 
@@ -48,7 +50,7 @@ class EmailStringCheck extends AcanthisCheck<String> {
 /// String Check for Maximum String Length validation.
 class MaxStringLengthCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final int value;
 
@@ -73,7 +75,7 @@ class MaxStringLengthCheck extends AcanthisCheck<String> {
 /// String Check for Minimum String Length validation.
 class MinStringLengthCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final int value;
 
@@ -98,7 +100,7 @@ class MinStringLengthCheck extends AcanthisCheck<String> {
 /// String Check for Exact String Length validation.
 class ExactStringLengthCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final int value;
 
@@ -174,7 +176,7 @@ class UncompromisedStringCheck extends AcanthisAsyncCheck<String> {
 /// String Check for Full Letters String validation.
 class PatternLettersStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -196,7 +198,7 @@ class PatternLettersStringChecks extends AcanthisCheck<String> {
 /// String Check for Full Digits String validation.
 class PatternDigitsStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -218,7 +220,7 @@ class PatternDigitsStringChecks extends AcanthisCheck<String> {
 /// String Check for Full Alphanumeric String validation.
 class PatternAlphanumericStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -242,7 +244,7 @@ class PatternAlphanumericStringChecks extends AcanthisCheck<String> {
 /// String Check for Full Alphanumeric with Spaces String validation.
 class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -270,7 +272,7 @@ class PatternAlphanumericWithSpacesStringChecks extends AcanthisCheck<String> {
 /// String Check for Full Special Characters String validation.
 class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -296,7 +298,7 @@ class PatternSpecialCharactersStringChecks extends AcanthisCheck<String> {
 /// String Check for Full All Characters String validation.
 class PatternAllCharactersStringChecks extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'strict': strict};
+  Map<String, Object?> get parameters => singleIssueParameter('strict', strict);
 
   final bool strict;
 
@@ -516,7 +518,7 @@ class NotEmptyStringCheck extends AcanthisCheck<String> {
 /// String check for containing a specific substring.
 class ContainsStringCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final String value;
 
@@ -541,7 +543,7 @@ class ContainsStringCheck extends AcanthisCheck<String> {
 /// String check for starting with a specific substring.
 class StartsWithStringCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final String value;
 
@@ -566,7 +568,7 @@ class StartsWithStringCheck extends AcanthisCheck<String> {
 /// String check for ending with a specific substring.
 class EndsWithStringCheck extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'value': value};
+  Map<String, Object?> get parameters => singleIssueParameter('value', value);
 
   final String value;
 

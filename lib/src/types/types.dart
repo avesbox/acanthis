@@ -18,6 +18,10 @@ abstract class AcanthisType<O> {
 
   final List<AcanthisOperation<O>> __operations;
 
+  /// Internal eligibility check that avoids allocating a public list view.
+  @internal
+  bool get hasOperations => __operations.isNotEmpty;
+
   Type get elementType => O;
 
   /// A boolean that indicates if the type is async or not
@@ -48,11 +52,25 @@ abstract class AcanthisType<O> {
     this.key = '',
     this.metadataEntry,
     this.defaultValue,
-  }) : __operations = List.unmodifiable(operations);
+  }) : __operations = operations.isEmpty
+           ? const []
+           : List.unmodifiable(operations);
 
   static O Function(O) _compileParseOperations<O>(
     List<AcanthisOperation<O>> operations,
   ) {
+    // The common one-check schema needs no preceding identity executor.
+    if (operations.length == 1) {
+      final operation = operations.single;
+      if (operation is AcanthisCheck<O> && operation is! CustomCauseCheck<O>) {
+        return (value) {
+          if (!operation(value)) {
+            throw ValidationError(operation.error, key: operation.name);
+          }
+          return value;
+        };
+      }
+    }
     O Function(O) compiled = (value) => value;
     for (final operation in operations) {
       switch (operation) {
@@ -95,6 +113,21 @@ abstract class AcanthisType<O> {
     List<AcanthisOperation<O>> operations,
     O? defaultValue,
   ) {
+    if (defaultValue == null && operations.length == 1) {
+      final operation = operations.single;
+      if (operation is AcanthisCheck<O> && operation is! CustomCauseCheck<O>) {
+        return (value, errors) {
+          if (!operation(value)) {
+            errors.addIssue(
+              operation.code,
+              operation.error,
+              parameters: operation.parameters,
+            );
+          }
+          return value;
+        };
+      }
+    }
     O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
     for (final operation in operations) {
       switch (operation) {
@@ -149,9 +182,9 @@ abstract class AcanthisType<O> {
     };
   }
 
-  late final bool _isPure = !__operations.any(
-    (operation) => operation is AcanthisTransformation<O>,
-  );
+  late final bool _isPure =
+      __operations.isEmpty ||
+      !__operations.any((operation) => operation is AcanthisTransformation<O>);
 
   bool get isPure => _isPure;
 
@@ -180,6 +213,7 @@ abstract class AcanthisType<O> {
 
   O parseInternal(dynamic value) {
     value ??= defaultValue;
+    if (__operations.isEmpty) return coerceInput(value);
     return compiledParseInternal(coerceInput(value ?? defaultValue));
   }
 
@@ -201,6 +235,7 @@ abstract class AcanthisType<O> {
   O tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
     value ??= defaultValue;
     try {
+      if (__operations.isEmpty) return coerceInput(value);
       return compiledTryParseInternal(
         coerceInput(value ?? defaultValue),
         errors,

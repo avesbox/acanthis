@@ -87,7 +87,7 @@ for keyword and reference semantics.
 From the package root:
 
 ```sh
-python -m pip install jsonschema==4.25.1 openapi-schema-validator==0.6.3
+python -m pip install -r tool/schema-export-requirements.txt
 dart run tool/audit_schema_export.dart
 dart analyze
 dart run test
@@ -102,5 +102,13 @@ names, unknown-key policies, PATCH, and overlapping unions. Runtime checks compa
 sync and async recovery and successful throwing parses. Separate regressions
 cover diagnostics, metadata, and export state isolation.
 
-Verification on 2026-09-14: 407 Dart tests passed. The exporter changes do not
-change runtime validation; existing performance archives have not been refreshed.
+Verification on 2026-09-15: 415 Dart tests, static analysis with `--fatal-infos`,
+and 2,000 seeded differential cases passed. The independent export audit passed
+all 1,620 runtime/input pairs and every successful output in both dialects.
+The Test Acanthis CI workflow installs the pinned Python validators and runs
+`dart run tool/audit_schema_export.dart` after the Dart test suite; any mismatch
+fails the job.
+
+Development-versus-1.6.0 JIT and AOT timing comparisons were rerun on September 15
+using `benchmark/version-comparison/`. Historical benchmark archives retain their
+original measurements; a complete allocation baseline has not been regenerated.

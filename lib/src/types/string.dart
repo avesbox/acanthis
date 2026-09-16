@@ -1,4 +1,7 @@
 import 'dart:math';
+
+import 'package:acanthis/src/issue_sink.dart';
+
 import 'dart:math' as math;
 
 import 'package:acanthis/src/operations/checks.dart';
@@ -38,6 +41,23 @@ class AcanthisString extends AcanthisType<String> {
       defaultValue: defaultValue,
       coercionEnabled: true,
     );
+  }
+
+  @override
+  String tryParseInternal(
+    dynamic value, {
+    required Map<String, dynamic> errors,
+  }) {
+    value ??= defaultValue;
+    // Do not intercept subclasses: their coercion hooks can accept other types.
+    if (value is! String && !coercionEnabled && runtimeType == AcanthisString) {
+      errors.addIssue(
+        'type',
+        'Invalid type: ${value.runtimeType}, expected String',
+      );
+      return valueOnFailure(value);
+    }
+    return super.tryParseInternal(value, errors: errors);
   }
 
   @override

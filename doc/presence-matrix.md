@@ -58,12 +58,14 @@ exports require filled defaulted fields except in PATCH. Required nullable field
 remain required in both modes. Stripping accepts extras on input and excludes
 them on output; preserve/reject policies apply on both sides.
 
-The first supported subset is structural JSON schemas: objects, lists, nullable
+The supported subset includes structural JSON schemas: objects, lists, nullable
 values, ordinary unions, strings, booleans, `num` numbers, and JSON scalar
-literals. Checks (including built-in constraints), coercion, transformations,
-guards, recursive schemas, dates, and int/double-specific schemas currently throw
-`AcanthisSchemaExportException` with a schema path. Export never executes custom
-callbacks. Expanding audited constraints and recursive references remains backlog.
+literals. Audited built-in constraints and stable recursive objects are also
+supported; see [the export contract](schema-export-contract.md) for the exact
+constraints and recursion requirements. Unsupported checks, coercion,
+transformations, guards, dates, and int/double-specific schemas throw
+`AcanthisSchemaExportException` with a schema path. Custom check callbacks are not
+executed during export; supported lazy callbacks resolve recursive schemas.
 Legacy `toJsonSchema()` / `toOpenApiSchema()` retain their best-effort behavior and
 are not the explicit runtime-equivalence contract. Defaults are deliberately not
 exported as annotations, since pipeline and transformed defaults can differ from
@@ -75,10 +77,13 @@ serialized output and annotations do not execute defaulting.
   non-throwing sync/async paths, PATCH, defaults, recovery, live state, and mapping.
 - `tool/presence_matrix.dart` and `test/fixtures/presence_matrix.json`: reviewed
   snapshot of 504 execution observations. Legacy exports remain in the snapshot.
-- `test/schema_export_contract_test.dart`: structural input/output fixtures. Set
-  `EXPORT_CORPUS_PATH` to a temporary JSON path when running it, then run
-  `python tool/verify_schema_export.py <path>` with `jsonschema==4.25.1` installed
-  to check both dialect validity and runtime acceptance independently.
+- `test/schema_export_contract_test.dart` and `test/schema_export_audit_test.dart`:
+  structural and constraint/recursion input/output fixtures. Install
+  `tool/schema-export-requirements.txt` with pip and run
+  `dart run tool/audit_schema_export.dart` to generate both corpora and check both
+  dialects independently. CI runs the same audit. On September 15, all 1,620
+  runtime/input pairs and every successful output passed.
 
-The historical benchmark baselines describe their original sources; they have
-not been regenerated and are not measurements of this implementation.
+Development-versus-1.6.0 JIT and AOT timings were rerun on September 15 using
+`benchmark/version-comparison/`. Historical baselines retain their original
+sources and measurements. A complete allocation baseline remains outstanding.

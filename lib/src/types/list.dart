@@ -7,10 +7,14 @@ import 'package:acanthis/src/exceptions/async_exception.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/validators/list.dart';
+import 'package:acanthis/src/validators/string.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
 import 'package:nanoid2/nanoid2.dart';
 
 import 'types.dart';
+import 'string.dart';
+import 'number.dart';
+import 'boolean.dart';
 
 /// A class to validate list types
 class AcanthisList<T> extends AcanthisType<List<T>> {
@@ -18,6 +22,21 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   final AcanthisType<T> element;
 
   final bool _localPure;
+
+  // Exact primitive schemas with checks cannot replace a successfully parsed
+  // element. Subclasses retain the copy-on-change path and their custom hooks.
+  late final bool _primitiveElements =
+      (element.runtimeType == AcanthisString ||
+          element.runtimeType == AcanthisBoolean ||
+          element.runtimeType == (AcanthisNumeric<int>) ||
+          element.runtimeType == (AcanthisNumeric<double>) ||
+          element.runtimeType == (AcanthisNumeric<num>)) &&
+      element.operations.every(
+        (operation) =>
+            operation.runtimeType == MinStringLengthCheck ||
+            operation.runtimeType == MaxStringLengthCheck ||
+            operation.runtimeType == ExactStringLengthCheck,
+      );
 
   @override
   bool get isPure =>
@@ -44,6 +63,22 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     value ??= defaultValue;
     final raw = value as List<dynamic>;
     if (isPure) {
+      if (_primitiveElements && raw is List<T>) {
+        if (element.runtimeType == AcanthisString && raw is List<String>) {
+          // Resolve the concretely typed executor once for the whole batch.
+          // Keep the dynamic entry point below for covariant element schemas.
+          final strings = raw as List<String>;
+          final parseString = (element as AcanthisString).compiledParseInternal;
+          for (var i = 0; i < strings.length; i++) {
+            parseString(strings[i]);
+          }
+          return super.parseInternal(raw);
+        }
+        for (var i = 0; i < raw.length; i++) {
+          element.parseInternal(raw[i]);
+        }
+        return super.parseInternal(raw);
+      }
       List<T>? changed;
       for (var i = 0; i < raw.length; i++) {
         final parsed = element.parseInternal(raw[i]);

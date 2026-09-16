@@ -12,6 +12,8 @@
 .vscode/
 *.iml
 .DS_Store
+ROADMAP.md
+tool/acanthis-benchmark-graph.svg
 Thumbs.db
 
 # Website dependencies and generated output.
@@ -26,4 +28,6 @@ node_modules/
 /benchmark/**/*.aot
 /benchmark/**/*.snapshot
 /benchmark/baselines/**/*.json
+/benchmark/**/optimization-*/
+/benchmark/**/version-comparison/**
 

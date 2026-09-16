@@ -2,9 +2,10 @@
 
 ## 2.0.0
 
+- perf: resolve typed string-list executors once per batch and reduce first-use object-plan setup, retaining dynamic-list and subclass fallbacks.
+- perf: reduce diagnostic metadata and path copying, avoid exception-based string type rejection, simplify single-check executors, and reduce flat-schema setup and primitive-list parsing overhead while preserving ordered issues and recovery behavior.
 - feat: extend audited input/output JSON Schema 2020-12 and OpenAPI 3.1 exports with numeric bounds, scalar equality/enumeration, boolean checks, nonempty strings, list lengths, and stable recursive object references. Keep repeated constraints conjunctive and diagnose unaudited semantics explicitly.
 - test: verify 1,620 runtime/input pairs and successful outputs with independent JSON Schema and OpenAPI validators; add a repeatable export audit runner.
-
 - breaking: separate required nullable fields from optional presence; validate defaults for absent/null input consistently across execution modes. Preserve nullable nulls and keep invalid-input recovery unsuccessful.
 - breaking: `partial()` now preserves omission, nullability and unknown-key policy; add `patch()` alias and suppress defaults only for omitted PATCH fields.
 - feat: add explicit strip/preserve/reject unknown-key policies and structural input/output exports for JSON Schema 2020-12 and OpenAPI 3.1, with diagnostics for unsupported behavior.

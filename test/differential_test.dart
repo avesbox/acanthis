@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -65,10 +64,7 @@ void main() {
       expect(result.value, {
         'account': {'email': ''},
       });
-      expect(
-        (await async.tryParseAsync(payload)).value,
-        result.value,
-      );
+      expect((await async.tryParseAsync(payload)).value, result.value);
       expect(payload, {
         'account': {'email': '', 'unknown': true},
         'extra': true,
@@ -117,11 +113,7 @@ void main() {
         final reason =
             'seed=$seed specialized=$trial input=${jsonEncode(payload)}';
         expect(actual.isValid, expected.isValid, reason: reason);
-        expect(
-          actual.value,
-          expected.value,
-          reason: reason,
-        );
+        expect(actual.value, expected.value, reason: reason);
         expect(actual.issues, expected.issues, reason: reason);
         expect(
           _sharing(input, actual.value),
@@ -131,11 +123,7 @@ void main() {
         expect(input, payload, reason: reason);
         expect(expectedInput, payload, reason: reason);
         if (actual.isValid) {
-          expect(
-            fast.parse(_copy(payload)),
-            actual.value,
-            reason: reason,
-          );
+          expect(fast.parse(_copy(payload)), actual.value, reason: reason);
           expect(
             (await fast.parseAsync(_copy(payload))),
             actual.value,
@@ -155,10 +143,7 @@ void main() {
         name: 'scheduled',
       );
       expect((await async.tryParseAsync({})).issues, sync.tryParse({}).issues);
-      expect(
-        (await async.tryParseAsync({})).value,
-        sync.tryParse({}).value,
-      );
+      expect((await async.tryParseAsync({})).value, sync.tryParse({}).value);
       expect(() => sync.parse({}), throwsA(isA<ValidationError>()));
       await expectLater(async.parseAsync({}), throwsA(isA<ValidationError>()));
     },
@@ -219,11 +204,7 @@ void main() {
       final async = await schema(async: true).tryParseAsync(inputs[2]);
       for (final result in [fast, async]) {
         expect(result.isValid, expected.isValid, reason: reason);
-        expect(
-          result.value,
-          expected.value,
-          reason: reason,
-        );
+        expect(result.value, expected.value, reason: reason);
         expect(result.issues, expected.issues, reason: reason);
       }
       for (var i = 0; i < inputs.length; i++) {

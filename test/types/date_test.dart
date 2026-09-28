@@ -206,10 +206,7 @@ void main() {
       final result = schema.tryParse('2026-06-10T10:20:52+00:00');
 
       expect(result.isValid, true);
-      expect(
-        result.value,
-        DateTime.parse('2026-06-10T10:20:52+00:00'),
-      );
+      expect(result.value, DateTime.parse('2026-06-10T10:20:52+00:00'));
     });
 
     test('when creating a date validator,'

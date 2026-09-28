@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:acanthis/acanthis.dart';
 import 'package:luthor/luthor.dart';
 import 'package:vine/vine.dart';
@@ -106,8 +107,7 @@ void main(List<String> args) {
     'rounds': 5,
     'rows': rows,
   };
-  File(
-    'analysis_benchmarks_${args.isEmpty ? 'jit' : args.first}.json',
-  ).writeAsStringSync(const JsonEncoder.withIndent('  ').convert(output));
+  File('analysis_benchmarks_${args.isEmpty ? 'jit' : args.first}.json')
+      .writeAsStringSync(const JsonEncoder.withIndent('  ').convert(output));
   print('Consumed final result: ${sink.runtimeType}');
 }

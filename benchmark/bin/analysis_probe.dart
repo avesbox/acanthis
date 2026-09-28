@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:acanthis/acanthis.dart';
 
 Future<void> main() async {
@@ -50,9 +51,8 @@ Future<void> main() async {
     'unknown keys async',
     () => flat.parseAsync({'x': 'a', 'extra': true}),
   );
-  final refined = union<String>([
-    string(),
-  ]).refine(onCheck: (_) => false, error: 'no', name: 'own');
+  final refined = union<String>([string()])
+      .refine(onCheck: (_) => false, error: 'no', name: 'own');
   await probe('union parse failing refinement', () => refined.parse('a'));
   final asyncUnion = union<String>([literal('a'), literal('b')]);
   await probe('union async later match', () => asyncUnion.tryParseAsync('b'));

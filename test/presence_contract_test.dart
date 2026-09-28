@@ -122,10 +122,7 @@ void main() {
       for (final schema in schemas) {
         expect(schema.tryParse(null).isValid, true);
         expect(schema.parse(null), schema.defaultValue);
-        expect(
-          (await schema.tryParseAsync(null)).value,
-          schema.defaultValue,
-        );
+        expect((await schema.tryParseAsync(null)).value, schema.defaultValue);
       }
       expect(string().withDefault('guest').list().parse([null]), ['guest']);
     },

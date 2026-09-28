@@ -18,9 +18,7 @@ void main() {
           : leaf;
       final map = object({'a': child});
       expect((await map.parseAsync({'a': 'v'})), {'a': 'v!'});
-      expect((await map.tryParseAsync({'a': 'v'})).value, {
-        'a': 'v!',
-      });
+      expect((await map.tryParseAsync({'a': 'v'})).value, {'a': 'v!'});
       expect((await child.list().parseAsync(['v'])), ['v!']);
       expect((await child.list().tryParseAsync(['v'])).value, ['v!']);
       expect(calls, 4);

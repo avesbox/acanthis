@@ -78,10 +78,7 @@ void main() {
     });
     final input = {'a': 'ok'};
     expect((await schema.tryParseAsync({'a': 'bad'})).isValid, isFalse);
-    expect(
-      identical((await schema.tryParseAsync(input)).value, input),
-      isTrue,
-    );
+    expect(identical((await schema.tryParseAsync(input)).value, input), isTrue);
     expect(identical((await schema.parseAsync(input)), input), isTrue);
     expect(calls, 3);
   });

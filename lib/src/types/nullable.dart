@@ -103,9 +103,7 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
       return super.tryParseAsyncOperations(null);
     }
     final elementResult = await element.tryParseAsync(value);
-    final result = await super.tryParseAsyncOperations(
-      elementResult.value,
-    );
+    final result = await super.tryParseAsyncOperations(elementResult.value);
     return outcomeFromDiagnostics(
       value: result.isValid && elementResult.isValid
           ? result.value

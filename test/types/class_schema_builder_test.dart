@@ -82,10 +82,7 @@ void main() {
 
       final missingField = pipeline.tryParse({'age': 21});
       expect(missingField.isValid, isFalse);
-      expect(
-        missingField.value,
-        equals(const _User(name: 'fallback', age: 0)),
-      );
+      expect(missingField.value, equals(const _User(name: 'fallback', age: 0)));
 
       final invalidOutput = pipeline.tryParse({'name': 'A', 'age': 21});
       expect(invalidOutput.isValid, isFalse);
@@ -94,10 +91,7 @@ void main() {
       final refineFailure = pipeline.tryParse({'name': 'Adam', 'age': 16});
       expect(refineFailure.isValid, isFalse);
       expect(refineFailure.errors.keys, contains('adult'));
-      expect(
-        refineFailure.value,
-        equals(const _User(name: 'Adam', age: 16)),
-      );
+      expect(refineFailure.value, equals(const _User(name: 'Adam', age: 16)));
     });
   });
 }

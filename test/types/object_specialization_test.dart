@@ -62,10 +62,7 @@ void main() {
           expect(actual.isValid, expected.isValid);
           expect(actual.errors, expected.errors);
           expect(actual.value, expected.value);
-          expect(
-            actual.value.keys.toList(),
-            expected.value.keys.toList(),
-          );
+          expect(actual.value.keys.toList(), expected.value.keys.toList());
           if (actual.isValid) {
             final parsed = fast.parse(payload);
             expect(parsed, generic.parse(payload));
@@ -133,9 +130,7 @@ void main() {
 
   test('custom subclasses and object refinements are never bypassed', () {
     expect(_CustomMap().parse({'a': 'ok'}), {'custom': true});
-    expect(_CustomMap().tryParse({'a': 'ok'}).value, {
-      'custom': true,
-    });
+    expect(_CustomMap().tryParse({'a': 'ok'}).value, {'custom': true});
     final child = _CustomString();
     final schema = object({'a': child});
     schema.parse({'a': 'ok'});

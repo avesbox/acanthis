@@ -238,11 +238,11 @@ void main() {
         'and the value is valid, '
         'then the result should be successful', () {
       final date = acanthis.date().differsFromNow(Duration(days: 1));
-      final result = date.tryParse(DateTime.now().add(Duration(days: 2)));
+      final result = date.tryParse(DateTime(2026, 1, 1).add(Duration(days: 2)));
 
       expect(result.isValid, true);
 
-      final resultParse = date.parse(DateTime.now().add(Duration(days: 2)));
+      final resultParse = date.parse(DateTime(2026, 1, 1).add(Duration(days: 2)));
 
       expect(resultParse, (result as AcanthisValid).value);
     });
@@ -252,12 +252,12 @@ void main() {
         'and the value is not valid, '
         'then the result should be unsuccessful', () {
       final date = acanthis.date().differsFromNow(Duration(days: 1));
-      final result = date.tryParse(DateTime.now().add(Duration(hours: 12)));
+      final result = date.tryParse(DateTime(2026, 1, 1).add(Duration(hours: 12)));
 
       expect(result.isValid, false);
 
       expect(
-        () => date.parse(DateTime.now().add(Duration(hours: 12))),
+        () => date.parse(DateTime(2026, 1, 1).add(Duration(hours: 12))),
         throwsA(TypeMatcher<ValidationError>()),
       );
     });

@@ -1,3 +1,8 @@
+<script setup>
+import DataInspection from './DataInspection.vue'
+import ValidationPreview from './ValidationPreview.vue'
+</script>
+
 <template>
   <div class="acanthis-home">
     <section class="home-hero" aria-labelledby="home-title">
@@ -17,6 +22,8 @@
         <div class="example-result"><span aria-hidden="true">✓</span> Define once. Reuse wherever data comes in.</div>
       </div>
     </section>
+    <DataInspection />
+    <ValidationPreview />
     <section class="home-paths" aria-labelledby="paths-title">
       <div class="paths-heading"><p class="eyebrow">THE DOCUMENTATION</p><h2 id="paths-title">A clear path from input to output.</h2></div>
       <div class="path-grid">

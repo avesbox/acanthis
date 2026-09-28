@@ -50,3 +50,16 @@ Use `result.issues.formatFields()` to get messages grouped by JSON pointer. A fi
 Keep schemas reusable across languages by resolving messages from each issue’s code and parameters. A resolver returns `null` to keep the schema’s fallback message.
 
 See [presentation and localization](/validation-results#presentation-and-localization) for a complete resolver example and the available output formats.
+
+### Custom rules
+
+For `checkFields()` and `checkFieldsAsync()`, resolve the rule's `name` as the
+translation key; `error` supplies the fallback message. For explicit
+`AcanthisRule` callbacks, resolve the returned `AcanthisIssue.code`, which is
+independent of the rule's `id`. Return `null` for unknown codes to preserve the
+fallback. Custom codes are translated by your application.
+
+See [localizing custom rule messages](/contextual-rules#localize-custom-rule-messages)
+for complete examples covering password confirmation, live sessions, and
+parameter interpolation. The same resolver works with
+`result.issues.formatFields()` and `session.issues.formatFields()`.

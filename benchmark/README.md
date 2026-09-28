@@ -118,3 +118,9 @@ No speedup target is set. Evaluate additional generated executors only after
 repeatable profiles attribute worthwhile cost to the existing compilation or
 specialization. Diagnostic allocation and presentation costs need separate
 investigation; faster generated type checks would not establish a solution to them.
+
+## Selected rules and live editing
+
+See [rules-live/README.md](rules-live/README.md) for reproducible JIT/AOT
+construction, full-validation, and incremental-edit timings, with raw samples
+and scheduling preflight checks.

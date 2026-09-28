@@ -151,6 +151,11 @@ abstract class AcanthisType<O> {
           final current = operation;
           compiled = (value, errors) {
             final newValue = previous(value, errors);
+            if (errors.isNotEmpty &&
+                AcanthisValidationScope.current.fieldPolicy ==
+                    AcanthisCollectionPolicy.first) {
+              return newValue;
+            }
             final cause = current.cause(newValue);
             if (cause != null) {
               errors.addIssue(
@@ -167,6 +172,11 @@ abstract class AcanthisType<O> {
           final current = operation;
           compiled = (value, errors) {
             final newValue = previous(value, errors);
+            if (errors.isNotEmpty &&
+                AcanthisValidationScope.current.fieldPolicy ==
+                    AcanthisCollectionPolicy.first) {
+              return newValue;
+            }
             if (!current(newValue)) {
               errors.addIssue(
                 current.code,
@@ -180,7 +190,15 @@ abstract class AcanthisType<O> {
         case AcanthisTransformation<O>():
           final previous = compiled;
           final current = operation;
-          compiled = (value, errors) => current(previous(value, errors));
+          compiled = (value, errors) {
+            final parsed = previous(value, errors);
+            if (errors.isNotEmpty &&
+                AcanthisValidationScope.current.fieldPolicy ==
+                    AcanthisCollectionPolicy.first) {
+              return parsed;
+            }
+            return current(parsed);
+          };
           break;
         default:
           break;
@@ -391,6 +409,11 @@ abstract class AcanthisType<O> {
       }
       O newValue = typedValue;
       for (var operation in operations) {
+        if (errors.isNotEmpty &&
+            AcanthisValidationScope.current.fieldPolicy ==
+                AcanthisCollectionPolicy.first) {
+          break;
+        }
         switch (operation) {
           case AcanthisCheck<O>():
             if (operation is CustomCauseCheck<O>) {

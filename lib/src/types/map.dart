@@ -29,12 +29,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   /// The fields of the map
   Map<String, AcanthisType> get fields => UnmodifiableMapView(_fields);
 
-  /// Whether the schema has rules involving more than one field.
+  /// Whether the schema has legacy dependencies requiring full live validation.
   bool get hasCrossFieldDependencies => _dependencies.isNotEmpty;
 
   final bool _passthrough;
   final AcanthisType? _passthroughType;
   final List<_Dependency> _dependencies;
+  final List<AcanthisRule> rules;
   final Set<String> _optionalFields;
   final bool _localPure;
   late final List<String> _keys;
@@ -185,7 +186,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  bool get isPure => _localPure && _isPure && super.isPure;
+  bool get isPure => rules.isEmpty && _localPure && _isPure && super.isPure;
 
   /// Constructor of the map type
   AcanthisMap(
@@ -199,6 +200,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
        _patch = false,
        _rejectUnknownKeys = false,
        _dependencies = const [],
+       rules = const [],
        _optionalFields = const {},
        _localPure = isPure,
        super(isAsync: _fields.values.any((field) => field.isAsync)) {
@@ -210,6 +212,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     required this._passthrough,
     required this._passthroughType,
     required this._dependencies,
+    List<AcanthisRule> rules = const [],
     required this._optionalFields,
     this._patch = false,
     this._rejectUnknownKeys = false,
@@ -219,14 +222,349 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     super.key,
     super.metadataEntry,
     super.defaultValue,
-  }) : _builtIn = true,
+  }) : rules = List.unmodifiable(rules),
+       _builtIn = true,
        _fields = fields,
        _localPure = isPure,
-       super(isAsync: isAsync || fields.values.any((field) => field.isAsync)) {
+       super(
+         isAsync:
+             isAsync ||
+             rules.any((rule) => rule.isAsync) ||
+             fields.values.any((field) => field.isAsync),
+       ) {
     _initializeCaches();
   }
 
+  /// Checks selected parsed fields and reports one issue at [at] on failure.
+  /// [name] identifies both the rule and its issue code and must be unique.
+  /// Paths accept field names, nested segment lists, or [AcanthisPath] values.
+  /// Use [rule] for multiple issues or an explicitly typed context callback.
+  AcanthisMap<V> checkFields(
+    Iterable<Object> fields, {
+    required Object at,
+    required String name,
+    required String error,
+    required bool Function(AcanthisRuleInputs fields) check,
+    bool allowMissing = false,
+    bool Function(AcanthisRuleInputs fields)? when,
+  }) {
+    final target = AcanthisPath.from(at);
+    final issue = AcanthisIssue(
+      path: target.segments,
+      code: name,
+      message: error,
+    );
+    return rule(
+      AcanthisRule<void>(
+        id: name,
+        inputs: fields,
+        outputs: [target],
+        allowMissing: allowMissing,
+        when: when == null ? null : (values, _) => when(values),
+        check: (values, _) => check(values) ? const [] : [issue],
+      ),
+    );
+  }
+
+  /// Async version of [checkFields], with the same dependency and error contract.
+  AcanthisMap<V> checkFieldsAsync(
+    Iterable<Object> fields, {
+    required Object at,
+    required String name,
+    required String error,
+    required Future<bool> Function(AcanthisRuleInputs fields) check,
+    bool allowMissing = false,
+    bool Function(AcanthisRuleInputs fields)? when,
+  }) {
+    final target = AcanthisPath.from(at);
+    final issue = AcanthisIssue(
+      path: target.segments,
+      code: name,
+      message: error,
+    );
+    return rule(
+      AcanthisRule<void>.async(
+        id: name,
+        inputs: fields,
+        outputs: [target],
+        allowMissing: allowMissing,
+        when: when == null ? null : (values, _) => when(values),
+        check: (values, _) async => await check(values) ? const [] : [issue],
+      ),
+    );
+  }
+
+  /// Attaches a rule with declared reads and diagnostic destinations.
+  /// IDs must be unique. Static object keys are checked eagerly.
+  AcanthisMap<V> rule<C>(AcanthisRule<C> rule) {
+    if (rule.id.isEmpty || rules.any((r) => r.id == rule.id)) {
+      throw ArgumentError('Rule IDs must be nonempty and unique');
+    }
+    return AcanthisMap<V>._(
+      fields: _fields,
+      passthrough: _passthrough,
+      passthroughType: _passthroughType,
+      dependencies: _dependencies,
+      optionalFields: _optionalFields,
+      patch: _patch,
+      rejectUnknownKeys: _rejectUnknownKeys,
+      rules: [...rules, rule],
+      operations: operations,
+      isAsync: isAsync,
+      key: key,
+      metadataEntry: metadataEntry,
+      defaultValue: defaultValue,
+    );
+  }
+
+  Map<String, V> _ruleValue(AcanthisOutcome<Map<String, V>> outcome) {
+    if (outcome is AcanthisInvalid<Map<String, V>>) {
+      final issue = outcome.issues.first;
+      throw ValidationError(issue.message, issue: issue);
+    }
+    return outcome.value;
+  }
+
+  bool _hasField(Map<String, dynamic> input, String key) =>
+      input.containsKey(key) || (!_patch && _fields[key]!.hasDefault);
+
+  AcanthisOutcome<dynamic>? _missingField(
+    Map<String, dynamic> input,
+    String key,
+  ) {
+    if (_hasField(input, key)) return null;
+    final errors = IssueSink();
+    if (!isOptionalField(key)) _requiredIssues(errors, key, _fields[key]!);
+    // Cached field diagnostics are relative to the field, including required.
+    return outcomeFromDiagnostics<dynamic>(
+      value: null,
+      issues: [
+        for (final issue in errors.issues)
+          AcanthisIssue(
+            path: issue.path.skip(1).toList(),
+            code: issue.code,
+            message: issue.message,
+            parameters: issue.parameters,
+          ),
+      ],
+    );
+  }
+
+  /// Shared full evaluator; caches are owned by a single live revision.
+  @internal
+  AcanthisOutcome<Map<String, V>> evaluateObject(
+    dynamic value, {
+    Map<String, AcanthisOutcome<dynamic>>? fieldCache,
+    Map<String, List<AcanthisIssue>>? ruleCache,
+    Set<String>? executedFields,
+    Set<String>? executedRules,
+    void Function(String)? onFieldSettled,
+  }) {
+    value ??= defaultValue;
+    final errors = IssueSink();
+    _checkUnknownKeys(value, errors);
+    final input = _tryInput(value, errors, snapshot: true);
+    if (input == null) {
+      return outcomeFromDiagnostics(
+        value: valueOnFailure(value),
+        errors: errors,
+      );
+    }
+    final parsed = <String, V>{};
+    final fields = fieldCache ?? <String, AcanthisOutcome<dynamic>>{};
+    for (final key in _keys) {
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+      var result = fields[key];
+      if (result == null) {
+        executedFields?.add(key);
+        final type = _fields[key] is LazyEntry
+            ? (_fields[key] as LazyEntry).call(this)
+            : _fields[key]!;
+        result = _missingField(input, key) ?? type.tryParse(input[key]);
+        fields[key] = result;
+      }
+      if (_hasField(input, key)) parsed[key] = result.value as V;
+      errors.addChild(key, result.errors);
+      onFieldSettled?.call(key);
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+    }
+    for (final key in input.keys.where((key) => !_fields.containsKey(key))) {
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+      if (!_passthrough) continue;
+      if (_passthroughType == null) {
+        parsed[key] = input[key] as V;
+      } else {
+        final result = _passthroughType.tryParse(input[key]);
+        parsed[key] = result.value;
+        errors.addChild(key, result.errors);
+      }
+    }
+    final childIssues = errors.issues;
+    if (errors.isEmpty ||
+        AcanthisValidationScope.current.objectPolicy !=
+            AcanthisCollectionPolicy.first) {
+      for (final rule in rules) {
+        var issues = ruleCache?[rule.id];
+        if (issues == null) {
+          executedRules?.add(rule.id);
+          issues = rule.evaluate(input, parsed, childIssues);
+          ruleCache?[rule.id] = issues;
+        }
+        errors.addAll(IssueSink.fromIssues(issues));
+        if (errors.isNotEmpty &&
+            AcanthisValidationScope.current.objectPolicy ==
+                AcanthisCollectionPolicy.first) {
+          break;
+        }
+      }
+      if (errors.isEmpty ||
+          AcanthisValidationScope.current.objectPolicy !=
+              AcanthisCollectionPolicy.first) {
+        _validateDependenciesTry(input, errors);
+      }
+    }
+    final result = errors.isEmpty
+        ? super.tryParseInternal(parsed, errors: errors)
+        : parsed;
+    return outcomeFromDiagnostics(
+      value: result,
+      errors: errors,
+      metadata: metadataEntry,
+    );
+  }
+
+  /// Shared full evaluator; caches are owned by a single live revision.
+  @internal
+  Future<AcanthisOutcome<Map<String, V>>> evaluateObjectAsync(
+    dynamic value, {
+    Map<String, AcanthisOutcome<dynamic>>? fieldCache,
+    Map<String, List<AcanthisIssue>>? ruleCache,
+    Set<String>? executedFields,
+    Set<String>? executedRules,
+    void Function(String)? onFieldSettled,
+  }) async {
+    value ??= defaultValue;
+    final errors = IssueSink();
+    _checkUnknownKeys(value, errors);
+    final input = _tryInput(value, errors, snapshot: true);
+    if (input == null) {
+      return outcomeFromDiagnostics(
+        value: valueOnFailure(value),
+        errors: errors,
+      );
+    }
+    final parsed = <String, V>{};
+    final fields = fieldCache ?? <String, AcanthisOutcome<dynamic>>{};
+    for (final key in _keys) {
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+      var result = fields[key];
+      if (result == null) {
+        executedFields?.add(key);
+        final type = _fields[key] is LazyEntry
+            ? (_fields[key] as LazyEntry).call(this)
+            : _fields[key]!;
+        result =
+            _missingField(input, key) ?? await type.tryParseAsync(input[key]);
+        fields[key] = result;
+      }
+      if (_hasField(input, key)) parsed[key] = result.value as V;
+      errors.addChild(key, result.errors);
+      onFieldSettled?.call(key);
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+    }
+    for (final key in input.keys.where((key) => !_fields.containsKey(key))) {
+      if (errors.isNotEmpty &&
+          AcanthisValidationScope.current.objectPolicy ==
+              AcanthisCollectionPolicy.first) {
+        break;
+      }
+      if (!_passthrough) continue;
+      if (_passthroughType == null) {
+        parsed[key] = input[key] as V;
+      } else {
+        final result = await _passthroughType.tryParseAsync(input[key]);
+        parsed[key] = result.value;
+        errors.addChild(key, result.errors);
+      }
+    }
+    final childIssues = errors.issues;
+    if (errors.isEmpty ||
+        AcanthisValidationScope.current.objectPolicy !=
+            AcanthisCollectionPolicy.first) {
+      for (final rule in rules) {
+        var issues = ruleCache?[rule.id];
+        if (issues == null) {
+          executedRules?.add(rule.id);
+          issues = await rule.evaluateAsync(input, parsed, childIssues);
+          ruleCache?[rule.id] = issues;
+        }
+        errors.addAll(IssueSink.fromIssues(issues));
+        if (errors.isNotEmpty &&
+            AcanthisValidationScope.current.objectPolicy ==
+                AcanthisCollectionPolicy.first) {
+          break;
+        }
+      }
+      if (errors.isEmpty ||
+          AcanthisValidationScope.current.objectPolicy !=
+              AcanthisCollectionPolicy.first) {
+        _validateDependenciesTry(input, errors);
+      }
+    }
+    final result = errors.isEmpty
+        ? await super.tryParseAsyncOperations(parsed)
+        : outcomeFromDiagnostics(value: parsed);
+    errors.addAll(result.errors);
+    return outcomeFromDiagnostics(
+      value: result.value,
+      errors: errors,
+      metadata: metadataEntry,
+    );
+  }
+
+  void _validateRulePaths(AcanthisRule rule) {
+    for (final path in [...rule.inputs, ...rule.outputs]) {
+      AcanthisType current = this;
+      for (final segment in path.segments) {
+        if (current is AcanthisNullable) current = current.element;
+        if (current is AcanthisMap && segment is String) {
+          if (!current.fields.containsKey(segment)) {
+            throw ArgumentError('Unknown rule field $segment');
+          }
+          current = current.fields[segment]!;
+        } else if (current is AcanthisList && segment is int) {
+          current = current.element;
+        } else {
+          throw ArgumentError('Rule path cannot be resolved statically');
+        }
+      }
+    }
+  }
+
   void _initializeCaches() {
+    for (final rule in rules) {
+      _validateRulePaths(rule);
+    }
     _keys = _fields.keys.toList(growable: false);
     _types = _fields.values.toList(growable: false);
     _length = _keys.length;
@@ -243,6 +581,10 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     AcanthisType type,
   ) {
     errors.addIssue('required', 'Field $field is required', path: [field]);
+    if (AcanthisValidationScope.current.fieldPolicy ==
+        AcanthisCollectionPolicy.first) {
+      return;
+    }
     // Preserve the existing collection policy for absent fields, including
     // repeated checks, without running predicates against missing input.
     for (final check in type.operations.whereType<AcanthisCheck>()) {
@@ -378,6 +720,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: {..._optionalFields, ...fields},
       operations: operations,
       isAsync: isAsync,
@@ -388,6 +731,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   Map<String, V> parseInternal(dynamic value) {
+    if (rules.isNotEmpty) return _ruleValue(tryParse(value));
     value ??= defaultValue;
     final plan = _objectTypePlan;
     if (plan != null && value is Map<String, dynamic> && plan.accepts(value)) {
@@ -534,6 +878,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     dynamic value, {
     required Map<String, dynamic> errors,
   }) {
+    if (rules.isNotEmpty ||
+        AcanthisValidationScope.current.objectPolicy ==
+            AcanthisCollectionPolicy.first) {
+      final result = evaluateObject(value);
+      errors.addAll(result.errors);
+      return result.value;
+    }
     value ??= defaultValue;
     final plan = _objectTypePlan;
     if (plan != null && value is Map<String, dynamic> && plan.accepts(value)) {
@@ -668,6 +1019,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   Future<Map<String, V>> parseAsync(dynamic value) async {
+    if (rules.isNotEmpty) return _ruleValue(await tryParseAsync(value));
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     _checkUnknownKeys(value);
@@ -767,6 +1119,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
 
   @override
   Future<AcanthisOutcome<Map<String, V>>> tryParseAsync(dynamic value) async {
+    if (rules.isNotEmpty ||
+        AcanthisValidationScope.current.objectPolicy ==
+            AcanthisCollectionPolicy.first) {
+      return evaluateObjectAsync(value);
+    }
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     final errors = IssueSink();
@@ -914,6 +1271,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       patch: _patch,
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
+      rules: rules,
       dependencies: [
         ..._dependencies,
         _Dependency(dependent, dependendsOn, dependency),
@@ -944,6 +1302,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -964,6 +1323,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -989,6 +1349,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -1014,6 +1375,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -1033,6 +1395,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: false,
       passthroughType: type,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -1058,6 +1421,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       patch: true,
       rejectUnknownKeys: _rejectUnknownKeys,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _fields.keys.toSet(),
       isPure: _localPure,
       operations: operations,
@@ -1081,6 +1445,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     patch: _patch,
     rejectUnknownKeys: policy == AcanthisUnknownKeys.reject,
     dependencies: _dependencies,
+    rules: rules,
     optionalFields: _optionalFields,
     isPure: _localPure,
     operations: operations,
@@ -1161,6 +1526,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: [...operations, check],
@@ -1180,6 +1546,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: [...operations, check],
@@ -1201,6 +1568,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: false,
       operations: [...operations, transformation],
@@ -1225,6 +1593,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,
@@ -1310,6 +1679,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       rejectUnknownKeys: _rejectUnknownKeys,
       passthroughType: _passthroughType,
       dependencies: _dependencies,
+      rules: rules,
       optionalFields: _optionalFields,
       isPure: isPure,
       operations: operations,

@@ -104,11 +104,11 @@ void main() {
         'and the value is a valid date, '
         'then the result should be successful', () {
       final u = date().or([string()]);
-      final result = u.tryParse(DateTime.now());
+      final result = u.tryParse(DateTime.utc(2026, 1, 1));
 
       expect(result.isValid, true);
 
-      final resultParse = u.parse(DateTime.now());
+      final resultParse = u.parse(DateTime.utc(2026, 1, 1));
 
       expect(resultParse, (result as AcanthisValid).value);
     });

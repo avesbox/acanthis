@@ -190,7 +190,7 @@ class _ContractExporter {
     final constraints = _constraints(type, path);
     late Map<String, dynamic> schema;
     if (type is AcanthisMap) {
-      if (type.hasCrossFieldDependencies) {
+      if (type.hasCrossFieldDependencies || type.rules.isNotEmpty) {
         unsupported('Cross-field dependencies cannot be represented.');
       }
       final required = <String>[];

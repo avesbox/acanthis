@@ -39,6 +39,7 @@ export default defineConfig({
         { text: 'Custom error messages', link: '/error-customization' },
         { text: 'Custom validation', link: '/schemas/refinements' },
         { text: 'Transformations & defaults', link: '/schemas/transformations' },
+        { text: 'Context & selected-field rules', link: '/contextual-rules' },
         { text: 'Live validation', link: '/live-validation' },
       ] },
       { text: 'Tools & integrations', collapsed: false, items: [

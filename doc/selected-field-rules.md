@@ -1,7 +1,31 @@
 # Selected-field rules before incremental scheduling
 
-Design date: 2026-09-12. Proposal only; the APIs below are not implemented.
-No live-session scheduling changes are part of this design.
+Design date: 2026-09-12. Implemented: 2026-09-28.
+
+The original design and truth tables below are retained as rationale. Public
+APIs are documented in [contextual rules](../.website/contextual-rules.md) and
+[live editing](../.website/live-validation.md). `AcanthisPath`, `AcanthisRule<C>`,
+`AcanthisValidationScope`, and sync/async sessions implement the contract.
+
+Implementation choices:
+- Field caches operate at top-level subtree boundaries. Nested edits rerun the
+  containing subtree and rules reading that subtree, handling list index shifts
+  and ancestor transformations conservatively.
+- Context changes invalidate all children/rules because existing nested
+  callbacks may read scoped context without declaring dependencies.
+- Object operations and legacy dependencies retain full-validation fallback.
+- Field and object collection policies are independent; object stopping uses
+  full validation in sessions. Rule predicates run on parsed inputs; invalid
+  prerequisites skip them. Object operations follow successful child/rule work.
+- Callback exceptions propagate; returned issues represent validation failures.
+- Async revisions own caches and captured input. Debounce cancellation returns
+  an unsettled delta; in-flight stale work returns its own result but cannot
+  publish. Field pending state clears as each field settles.
+
+Verification: `selected_field_rules_test.dart`, `collection_policy_test.dart`,
+`live_editing_test.dart`, `live_dependency_test.dart`, and `async_live_test.dart`.
+The seeded nested-edit parity test exercises 200 revisions in both session types.
+Timing evidence and reproduction commands: [rules/live benchmarks](../benchmark/rules-live/README.md).
 
 ## Problem and existing behavior
 
@@ -11,7 +35,7 @@ validity. Object refinements likewise do not declare field dependencies. Live
 sessions consequently revalidate the complete object for either kind of rule.
 Keep these existing APIs' semantics; add an explicit rule abstraction.
 
-## Proposed execution contract
+## Accepted execution contract
 
 A rule declares a stable unique ID, immutable input paths, allowed issue paths,
 an execution policy, and a callback. Paths reuse the string/integer data-only
@@ -44,7 +68,7 @@ programming failures into user validation failures.
 
 ## Password confirmation
 
-Proposed declaration (pseudocode):
+Declaration rationale (pseudocode):
 
 ```text
 id: passwordConfirmation
@@ -71,7 +95,7 @@ declared in its field schema. Password values never enter issue parameters.
 ## Conditional required field
 
 Use `accountType` with a constrained set of tags and an optional, non-nullable
-`businessId` string whose own schema checks non-empty content. Proposed rule:
+`businessId` string whose own schema checks non-empty content. Rule rationale:
 
 ```text
 id: businessIdRequired
@@ -117,4 +141,4 @@ Unknown dependencies and arbitrary object operations continue to force full
 validation. A settled incremental result must equal the reference evaluator's
 ordered issues and parsed output for that revision. Context changes invalidate
 rules declaring that context dependency. No automatic dependency discovery,
-rule-to-rule dependencies, or parallel execution is required for the first API.
+rule-to-rule dependencies, or parallel execution is provided by this API.

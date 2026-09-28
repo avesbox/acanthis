@@ -278,7 +278,7 @@ void main() {
                 .max(10)
                 .transform((value) => value.toUpperCase()),
           }),
-          'date': acanthis.date().min(DateTime.now()),
+          'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
         }),
       }).passthrough();
 
@@ -288,7 +288,7 @@ void main() {
           'age': 18,
           'email': 'test@gmail.com',
           'style': {'color': 'red'},
-          'date': DateTime.now(),
+          'date': DateTime.utc(2026, 1, 1),
         },
         'elements': ['Hell', 5],
       });
@@ -313,7 +313,7 @@ void main() {
                     .max(10)
                     .transform((value) => value.toUpperCase()),
               }),
-              'date': acanthis.date().min(DateTime.now()),
+              'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
             }),
           })
           .passthrough()
@@ -326,7 +326,7 @@ void main() {
             'age': 18,
             'email': 'test@test.com',
             'style': {'color': 'red'},
-            'date': DateTime.now(),
+            'date': DateTime.utc(2026, 1, 1),
           },
           'elements': ['Hell', 5],
         },
@@ -336,7 +336,7 @@ void main() {
             'age': 18,
             'email': 'test@example.com',
             'style': {'color': 'red'},
-            'date': DateTime.now(),
+            'date': DateTime.utc(2026, 1, 1),
           },
           'elements': ['Hell', 5],
         },
@@ -360,7 +360,7 @@ void main() {
                     .max(10)
                     .transform((value) => value.toUpperCase()),
               }),
-              'date': acanthis.date().min(DateTime.now()),
+              'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
             }),
           })
           .passthrough()
@@ -379,7 +379,7 @@ void main() {
             'age': 18,
             'email': 'test@test.com',
             'style': {'color': 'red'},
-            'date': DateTime.now(),
+            'date': DateTime.utc(2026, 1, 1),
           },
           'elements': ['Hell', 5],
         }),
@@ -392,7 +392,7 @@ void main() {
           'age': 18,
           'email': 'test@test.com',
           'style': {'color': 'red'},
-          'date': DateTime.now(),
+          'date': DateTime.utc(2026, 1, 1),
         },
         'elements': ['Hell', 5],
       });
@@ -418,7 +418,7 @@ void main() {
                     .max(10)
                     .transform((value) => value.toUpperCase()),
               }),
-              'date': acanthis.date().min(DateTime.now()),
+              'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
             }),
           })
           .passthrough()
@@ -436,7 +436,7 @@ void main() {
           'age': 18,
           'email': 'test@test.com',
           'style': {'color': 'red'},
-          'date': DateTime.now(),
+          'date': DateTime.utc(2026, 1, 1),
         },
         'elements': ['Hell', 5],
       });
@@ -449,7 +449,7 @@ void main() {
           'age': 18,
           'email': 'test@test.com',
           'style': {'color': 'red'},
-          'date': DateTime.now(),
+          'date': DateTime.utc(2026, 1, 1),
         },
         'elements': ['Hell', 5],
       });
@@ -472,7 +472,7 @@ void main() {
                     'style': acanthis.object({
                       'color': acanthis.string().min(3).max(10),
                     }),
-                    'date': acanthis.date().min(DateTime.now()),
+                    'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
                   })
                   .optionals(['style', 'date']),
             })
@@ -482,7 +482,7 @@ void main() {
           'attributes': {
             'age': 18,
             'email': 'test@test.com',
-            'date': DateTime.now(),
+            'date': DateTime.utc(2026, 1, 1),
           },
         });
         expect(result.isValid, true);
@@ -495,7 +495,7 @@ void main() {
         'attributes': acanthis.object({
           'age': acanthis.number().gte(18),
           'style': acanthis.object({'color': acanthis.string().min(3).max(10)}),
-          'date': acanthis.date().min(DateTime.now()),
+          'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
         }).partial(),
       });
 
@@ -503,7 +503,7 @@ void main() {
         'name': 'Hello',
         'attributes': {
           'style': {'color': 'red'},
-          'date': DateTime.now(),
+          'date': DateTime.utc(2026, 1, 1),
         },
       });
       expect(result.isValid, true);
@@ -518,14 +518,14 @@ void main() {
               'style': acanthis.object({
                 'color': acanthis.string().min(3).max(10),
               }),
-              'date': acanthis.date().min(DateTime.now()),
+              'date': acanthis.date().min(DateTime.utc(2026, 1, 1)),
             })
             .partial(deep: true),
       });
 
       final result = object.tryParse({
         'name': 'Hello',
-        'attributes': {'style': {}, 'date': DateTime.now()},
+        'attributes': {'style': {}, 'date': DateTime.utc(2026, 1, 1)},
       });
       expect(result.isValid, true);
     });

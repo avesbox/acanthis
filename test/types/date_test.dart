@@ -251,13 +251,14 @@ void main() {
         'and use the differenceFromNow method, '
         'and the value is not valid, '
         'then the result should be unsuccessful', () {
+          final now = DateTime.now();
       final date = acanthis.date().differsFromNow(Duration(days: 1));
-      final result = date.tryParse(DateTime(2026, 1, 1).add(Duration(hours: 12)));
+      final result = date.tryParse(now.add(Duration(hours: 12)));
 
       expect(result.isValid, false);
 
       expect(
-        () => date.parse(DateTime(2026, 1, 1).add(Duration(hours: 12))),
+        () => date.parse(now.add(Duration(hours: 12))),
         throwsA(TypeMatcher<ValidationError>()),
       );
     });

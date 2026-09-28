@@ -34,7 +34,7 @@ final result = account.tryParse({
   'age': 28,
 });
 
-if (result.success) {
+if (result.isValid) {
   print(result.value['name']); // Ada
 } else {
   for (final issue in result.issues) {
@@ -43,7 +43,7 @@ if (result.success) {
 }
 ```
 
-`tryParse()` returns an `AcanthisParseResult`. Check `success` before treating its `value` as valid data: a failed result can still contain a recovery value.
+`tryParse()` returns an `AcanthisOutcome<T>`. Both branches expose `.value`: validated output on `AcanthisValid<T>`, best-effort output on `AcanthisInvalid<T>`. Check `isValid` or match the outcome before treating the value as valid data.
 
 ## Handle invalid data
 
@@ -56,7 +56,7 @@ final invalid = account.tryParse({
   'age': 28,
 });
 
-print(invalid.success); // false
+print(invalid.isValid); // false
 print(invalid.issues.first.jsonPointer); // /email
 print(invalid.issues.first.code); // email
 ```
@@ -67,14 +67,87 @@ For custom messages or localization, continue to [custom error messages](/error-
 
 | When you need… | Use | On invalid input |
 | --- | --- | --- |
-| A result you can inspect | `tryParse(input)` | Returns an unsuccessful result with issues |
 | Validation to stop the operation | `parse(input)` | Throws `ValidationError` |
-| Typed success and failure branches | `validate(input)` | Returns `AcanthisInvalid` |
-| Any of the above with async checks | `tryParseAsync`, `parseAsync`, or `validateAsync` | Same behavior, wrapped in a `Future` |
+| A field error message | `validate(input)` | Returns the first validation message, or `null` on success |
+| Typed success and failure branches | `tryParse(input)` | Returns `AcanthisInvalid` |
+| Async checks | `tryParseAsync(input)` or `parseAsync(input)` | Returns issues or throws, respectively |
+| Async field messages | `validateAsync(input)` | Returns the first message, or `null`, in a `Future` |
+
+### `validate()` with Flutter's `TextFormField` {#flutter-textformfield}
+
+`validate()` returns `null` for valid input and the first `ValidationError`
+message for invalid input. This matches Flutter's
+[`validator` callback](https://api.flutter.dev/flutter/widgets/FormField/validator.html).
+Reuse a synchronous schema and normalize the callback's nullable input to an
+empty string so a required-field check can display your message.
+
+```dart
+import 'package:acanthis/acanthis.dart';
+import 'package:flutter/material.dart';
+
+class EmailForm extends StatefulWidget {
+  const EmailForm({super.key});
+
+  @override
+  State<EmailForm> createState() => _EmailFormState();
+}
+
+class _EmailFormState extends State<EmailForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _email = string()
+      .notEmpty(message: 'Enter your email')
+      .email(message: 'Enter a valid email address');
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (value) => _email.validate(value ?? ''),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                // All fields passed; save or submit the form here.
+              }
+            },
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+You can also pass `validator: schema.validate` directly when the schema accepts
+the callback's possible `null` value, for example with a nullable schema.
+`string().nullable()` accepts null, but still checks a supplied empty string.
+Passing null or an incompatible type to a non-nullable string schema can throw
+`TypeError`; `validate()` only converts `ValidationError` into a message.
+Uncaught exceptions from transformations propagate. Custom refinements retain
+their existing behavior of converting thrown exceptions into check failures.
+
+Coercions and transformations run during validation, but `validate()` discards
+the parsed value and does not update the text field. Use `parse(input)`
+when you need the transformed value, or `tryParse()` for all structured issues.
+
+Async schemas throw `AsyncValidationException` in `validate()`. Run remote checks
+outside the synchronous Flutter callback with `tryParseAsync()` and manage the
+pending/error state in your widget. `validateAsync()` returns `Future<String?>` and can supply a message for that
+state, but cannot be assigned to the synchronous `validator` callback.
+
+For translated text today, use schema messages or resolve structured issues as
+described in [presentation and localization](/validation-results#presentation-and-localization).
 
 ### `parse()`
 
-Read the validated data from `.value`. `parse()` returns a result wrapper, not the raw value.
+`parse()` returns the validated value directly and throws on validation failure.
 
 ```dart
 try {
@@ -83,7 +156,7 @@ try {
     'email': 'not-an-email',
     'age': 28,
   });
-  print(result.value);
+  print(result);
 } on ValidationError catch (error) {
   print(error.message);
 }
@@ -91,11 +164,11 @@ try {
 
 ### `tryParse()`
 
-Use the result’s `success`, `value`, and `issues` fields as shown above. `errors` is also available for compatibility; [structured issues](/validation-results#structured-diagnostics) preserve more detail.
+Both branches expose `value`, `isValid`, and `issues`. An invalid outcome contains best-effort output, which may include defaults or partial transformations and may still fail the schema. Use `isValid` or match the sealed branches to decide how to handle it. `errors` is also available for compatibility; [structured issues](/validation-results#structured-diagnostics) preserve more detail.
 
 ### `parseAsync()`
 
-Schemas with async refinements require an async parsing method. Awaiting `parseAsync()` returns an `AcanthisParseResult`, just like `parse()`.
+Schemas with async refinements require an async parsing method. Awaiting `parseAsync()` returns the validated value directly, just like `parse()`.
 
 ```dart
 final name = string().refineAsync(
@@ -105,7 +178,7 @@ final name = string().refineAsync(
 );
 
 final result = await name.parseAsync('Ada');
-print(result.value); // Ada
+print(result); // Ada
 ```
 
 ### `tryParseAsync()`
@@ -114,7 +187,7 @@ Use this to collect validation issues from a schema with async checks.
 
 ```dart
 final result = await name.tryParseAsync('admin');
-print(result.success); // false
+print(result.isValid); // false
 ```
 
 ::: tip Async checks

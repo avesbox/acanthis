@@ -14,11 +14,11 @@ void main() {
       final u = union([string(), number()]);
       final result = u.tryParse('This is a test');
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse('This is a test');
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a union validator with a string and a number,'
@@ -27,11 +27,11 @@ void main() {
       final u = union([string(), number()]);
       final result = u.tryParse(1);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse(1);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a union validator with a string and a number,'
@@ -40,7 +40,7 @@ void main() {
       final u = union([string(), number()]);
       final result = u.tryParse(true);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => u.parse(true), throwsA(isA<ValidationError>()));
     });
@@ -52,11 +52,11 @@ void main() {
       final u = string().or([number()]);
       final result = u.tryParse('This is a test');
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse('This is a test');
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a string validator with checks, '
@@ -66,11 +66,11 @@ void main() {
       final u = string().max(5).or([number()]);
       final result = u.tryParse('This');
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse('This');
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a string validator with checks, '
@@ -80,7 +80,7 @@ void main() {
       final u = string().max(5).or([number()]);
       final result = u.tryParse('This is a test');
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => u.parse('This is a test'), throwsA(isA<ValidationError>()));
     });
@@ -92,11 +92,11 @@ void main() {
       final u = number().or([string()]);
       final result = u.tryParse(1);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse(1);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator, '
@@ -106,11 +106,11 @@ void main() {
       final u = date().or([string()]);
       final result = u.tryParse(DateTime.now());
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse(DateTime.now());
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a boolean validator, '
@@ -120,11 +120,11 @@ void main() {
       final u = boolean().or([string()]);
       final result = u.tryParse(false);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse(false);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable string validator, '
@@ -134,11 +134,11 @@ void main() {
       final u = string().nullable().or([number()]);
       final result = u.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = u.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when a coercive schema appears first in a union,'
@@ -147,7 +147,7 @@ void main() {
 
       final result = u.tryParse(7);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
       expect(result.value, '7');
     });
 
@@ -174,7 +174,7 @@ void main() {
       ]);
       final result = u.tryParse(TestVariantA('This is a test'));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
   });
 }

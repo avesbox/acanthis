@@ -78,20 +78,26 @@ void main() {
           .build();
 
       final success = pipeline.parse({'name': 'Alice', 'age': 21});
-      expect(success.value, equals(const _User(name: 'Alice', age: 21)));
+      expect(success, equals(const _User(name: 'Alice', age: 21)));
 
       final missingField = pipeline.tryParse({'age': 21});
-      expect(missingField.success, isFalse);
-      expect(missingField.value, equals(const _User(name: 'fallback', age: 0)));
+      expect(missingField.isValid, isFalse);
+      expect(
+        missingField.value,
+        equals(const _User(name: 'fallback', age: 0)),
+      );
 
       final invalidOutput = pipeline.tryParse({'name': 'A', 'age': 21});
-      expect(invalidOutput.success, isFalse);
+      expect(invalidOutput.isValid, isFalse);
       expect(invalidOutput.errors.keys, contains('name.minLength'));
 
       final refineFailure = pipeline.tryParse({'name': 'Adam', 'age': 16});
-      expect(refineFailure.success, isFalse);
+      expect(refineFailure.isValid, isFalse);
       expect(refineFailure.errors.keys, contains('adult'));
-      expect(refineFailure.value, equals(const _User(name: 'Adam', age: 16)));
+      expect(
+        refineFailure.value,
+        equals(const _User(name: 'Adam', age: 16)),
+      );
     });
   });
 }

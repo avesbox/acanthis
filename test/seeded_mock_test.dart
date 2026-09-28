@@ -25,7 +25,7 @@ void main() {
       for (final schema in schemas) {
         for (var seed = 0; seed < 100; seed++) {
           final value = schema.mockSeeded(seed: seed);
-          expect(schema.tryParse(value).success, isTrue);
+          expect(schema.tryParse(value).isValid, isTrue);
           expect(schema.mockSeeded(seed: seed), value);
         }
       }

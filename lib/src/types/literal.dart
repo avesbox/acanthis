@@ -30,7 +30,11 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
     if (typedValue == this.value) {
       return typedValue;
     }
-    throw ValidationError('Value does not match literal');
+    throw ValidationError.diagnostic(
+      'Value does not match literal',
+      code: 'literal',
+      parameters: {'expected': this.value},
+    );
   }
 
   @override
@@ -52,30 +56,34 @@ class AcanthisLiteral<T> extends AcanthisType<T> {
   }
 
   @override
-  Future<AcanthisParseResult<T>> parseAsync(dynamic value) async {
+  Future<T> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     final typedValue = coerceInput(value);
     if (typedValue != this.value) {
-      throw ValidationError('Value does not match literal');
+      throw ValidationError.diagnostic(
+        'Value does not match literal',
+        code: 'literal',
+        parameters: {'expected': this.value},
+      );
     }
     return super.parseAsync(typedValue);
   }
 
   @override
-  Future<AcanthisParseResult<T>> tryParseAsync(dynamic value) async {
+  Future<AcanthisOutcome<T>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     final result = await super.tryParseAsyncOperations(value);
-    if (!result.success || result.value == this.value) return result;
-    return AcanthisParseResult(
+    if (!result.isValid || result.value == this.value) return result;
+    return outcomeFromDiagnostics(
       value: defaultValue ?? result.value,
       errors: IssueSink.single(
         'literal',
         'Value does not match literal',
         parameters: {'expected': this.value},
       ),
-      success: false,
+
       metadata: metadataEntry,
     );
   }

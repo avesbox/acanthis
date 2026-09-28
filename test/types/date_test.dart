@@ -11,11 +11,11 @@ void main() {
       final date = acanthis.date();
       final result = date.tryParse(DateTime(2020, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2020, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator with a max check,'
@@ -24,11 +24,11 @@ void main() {
       final date = acanthis.date().max(DateTime(2020, 1, 1));
       final result = date.tryParse(DateTime(2019, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2019, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator with a min check,'
@@ -37,11 +37,11 @@ void main() {
       final date = acanthis.date().min(DateTime(2020, 1, 1));
       final result = date.tryParse(DateTime(2021, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2021, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator with a min check,'
@@ -50,7 +50,7 @@ void main() {
       final date = acanthis.date().min(DateTime(2020, 1, 1));
       final result = date.tryParse(DateTime(2019, 1, 1));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime(2019, 1, 1)),
@@ -67,7 +67,7 @@ void main() {
           .max(DateTime(2021, 1, 1));
       final result = date.tryParse(DateTime(2019, 1, 1));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime(2019, 1, 1)),
@@ -84,7 +84,7 @@ void main() {
           .max(DateTime(2021, 1, 1));
       final result = date.tryParse(DateTime(2022, 1, 1));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime(2022, 1, 1)),
@@ -101,11 +101,11 @@ void main() {
           .max(DateTime(2021, 1, 1));
       final result = date.tryParse(DateTime(2020, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2020, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a tuple validator from a date validator,'
@@ -114,11 +114,11 @@ void main() {
       final date = acanthis.date().and([acanthis.string()]);
       final result = date.tryParse([DateTime(2020, 1, 1), 'Hello']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse([DateTime(2020, 1, 1), 'Hello']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a tuple validator from a date validator,'
@@ -127,7 +127,7 @@ void main() {
       final date = acanthis.date().and([acanthis.string()]);
       final result = date.tryParse([DateTime(2020, 1, 1), 5]);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse([DateTime(2020, 1, 1), 5]),
@@ -141,11 +141,11 @@ void main() {
       final date = acanthis.date().or([acanthis.string()]);
       final result = date.tryParse(DateTime(2020, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2020, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator with a customCheck,'
@@ -158,7 +158,7 @@ void main() {
       );
       final result = date.tryParse(DateTime(2021, 1, 1));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime(2021, 1, 1)),
@@ -176,11 +176,11 @@ void main() {
       );
       final result = date.tryParse(DateTime(2020, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2020, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator with a custom transformation,'
@@ -191,12 +191,12 @@ void main() {
       );
       final result = date.tryParse(DateTime(2021, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2021, 1, 1));
 
-      expect(resultParse.success, true);
-      expect(resultParse.value, DateTime(2021, 1, 2));
+      expect(resultParse, (result as AcanthisValid).value);
+      expect(resultParse, DateTime(2021, 1, 2));
     });
 
     test('when parsing a date-like string,'
@@ -205,8 +205,11 @@ void main() {
 
       final result = schema.tryParse('2026-06-10T10:20:52+00:00');
 
-      expect(result.success, true);
-      expect(result.value, DateTime.parse('2026-06-10T10:20:52+00:00'));
+      expect(result.isValid, true);
+      expect(
+        result.value,
+        DateTime.parse('2026-06-10T10:20:52+00:00'),
+      );
     });
 
     test('when creating a date validator,'
@@ -223,14 +226,14 @@ void main() {
         DateTime(2021, 1, 1),
       ]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse([
         DateTime(2020, 1, 1),
         DateTime(2021, 1, 1),
       ]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator,'
@@ -240,11 +243,11 @@ void main() {
       final date = acanthis.date().differsFromNow(Duration(days: 1));
       final result = date.tryParse(DateTime.now().add(Duration(days: 2)));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime.now().add(Duration(days: 2)));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator,'
@@ -254,7 +257,7 @@ void main() {
       final date = acanthis.date().differsFromNow(Duration(days: 1));
       final result = date.tryParse(DateTime.now().add(Duration(hours: 12)));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime.now().add(Duration(hours: 12))),
@@ -272,11 +275,11 @@ void main() {
       );
       final result = date.tryParse(DateTime(2023, 10, 2));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = date.parse(DateTime(2023, 10, 2));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a date validator,'
@@ -289,7 +292,7 @@ void main() {
       );
       final result = date.tryParse(DateTime(2023, 10, 0));
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => date.parse(DateTime(2023, 10, 0)),

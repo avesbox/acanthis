@@ -8,14 +8,14 @@ void main() {
       object({'a': string().min(2)}),
     ]) {
       final input = {'a': 'ok'};
-      expect(identical(schema.parse(input).value, input), isTrue);
+      expect(identical(schema.parse(input), input), isTrue);
       expect(identical(schema.tryParse(input).value, input), isTrue);
-      expect(identical((await schema.parseAsync(input)).value, input), isTrue);
+      expect(identical((await schema.parseAsync(input)), input), isTrue);
       expect(
         identical((await schema.tryParseAsync(input)).value, input),
         isTrue,
       );
-      schema.parse(input).value['a'] = 'updated';
+      schema.parse(input)['a'] = 'updated';
       expect(input['a'], 'updated');
     }
   });
@@ -25,12 +25,15 @@ void main() {
     () {
       final schema = object({'a': string()});
       final input = {'a': 'ok', 'extra': 'keep'};
-      for (final result in [schema.parse(input), schema.tryParse(input)]) {
-        expect(result.value, {'a': 'ok'});
-        expect(identical(result.value, input), isFalse);
+      for (final result in [
+        schema.parse(input),
+        (schema.tryParse(input) as AcanthisValid).value,
+      ]) {
+        expect(result, {'a': 'ok'});
+        expect(identical(result, input), isFalse);
         expect(input['extra'], 'keep');
       }
-      expect(identical(schema.passthrough().parse(input).value, input), isTrue);
+      expect(identical(schema.passthrough().parse(input), input), isTrue);
       expect(
         identical(schema.passthrough().tryParse(input).value, input),
         isTrue,
@@ -40,7 +43,7 @@ void main() {
 
   test('coercion, child transformations and defaults keep their outputs', () {
     final coercedInput = {'a': 42};
-    final coerced = object({'a': string().coerce()}).parse(coercedInput).value;
+    final coerced = object({'a': string().coerce()}).parse(coercedInput);
     expect(coerced, {'a': '42'});
     expect(coercedInput, {'a': 42});
     final input = {'a': 'ok'};
@@ -51,12 +54,12 @@ void main() {
         return '$v!';
       }),
     });
-    expect(transformed.parse(input).value, {'a': 'ok!'});
+    expect(transformed.parse(input), {'a': 'ok!'});
     expect(calls, 1);
     expect(input['a'], 'ok');
     final fallback = object({'a': string().min(3).withDefault('fallback')})
         .tryParse(input);
-    expect(fallback.success, isFalse);
+    expect(fallback.isValid, isFalse);
     expect(fallback.value['a'], 'fallback');
     expect(input['a'], 'ok');
   });
@@ -74,23 +77,22 @@ void main() {
       ),
     });
     final input = {'a': 'ok'};
-    expect((await schema.tryParseAsync({'a': 'bad'})).success, isFalse);
-    expect(identical((await schema.tryParseAsync(input)).value, input), isTrue);
-    expect(identical((await schema.parseAsync(input)).value, input), isTrue);
+    expect((await schema.tryParseAsync({'a': 'bad'})).isValid, isFalse);
+    expect(
+      identical((await schema.tryParseAsync(input)).value, input),
+      isTrue,
+    );
+    expect(identical((await schema.parseAsync(input)), input), isTrue);
     expect(calls, 3);
   });
 
   test('pure lists retain identity, transformed elements do not', () async {
     final input = ['ok'];
     final schema = string().min(1).list();
-    expect(identical(schema.parse(input).value, input), isTrue);
+    expect(identical(schema.parse(input), input), isTrue);
     expect(identical(schema.tryParse(input).value, input), isTrue);
-    expect(identical((await schema.parseAsync(input)).value, input), isTrue);
-    final transformed = string()
-        .transform((v) => '$v!')
-        .list()
-        .parse(input)
-        .value;
+    expect(identical((await schema.parseAsync(input)), input), isTrue);
+    final transformed = string().transform((v) => '$v!').list().parse(input);
     expect(transformed, ['ok!']);
     expect(input, ['ok']);
   });
@@ -104,9 +106,9 @@ void main() {
       final input = {
         'child': {'a': 'ok'},
       };
-      expect(identical(schema.parse(input).value, input), isTrue);
+      expect(identical(schema.parse(input), input), isTrue);
       final frozen = Map<String, dynamic>.unmodifiable(input);
-      expect(identical(schema.parse(frozen).value, frozen), isTrue);
+      expect(identical(schema.parse(frozen), frozen), isTrue);
     },
   );
 }

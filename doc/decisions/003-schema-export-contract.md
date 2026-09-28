@@ -10,7 +10,7 @@ defaults. `output` describes successful JSON outputs, including inserted default
 and stripped unknown properties. These contracts concern JSON values: finite
 numbers, strings, booleans, null, lists, and objects with string keys. They do not
 describe arbitrary Dart objects or promise to enumerate exactly every reachable
-output. Presence follows [the presence contract](presence-matrix.md).
+output. Presence follows [the presence contract](002-presence-matrix.md).
 
 ## Supported constraints
 

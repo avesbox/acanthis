@@ -68,7 +68,8 @@ class AcanthisString extends AcanthisType<String> {
     return switch (value) {
       String() => value,
       num() || bool() || DateTime() => value.toString(),
-      _ => throw ValidationError(
+      _ => throw ValidationError.diagnostic(
+        code: 'type',
         'Invalid type: ${value.runtimeType}, expected coercible string value',
       ),
     };

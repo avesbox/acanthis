@@ -65,7 +65,12 @@ abstract class AcanthisType<O> {
       if (operation is AcanthisCheck<O> && operation is! CustomCauseCheck<O>) {
         return (value) {
           if (!operation(value)) {
-            throw ValidationError(operation.error, key: operation.name);
+            throw ValidationError.diagnostic(
+              operation.error,
+              key: operation.name,
+              code: operation.code,
+              parameters: operation.parameters,
+            );
           }
           return value;
         };
@@ -81,7 +86,12 @@ abstract class AcanthisType<O> {
             final newValue = previous(value);
             final cause = current.cause(newValue);
             if (cause != null) {
-              throw ValidationError(cause, key: current.name);
+              throw ValidationError.diagnostic(
+                cause,
+                key: current.name,
+                code: current.code,
+                parameters: current.parameters,
+              );
             }
             return newValue;
           };
@@ -92,7 +102,12 @@ abstract class AcanthisType<O> {
           compiled = (value) {
             final newValue = previous(value);
             if (!current(newValue)) {
-              throw ValidationError(current.error, key: current.name);
+              throw ValidationError.diagnostic(
+                current.error,
+                key: current.name,
+                code: current.code,
+                parameters: current.parameters,
+              );
             }
             return newValue;
           };
@@ -217,19 +232,47 @@ abstract class AcanthisType<O> {
     return compiledParseInternal(coerceInput(value ?? defaultValue));
   }
 
-  /// The parse method to parse the value
-  /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
-  AcanthisParseResult<O> parse(dynamic value) {
-    value ??= defaultValue;
+  /// Returns null on success or the first [ValidationError.message] on failure.
+  ///
+  /// Runs synchronous parsing, including coercion and transformations, but
+  /// discards the parsed value. Use [parse] to retrieve that value or [tryParse]
+  /// to collect structured issues. Non-validation exceptions propagate.
+  /// For a Flutter text field, use `(value) => schema.validate(value ?? '')`
+  /// to treat a null value as empty input on a non-nullable string schema.
+  String? validate(dynamic value, {AcanthisMessageResolver? resolver}) {
     if (isAsync) {
       throw AsyncValidationException(
-        'Cannot use tryParse with async operations',
+        'Cannot use validate with async operations',
       );
     }
-    return AcanthisParseResult<O>(
-      value: parseInternal(value),
-      metadata: metadataEntry,
-    );
+    try {
+      parseInternal(value);
+      return null;
+    } on ValidationError catch (e) {
+      return e.formatMessage(resolver: resolver);
+    }
+  }
+
+  /// Returns null on success or the first asynchronous validation error message.
+  Future<String?> validateAsync(
+    dynamic value, {
+    AcanthisMessageResolver? resolver,
+  }) async {
+    try {
+      await parseAsync(value);
+      return null;
+    } on ValidationError catch (error) {
+      return error.formatMessage(resolver: resolver);
+    }
+  }
+
+  /// Returns the parsed value or throws [ValidationError] on failure.
+  O parse(dynamic value) {
+    value ??= defaultValue;
+    if (isAsync) {
+      throw AsyncValidationException('Cannot use parse with async operations');
+    }
+    return parseInternal(value);
   }
 
   O tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
@@ -251,13 +294,9 @@ abstract class AcanthisType<O> {
 
   O mock([int? seed]);
 
-  /// The tryParse method to try to parse the value
-  /// it returns a [AcanthisParseResult]
-  /// that has the following properties:
-  /// - success: A boolean that indicates if the parsing was successful or not.
-  /// - value: The value of the parsing. If the parsing was successful, this will contain the parsed value.
-  /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
-  AcanthisParseResult<O> tryParse(dynamic value) {
+  /// Returns [AcanthisValid] with the parsed value or [AcanthisInvalid]
+  /// with ordered issues and a recovery value. Async schemas require [tryParseAsync].
+  AcanthisOutcome<O> tryParse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException(
@@ -267,29 +306,22 @@ abstract class AcanthisType<O> {
     final errors = IssueSink();
     final newValue = tryParseInternal(value, errors: errors);
     final success = errors.isEmpty;
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: success ? newValue : defaultValue ?? newValue,
       errors: errors,
-      success: success,
       metadata: metadataEntry,
     );
   }
 
-  /// The parseAsync method to parse the value that uses [AcanthisAsyncCheck]
-  /// it returns a [AcanthisParseResult] with the parsed value and throws a [ValidationError] if the value is not valid
-  Future<AcanthisParseResult<O>> parseAsync(dynamic value) async {
+  /// Returns the parsed value after awaiting checks, or throws [ValidationError].
+  Future<O> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) {
       return parse(value);
     }
     final typedValue = coerceInput(value ?? defaultValue);
     if (operations.isEmpty) {
-      return AcanthisParseResult(
-        value: typedValue,
-        errors: {},
-        success: true,
-        metadata: metadataEntry,
-      );
+      return typedValue;
     }
     O newValue = typedValue;
     for (var operation in operations) {
@@ -298,17 +330,31 @@ abstract class AcanthisType<O> {
           if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
             if (cause != null) {
-              throw ValidationError(cause, key: operation.name);
+              throw ValidationError.diagnostic(
+                cause,
+                key: operation.name,
+                code: operation.code,
+                parameters: operation.parameters,
+              );
             }
             break;
           }
           if (!operation(newValue)) {
-            throw ValidationError(operation.error, key: operation.name);
+            throw ValidationError.diagnostic(
+              operation.error,
+              key: operation.name,
+              code: operation.code,
+              parameters: operation.parameters,
+            );
           }
           break;
         case AcanthisAsyncCheck<O>():
           if (!await operation(newValue)) {
-            throw ValidationError(operation.error);
+            throw ValidationError.diagnostic(
+              operation.error,
+              code: operation.code,
+              parameters: operation.parameters,
+            );
           }
           break;
         case AcanthisTransformation<O>():
@@ -318,16 +364,11 @@ abstract class AcanthisType<O> {
           break;
       }
     }
-    return AcanthisParseResult<O>(value: newValue, metadata: metadataEntry);
+    return newValue;
   }
 
-  /// The tryParseAsync method to try to parse the value that uses [AcanthisAsyncCheck]
-  /// it returns a [AcanthisParseResult]
-  /// that has the following properties:
-  /// - success: A boolean that indicates if the parsing was successful or not.
-  /// - value: The value of the parsing. If the parsing was successful, this will contain the parsed value.
-  /// - errors: The errors of the parsing. If the parsing was unsuccessful, this will contain the errors of the parsing.
-  Future<AcanthisParseResult<O>> tryParseAsync(dynamic value) async {
+  /// Returns a typed outcome after awaiting all applicable checks.
+  Future<AcanthisOutcome<O>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) {
       return tryParse(value);
@@ -337,15 +378,14 @@ abstract class AcanthisType<O> {
 
   /// Runs only this schema's operations; composition validates children first.
   @protected
-  Future<AcanthisParseResult<O>> tryParseAsyncOperations(dynamic value) async {
+  Future<AcanthisOutcome<O>> tryParseAsyncOperations(dynamic value) async {
     final errors = IssueSink();
     try {
       final typedValue = coerceInput(value ?? defaultValue);
       if (operations.isEmpty) {
-        return AcanthisParseResult(
+        return outcomeFromDiagnostics(
           value: typedValue,
           errors: errors,
-          success: true,
           metadata: metadataEntry,
         );
       }
@@ -389,26 +429,23 @@ abstract class AcanthisType<O> {
         }
       }
       final success = errors.isEmpty;
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: success ? newValue : defaultValue ?? newValue,
         errors: errors,
-        success: errors.isEmpty,
         metadata: metadataEntry,
       );
     } on ValidationError catch (e) {
       errors.addIssue(e.key.isNotEmpty ? e.key : inputErrorKey, e.message);
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: errors,
-        success: false,
         metadata: metadataEntry,
       );
     } on TypeError {
       errors.addIssue(inputErrorKey, _invalidTypeMessage(value));
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: errors,
-        success: false,
         metadata: metadataEntry,
       );
     }
@@ -560,22 +597,26 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     required this.outType,
     required T Function(O value) transform,
     super.defaultValue,
-  }) : transformFn = transform;
+  }) : transformFn = transform,
+       super(isAsync: inType.isAsync || outType.isAsync);
 
   @override
   bool get isPure => false;
 
   @override
   T? parseInternal(dynamic value) {
-    if (value == null && hasDefault) return outType.parse(defaultValue).value;
+    if (value == null && hasDefault) return outType.parse(defaultValue);
     final inResult = inType.parse(value);
     final T newValue;
     try {
-      newValue = transformFn(inResult.value);
+      newValue = transformFn(inResult);
     } catch (e) {
-      throw ValidationError('Error transforming the value from $O -> $T: $e');
+      throw ValidationError.diagnostic(
+        'Error transforming the value from $O -> $T: $e',
+        code: 'transform',
+      );
     }
-    return outType.parse(newValue).value;
+    return outType.parse(newValue);
   }
 
   @override
@@ -586,7 +627,7 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
       return result.value;
     }
     final inResult = inType.tryParse(value);
-    if (!inResult.success) {
+    if (!inResult.isValid) {
       errors.addAll(inResult.errors);
       return defaultValue;
     }
@@ -608,61 +649,66 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
   }
 
   @override
-  AcanthisParseResult<T?> parse(dynamic value) {
-    return AcanthisParseResult<T?>(
-      value: parseInternal(value),
-      metadata: metadataEntry,
-    );
+  T? parse(dynamic value) {
+    if (isAsync) {
+      throw AsyncValidationException('Cannot use parse with async operations');
+    }
+    return parseInternal(value);
   }
 
   @override
-  AcanthisParseResult<T?> tryParse(dynamic value) {
+  AcanthisOutcome<T?> tryParse(dynamic value) {
+    if (isAsync) {
+      throw AsyncValidationException(
+        'Cannot use tryParse with async operations',
+      );
+    }
     final errors = IssueSink();
     final parsed = tryParseInternal(value, errors: errors);
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: parsed,
       errors: errors,
-      success: errors.isEmpty,
       metadata: metadataEntry,
     );
   }
 
   @override
-  Future<AcanthisParseResult<T?>> parseAsync(dynamic value) async {
+  Future<T?> parseAsync(dynamic value) async {
     if (value == null && hasDefault) return outType.parseAsync(defaultValue);
     final inResult = await inType.parseAsync(value);
     final T newValue;
     try {
-      newValue = transformFn(inResult.value);
+      newValue = transformFn(inResult);
     } catch (e) {
-      throw ValidationError('Error transforming the value from $O -> $T: $e');
+      throw ValidationError.diagnostic(
+        'Error transforming the value from $O -> $T: $e',
+        code: 'transform',
+      );
     }
     final outResult = await outType.parseAsync(newValue);
     return outResult;
   }
 
   @override
-  Future<AcanthisParseResult<T?>> tryParseAsync(dynamic value) async {
+  Future<AcanthisOutcome<T?>> tryParseAsync(dynamic value) async {
     if (value == null && hasDefault) return outType.tryParseAsync(defaultValue);
     var inResult = await inType.tryParseAsync(value);
-    if (!inResult.success) {
-      return AcanthisParseResult(
+    if (!inResult.isValid) {
+      return outcomeFromDiagnostics(
         value: defaultValue,
         errors: inResult.errors,
-        success: false,
       );
     }
     final T newValue;
     try {
       newValue = transformFn(inResult.value);
     } catch (e) {
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: defaultValue,
         errors: IssueSink.single(
           'transform',
           'Error transforming the value from $O -> $T',
         ),
-        success: false,
       );
     }
     var outResult = await outType.tryParseAsync(newValue);
@@ -716,51 +762,5 @@ class AcanthisPipeline<O, T> extends AcanthisType<T?> {
     final inResult = inType.mock(seed);
     final T newValue = transformFn(inResult);
     return newValue;
-  }
-}
-
-/// A class to represent the result of a parse operation
-@immutable
-class AcanthisParseResult<O> {
-  /// The value of the parsing
-  final O value;
-
-  /// The errors of the parsing
-  final Map<String, dynamic> _errors;
-  final List<AcanthisIssue>? _providedIssues;
-
-  /// Ordered diagnostics, with data-only paths and no input values.
-  List<AcanthisIssue> get issues => _providedIssues != null
-      ? List.unmodifiable(_providedIssues)
-      : _errors is IssueSink
-      ? _errors.issues
-      : issuesFromLegacyErrors(_errors);
-
-  /// Lossy legacy projection: duplicate codes at one path overwrite each other.
-  Map<String, dynamic> get errors =>
-      _providedIssues == null ? _errors : IssueSink.fromIssues(_providedIssues);
-
-  /// A boolean that indicates if the parsing was successful or not
-  final bool success;
-
-  /// The metadata of the type
-  final MetadataEntry<O>? metadata;
-
-  /// The constructor of the class
-  // Keep the public const constructor and its named legacy errors argument.
-  // ignore: prefer_initializing_formals
-  const AcanthisParseResult({
-    required this.value,
-    Map<String, dynamic> errors = const {},
-    List<AcanthisIssue>? issues,
-    this.success = true,
-    this.metadata,
-    // ignore: prefer_initializing_formals
-  }) : _errors = errors,
-       _providedIssues = issues;
-
-  @override
-  String toString() {
-    return 'AcanthisParseResult<$O>{value: $value, errors: $errors, success: $success}';
   }
 }

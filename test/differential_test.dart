@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -64,7 +65,10 @@ void main() {
       expect(result.value, {
         'account': {'email': ''},
       });
-      expect((await async.tryParseAsync(payload)).value, result.value);
+      expect(
+        (await async.tryParseAsync(payload)).value,
+        result.value,
+      );
       expect(payload, {
         'account': {'email': '', 'unknown': true},
         'extra': true,
@@ -112,8 +116,12 @@ void main() {
         final expected = ordinary.tryParse(expectedInput);
         final reason =
             'seed=$seed specialized=$trial input=${jsonEncode(payload)}';
-        expect(actual.success, expected.success, reason: reason);
-        expect(actual.value, expected.value, reason: reason);
+        expect(actual.isValid, expected.isValid, reason: reason);
+        expect(
+          actual.value,
+          expected.value,
+          reason: reason,
+        );
         expect(actual.issues, expected.issues, reason: reason);
         expect(
           _sharing(input, actual.value),
@@ -122,14 +130,14 @@ void main() {
         );
         expect(input, payload, reason: reason);
         expect(expectedInput, payload, reason: reason);
-        if (actual.success) {
+        if (actual.isValid) {
           expect(
-            fast.parse(_copy(payload)).value,
+            fast.parse(_copy(payload)),
             actual.value,
             reason: reason,
           );
           expect(
-            (await fast.parseAsync(_copy(payload))).value,
+            (await fast.parseAsync(_copy(payload))),
             actual.value,
             reason: reason,
           );
@@ -147,7 +155,10 @@ void main() {
         name: 'scheduled',
       );
       expect((await async.tryParseAsync({})).issues, sync.tryParse({}).issues);
-      expect((await async.tryParseAsync({})).value, sync.tryParse({}).value);
+      expect(
+        (await async.tryParseAsync({})).value,
+        sync.tryParse({}).value,
+      );
       expect(() => sync.parse({}), throwsA(isA<ValidationError>()));
       await expectLater(async.parseAsync({}), throwsA(isA<ValidationError>()));
     },
@@ -207,8 +218,12 @@ void main() {
       final fast = schema().tryParse(inputs[1]);
       final async = await schema(async: true).tryParseAsync(inputs[2]);
       for (final result in [fast, async]) {
-        expect(result.success, expected.success, reason: reason);
-        expect(result.value, expected.value, reason: reason);
+        expect(result.isValid, expected.isValid, reason: reason);
+        expect(
+          result.value,
+          expected.value,
+          reason: reason,
+        );
         expect(result.issues, expected.issues, reason: reason);
       }
       for (var i = 0; i < inputs.length; i++) {
@@ -264,7 +279,7 @@ void main() {
         expect(delta.changedIssues, asyncDelta.changedIssues, reason: reason);
         expect(
           sync.validated,
-          full.success ? full.value : null,
+          full.isValid ? full.value : null,
           reason: reason,
         );
         expect(async.validated, sync.validated, reason: reason);

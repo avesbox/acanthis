@@ -1,13 +1,17 @@
 # Validation results
 
-Every parsing method returns an `AcanthisParseResult<T>`. It always carries a
-value, including a recovery value on failure, and its `success` flag indicates
-whether validation completed without issues.
+`parse(input)` returns the validated value directly and throws on failure.
+`tryParse(input)` returns a sealed `AcanthisOutcome<T>`: either `AcanthisValid<T>`
+or `AcanthisInvalid<T>`. Both branches expose `value`, `metadata`, `isValid`,
+and ordered `issues` (empty on success). On failure, `value` is best-effort
+output, which may contain defaults or partial transformations and is not
+guaranteed to satisfy the schema. Check `isValid` or match the outcome before
+using it as validated data.
 
 ```dart
 final result = string().email().tryParse('not-an-email');
 
-if (result.success) {
+if (result.isValid) {
   print(result.value);
 } else {
   print(result.errors);
@@ -22,14 +26,15 @@ containing an asynchronous refinement require `parseAsync()` or
 
 ## Typed outcomes
 
-`validate()` and `validateAsync()` are typed companions to the legacy result
-API. They expose exhaustive success and failure branches without removing
-`AcanthisParseResult` from existing applications.
+Use `tryParse(input)` for exhaustive success and failure branches.
+`tryParseAsync(input)` returns the corresponding typed outcome asynchronously.
+The synchronous `validate(input)` method returns a nullable error message for
+[Flutter form fields](/basic-usage#flutter-textformfield).
 
 ```dart
 switch (object({
   'email': string().email(),
-}).validate({
+}).tryParse({
   'email': 'not-an-email',
 })) {
   case AcanthisValid(value: final account):
@@ -120,8 +125,7 @@ as ISO 8601 strings, durations as microseconds, enums as names, and patterns as
 strings. Arbitrary constraint objects are represented by their type name.
 
 Diagnostics do not retain input values or include them in built-in error
-messages. Recovery values remain available separately on parse results and
-outcomes. Custom messages, cause callbacks, and supplied parameters are
+messages. Best-effort values remain available as `value` on invalid outcomes. Custom messages, cause callbacks, and supplied parameters are
 application-controlled: omit sensitive values from them.
 
 ### Legacy errors
@@ -132,11 +136,13 @@ message wins. Check names can collide with child field names; integer indices
 become string keys. Union branch diagnostics are available only in `issues`.
 Do not round-trip through this map when forwarding structured diagnostics.
 
-Custom schemas can construct `AcanthisParseResult(issues: ..., ...)` directly.
+Custom schemas can return `AcanthisValid(value, metadata: ...)` or
+`AcanthisInvalid(issues, value: ..., metadata: ...)` directly.
+Invalid outcomes take an immutable snapshot of the issue list.
 The existing `tryParseInternal(..., errors: ...)` extension point remains
 supported: library-owned sinks record legacy extension writes as they happen.
-A manually constructed result with only a plain `errors` map gets a best-effort
-conversion; already overwritten duplicates and index types cannot be recovered.
+Legacy writes using a plain errors map get a best-effort conversion; already
+overwritten duplicates and index types cannot be recovered.
 
 ## Object input and output
 
@@ -154,13 +160,13 @@ final account = object({
   'email': string().email(),
 });
 
-account.parse({'email': 'ada@example.com', 'debug': true}).value;
+account.parse({'email': 'ada@example.com', 'debug': true});
 // {email: ada@example.com}
 
 account.passthrough().parse({
   'email': 'ada@example.com',
   'debug': true,
-}).value;
+});
 // {email: ada@example.com, debug: true}
 ```
 

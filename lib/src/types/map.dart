@@ -261,7 +261,11 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       'Field $fieldKey is required',
       for (final check in checks) check.error,
     ];
-    throw ValidationError('${validationErrors.join('.\n')}.');
+    throw ValidationError.diagnostic(
+      '${validationErrors.join('.\n')}.',
+      code: 'required',
+      path: [fieldKey],
+    );
   }
 
   void _validateDependenciesThrow(Map<String, dynamic> value) {
@@ -282,13 +286,19 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       final dependTo = queryCache[dependency.dependent];
       if (dependFrom != null && dependTo != null) {
         if (!dependency.dependency(dependFrom, dependTo)) {
-          throw ValidationError(
+          throw ValidationError.diagnostic(
             'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}',
+            code: 'dependency',
+            path: [dependency.dependent],
+            parameters: {'dependsOn': dependency.dependendsOn},
           );
         }
       } else {
-        throw ValidationError(
+        throw ValidationError.diagnostic(
           'The dependency or dependFrom field does not exist in the map',
+          code: 'dependency',
+          path: [dependency.dependent],
+          parameters: {'dependsOn': dependency.dependendsOn},
         );
       }
     }
@@ -405,11 +415,16 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         if (identical(passedValue, _missing) && _isOptional[i]) {
           continue;
         }
-        final parsedValue =
-            (fieldType is LazyEntry ? fieldType.call(this) : fieldType)
-                .parseInternal(
-                  identical(passedValue, _missing) ? null : passedValue,
-                );
+        final dynamic parsedValue;
+        try {
+          parsedValue =
+              (fieldType is LazyEntry ? fieldType.call(this) : fieldType)
+                  .parseInternal(
+                    identical(passedValue, _missing) ? null : passedValue,
+                  );
+        } on ValidationError catch (error) {
+          throw error.prefixed(fieldKey);
+        }
         if (identical(passedValue, _missing) ||
             !identical(parsedValue, passedValue)) {
           (changed ??= Map<String, dynamic>.of(input))[fieldKey] = parsedValue;
@@ -448,16 +463,20 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       if (identical(passedValue, _missing) && _isOptional[i]) {
         continue;
       }
-      if (fieldType is LazyEntry) {
-        parsed[fieldKey] = (fieldType)
-            .call(this)
-            .parseInternal(
-              identical(passedValue, _missing) ? null : passedValue,
-            );
-      } else {
-        parsed[fieldKey] = fieldType.parseInternal(
-          identical(passedValue, _missing) ? null : passedValue,
-        );
+      try {
+        if (fieldType is LazyEntry) {
+          parsed[fieldKey] = (fieldType)
+              .call(this)
+              .parseInternal(
+                identical(passedValue, _missing) ? null : passedValue,
+              );
+        } else {
+          parsed[fieldKey] = fieldType.parseInternal(
+            identical(passedValue, _missing) ? null : passedValue,
+          );
+        }
+      } on ValidationError catch (error) {
+        throw error.prefixed(fieldKey);
       }
     }
 
@@ -470,8 +489,12 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         if (_passthroughType != null) {
           try {
             parsed[key] = _passthroughType.parseInternal(objValue);
+          } on ValidationError catch (error) {
+            throw error.prefixed(key);
           } on TypeError catch (_) {
-            throw ValidationError(
+            throw ValidationError.diagnostic(
+              code: 'passthrough',
+              path: [key],
               '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}',
             );
           }
@@ -621,6 +644,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             if (passthroughErrors.isNotEmpty) {
               errors.addChild(key, passthroughErrors);
             }
+          } on ValidationError catch (error) {
+            throw error.prefixed(key);
           } on TypeError catch (_) {
             errors.addIssue(
               'type',
@@ -642,7 +667,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
   }
 
   @override
-  Future<AcanthisParseResult<Map<String, V>>> parseAsync(dynamic value) async {
+  Future<Map<String, V>> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     _checkUnknownKeys(value);
@@ -661,16 +686,21 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
           'Field ${entry.key} is required',
           for (final check in checks) check.error,
         ];
-        throw ValidationError(validationErrors.join('.\n'));
+        throw ValidationError.diagnostic(
+          validationErrors.join('.\n'),
+          code: 'required',
+          path: [entry.key],
+        );
       }
       if (!hasValue && isOptional) continue;
-      if (fieldType is LazyEntry) {
-        parsed[entry.key] = (await fieldType.parseAsync(
-          passedValue,
-          this,
-        )).value;
-      } else {
-        parsed[entry.key] = (await fieldType.parseAsync(passedValue)).value;
+      try {
+        if (fieldType is LazyEntry) {
+          parsed[entry.key] = (await fieldType.parseAsync(passedValue, this));
+        } else {
+          parsed[entry.key] = (await fieldType.parseAsync(passedValue));
+        }
+      } on ValidationError catch (error) {
+        throw error.prefixed(entry.key);
       }
     }
     // Batch passthrough logic
@@ -683,9 +713,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         if (_passthroughType != null) {
           try {
             final parsedValue = await _passthroughType.parseAsync(objValue);
-            parsed[key] = parsedValue.value;
+            parsed[key] = parsedValue;
+          } on ValidationError catch (error) {
+            throw error.prefixed(key);
           } on TypeError catch (_) {
-            throw ValidationError(
+            throw ValidationError.diagnostic(
+              code: 'passthrough',
+              path: [key],
               '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}',
             );
           }
@@ -710,38 +744,38 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         final dependTo = queryCache[dependency.dependent];
         if (dependFrom != null && dependTo != null) {
           if (!dependency.dependency(dependFrom, dependTo)) {
-            throw ValidationError(
+            throw ValidationError.diagnostic(
               'Dependency not met: ${dependency.dependendsOn}->${dependency.dependent}',
+              code: 'dependency',
+              path: [dependency.dependent],
+              parameters: {'dependsOn': dependency.dependendsOn},
             );
           }
         } else {
-          throw ValidationError(
+          throw ValidationError.diagnostic(
             'The dependency or dependFrom field does not exist in the map',
+            code: 'dependency',
+            path: [dependency.dependent],
+            parameters: {'dependsOn': dependency.dependendsOn},
           );
         }
       }
     }
     final result = await super.parseAsync(parsed);
-    return AcanthisParseResult(
-      value: _reuseUnchangedInput(value, result.value),
-      metadata: result.metadata,
-    );
+    return _reuseUnchangedInput(value, result);
   }
 
   @override
-  Future<AcanthisParseResult<Map<String, V>>> tryParseAsync(
-    dynamic value,
-  ) async {
+  Future<AcanthisOutcome<Map<String, V>>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     final errors = IssueSink();
     _checkUnknownKeys(value, errors);
     final input = _tryInput(value, errors, snapshot: true);
     if (input == null) {
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: errors,
-        success: false,
         metadata: metadataEntry,
       );
     }
@@ -757,7 +791,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
         continue;
       }
       if (!hasValue && isOptional) continue;
-      final AcanthisParseResult parsedValue;
+      final AcanthisOutcome parsedValue;
       if (fieldType is LazyEntry) {
         parsedValue = await fieldType.tryParseAsync(passedValue, this);
       } else {
@@ -782,6 +816,8 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             if (parsedValue.errors.isNotEmpty) {
               errors.addChild(key, parsedValue.errors);
             }
+          } on ValidationError catch (error) {
+            throw error.prefixed(key);
           } on TypeError catch (_) {
             errors.addIssue(
               'type',
@@ -833,19 +869,18 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       errors.addAll(result.errors);
     }
     final success = errors.isEmpty;
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: success
           ? _reuseUnchangedInput(value, result.value)
           : defaultValue ?? _reuseUnchangedInput(value, result.value),
       errors: errors,
-      success: success,
       metadata: result.metadata,
     );
   }
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<Map<String, V>> tryParse(dynamic value) {
+  AcanthisOutcome<Map<String, V>> tryParse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException(
@@ -853,13 +888,13 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
       );
     }
     if (value is! Map) {
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: IssueSink.single(
           inputErrorKey,
           'Invalid type: ${value.runtimeType}, expected Map with String keys',
         ),
-        success: false,
+
         metadata: metadataEntry,
       );
     }
@@ -1060,7 +1095,12 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     for (final key in value.keys) {
       if (key is String && !_fields.containsKey(key)) {
         if (errors == null) {
-          throw ValidationError('Unknown field $key', key: 'unknownKey');
+          throw ValidationError.diagnostic(
+            'Unknown field $key',
+            key: 'unknownKey',
+            code: 'unknownKey',
+            path: [key],
+          );
         }
         errors.addIssue('unknownKey', 'Unknown field $key', path: [key]);
       }
@@ -1440,7 +1480,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  AcanthisParseResult<O> parse(dynamic value, [AcanthisMap? parent]) {
+  O parse(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1449,7 +1489,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  AcanthisParseResult<O> tryParse(dynamic value, [AcanthisMap? parent]) {
+  AcanthisOutcome<O> tryParse(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1458,10 +1498,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> parseAsync(
-    dynamic value, [
-    AcanthisMap? parent,
-  ]) {
+  Future<O> parseAsync(dynamic value, [AcanthisMap? parent]) {
     final type = _type(parent!);
     if (value is List) {
       value = List<Map<String, dynamic>>.from(value) as O;
@@ -1470,7 +1507,7 @@ class LazyEntry<O> extends AcanthisType<O> {
   }
 
   @override
-  Future<AcanthisParseResult<O>> tryParseAsync(
+  Future<AcanthisOutcome<O>> tryParseAsync(
     dynamic value, [
     AcanthisMap? parent,
   ]) {

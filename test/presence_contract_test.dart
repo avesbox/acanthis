@@ -20,14 +20,14 @@ Future<void> agrees(
     await schema.tryParseAsync(input),
     await scheduled(schema).tryParseAsync(input),
   ]) {
-    expect(result.success, valid);
+    expect(result.isValid, valid);
     expect(result.value, output);
     expect(result.issues, schema.tryParse(input).issues);
   }
   if (valid) {
-    expect(schema.parse(input).value, output);
-    expect((await schema.parseAsync(input)).value, output);
-    expect((await scheduled(schema).parseAsync(input)).value, output);
+    expect(schema.parse(input), output);
+    expect((await schema.parseAsync(input)), output);
+    expect((await scheduled(schema).parseAsync(input)), output);
   } else {
     expect(() => schema.parse(input), throwsA(anything));
     await expectLater(scheduled(schema).parseAsync(input), throwsA(anything));
@@ -44,7 +44,7 @@ void main() {
     await agrees(optional, {}, true, {});
     await agrees(optional, {'name': null}, true, {'name': null});
     final nonNullable = object({'name': string()}).optionals(['name']);
-    expect(nonNullable.tryParse({'name': null}).success, false);
+    expect(nonNullable.tryParse({'name': null}).isValid, false);
   });
 
   test(
@@ -91,10 +91,10 @@ void main() {
         false,
         {'name': 'x'},
       );
-      expect(field.tryParse(null).success, false);
-      expect((await field.tryParseAsync(null)).success, false);
+      expect(field.tryParse(null).isValid, false);
+      expect((await field.tryParseAsync(null)).isValid, false);
       final nullable = string().min(3).nullable(defaultValue: 'x');
-      expect(nullable.tryParse(null).success, false);
+      expect(nullable.tryParse(null).isValid, false);
       expect(
         (await nullable
                 .refineAsync(
@@ -103,7 +103,7 @@ void main() {
                   name: 'scheduled',
                 )
                 .tryParseAsync(null))
-            .success,
+            .isValid,
         false,
       );
     },
@@ -120,13 +120,14 @@ void main() {
         union<String>([string()]).withDefault('guest'),
       ];
       for (final schema in schemas) {
-        expect(schema.tryParse(null).success, true);
-        expect(schema.parse(null).value, schema.defaultValue);
-        expect((await schema.tryParseAsync(null)).value, schema.defaultValue);
+        expect(schema.tryParse(null).isValid, true);
+        expect(schema.parse(null), schema.defaultValue);
+        expect(
+          (await schema.tryParseAsync(null)).value,
+          schema.defaultValue,
+        );
       }
-      expect(string().withDefault('guest').list().parse([null]).value, [
-        'guest',
-      ]);
+      expect(string().withDefault('guest').list().parse([null]), ['guest']);
     },
   );
 
@@ -149,7 +150,7 @@ void main() {
           true,
         );
         final result = schema.tryParse({'extra': 1});
-        expect(result.success, policy != AcanthisUnknownKeys.reject);
+        expect(result.isValid, policy != AcanthisUnknownKeys.reject);
         expect(
           result.value,
           policy == AcanthisUnknownKeys.preserve ? {'extra': 1} : {},
@@ -160,24 +161,20 @@ void main() {
         );
       }
       expect(
-        object({'name': string()}).partial().tryParse({'name': null}).success,
+        object({'name': string()}).partial().tryParse({'name': null}).isValid,
         false,
       );
       expect(
-        object({'name': string().nullable()})
-            .patch()
-            .parse({'name': null})
-            .value,
+        object({'name': string().nullable()}).patch().parse({'name': null}),
         {'name': null},
       );
       final nested = object({
         'account': object({'name': string().withDefault('guest')}),
       });
-      expect(
-        nested.patch(deep: true).parse({'account': <String, dynamic>{}}).value,
-        {'account': {}},
-      );
-      expect(nested.patch().parse({'account': <String, dynamic>{}}).value, {
+      expect(nested.patch(deep: true).parse({'account': <String, dynamic>{}}), {
+        'account': {},
+      });
+      expect(nested.patch().parse({'account': <String, dynamic>{}}), {
         'account': {'name': 'guest'},
       });
     },
@@ -219,7 +216,7 @@ void main() {
           })
           .withDefault('guest');
       final schema = object({'name': field});
-      expect(schema.parse({}).value, {'name': 'GUEST'});
+      expect(schema.parse({}), {'name': 'GUEST'});
       expect(calls, 1);
       calls = 0;
       expect((await scheduled(schema).tryParseAsync({})).value, {
@@ -237,9 +234,9 @@ void main() {
       );
       await agrees(object({'name': pipeline}), {}, true, {'name': 12});
       expect(mapped, 0);
-      expect(pipeline.parse(null).value, 12);
-      expect((await pipeline.parseAsync(null)).value, 12);
-      expect(pipeline.tryParse('bad').success, false);
+      expect(pipeline.parse(null), 12);
+      expect((await pipeline.parseAsync(null)), 12);
+      expect(pipeline.tryParse('bad').isValid, false);
     },
   );
 

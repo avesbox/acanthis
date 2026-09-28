@@ -9,7 +9,7 @@ Validate existing Dart instances and describe class fields.
 ## Instances
 
 Use `instance<T>()` to validate already constructed Dart objects (class instances) without converting them to `Map`.  
-You attach field validators via getters. Read the original instance from `result.value`; field validators do not rewrite the instance’s properties.
+You attach field validators via getters. Read the original instance directly from `parse()`; field validators do not rewrite the instance’s properties.
 
 ```dart
 class User {
@@ -91,7 +91,7 @@ final buildUser = classSchema<Map<String, dynamic>, User>()
 final user = buildUser.parse({
   'name': 'Alice',
   'age': 30,
-}).value; // User instance
+}); // User instance
 ```
 
 ::: info

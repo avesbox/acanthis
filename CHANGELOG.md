@@ -2,6 +2,9 @@
 
 ## 2.0.0
 
+- breaking: remove `AcanthisParseResult` and `toOutcome()`. `parse`/`parseAsync` return raw values; `tryParse`/`tryParseAsync` return sealed `AcanthisValid`/`AcanthisInvalid` outcomes. Both outcome branches expose `value`; invalid values are best-effort output, not validated data.
+- feat: `validate`/`validateAsync` return the first validation message or null, for field validation. Async checks require the asynchronous entry points.
+
 - perf: resolve typed string-list executors once per batch and reduce first-use object-plan setup, retaining dynamic-list and subclass fallbacks.
 - perf: reduce diagnostic metadata and path copying, avoid exception-based string type rejection, simplify single-check executors, and reduce flat-schema setup and primitive-list parsing overhead while preserving ordered issues and recovery behavior.
 - feat: extend audited input/output JSON Schema 2020-12 and OpenAPI 3.1 exports with numeric bounds, scalar equality/enumeration, boolean checks, nonempty strings, list lengths, and stable recursive object references. Keep repeated constraints conjunctive and diagnose unaudited semantics explicitly.

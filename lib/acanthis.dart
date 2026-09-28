@@ -19,6 +19,7 @@ export 'src/exceptions/async_exception.dart';
 export 'src/exceptions/build_validator_exception.dart';
 export 'src/registries/metadata_registry.dart';
 export 'src/results.dart' hide singleIssueParameter;
+export 'src/i18n.dart';
 export 'src/live.dart';
 export 'src/seeded_mock.dart';
 

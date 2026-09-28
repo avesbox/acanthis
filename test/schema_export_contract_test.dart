@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -123,8 +124,8 @@ void main() {
             mode: AcanthisSchemaMode.output,
           ),
           'input': input,
-          'valid': result.success,
-          if (result.success) 'output': result.value,
+          'valid': result.isValid,
+          if (result.isValid) 'output': result.value,
         });
       }
     }
@@ -137,4 +138,3 @@ void main() {
     expect(cases.length, 140);
   });
 }
-

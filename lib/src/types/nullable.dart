@@ -60,60 +60,57 @@ class AcanthisNullable<T> extends AcanthisType<T?> {
 
   /// override of the [parse] method from [AcanthisType]
   @override
-  AcanthisParseResult<T?> parse(dynamic value) {
+  T? parse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
-      throw ValidationError('Cannot use parse on async type');
+      throw AsyncValidationException('Cannot use parse on async type');
     }
-    return AcanthisParseResult(
-      value: parseInternal(value),
-      metadata: metadataEntry,
-    );
+    return parseInternal(value);
   }
 
   /// override of the [tryParse] method from [AcanthisType]
   @override
-  AcanthisParseResult<T?> tryParse(dynamic value) {
+  AcanthisOutcome<T?> tryParse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
-      throw ValidationError('Cannot use tryParse on async type');
+      throw AsyncValidationException('Cannot use tryParse on async type');
     }
     final errors = IssueSink();
     final parsed = tryParseInternal(value, errors: errors);
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: errors.isEmpty ? parsed : defaultValue ?? parsed,
       errors: errors,
-      success: errors.isEmpty,
       metadata: metadataEntry,
     );
   }
 
   @override
-  Future<AcanthisParseResult<T?>> parseAsync(dynamic value) async {
+  Future<T?> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     if (value == null) {
       return super.parseAsync(null);
     }
     final elementResult = await element.parseAsync(value);
-    return await super.parseAsync(elementResult.value);
+    return await super.parseAsync(elementResult);
   }
 
   @override
-  Future<AcanthisParseResult<T?>> tryParseAsync(dynamic value) async {
+  Future<AcanthisOutcome<T?>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     if (value == null) {
       return super.tryParseAsyncOperations(null);
     }
     final elementResult = await element.tryParseAsync(value);
-    final result = await super.tryParseAsyncOperations(elementResult.value);
-    return AcanthisParseResult(
-      value: result.success && elementResult.success
+    final result = await super.tryParseAsyncOperations(
+      elementResult.value,
+    );
+    return outcomeFromDiagnostics(
+      value: result.isValid && elementResult.isValid
           ? result.value
           : defaultValue ?? result.value,
       errors: IssueSink.of(elementResult.errors)..addAll(result.errors),
-      success: result.success && elementResult.success,
       metadata: result.metadata,
     );
   }

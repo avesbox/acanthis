@@ -10,11 +10,11 @@ void main() {
       final tuple = acanthis.tuple([acanthis.string(), acanthis.number()]);
       final result = tuple.tryParse(['Hello', 5]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = tuple.parse(['Hello', 5]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a tuple validator,'
@@ -23,7 +23,7 @@ void main() {
       final tuple = acanthis.tuple([acanthis.string(), acanthis.number()]);
       final result = tuple.tryParse(['Hello', '5']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => tuple.parse(['Hello', '5']),
@@ -40,11 +40,11 @@ void main() {
       ]).variadic();
       final result = tuple.tryParse(['Hello', 5, 10, 20]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = tuple.parse(['Hello', 5, 10, 20]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a variadic tuple validator,'
@@ -56,7 +56,7 @@ void main() {
       ]).variadic();
       final result = tuple.tryParse(['Hello', '5']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => tuple.parse(['Hello', '5']),

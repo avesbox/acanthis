@@ -24,7 +24,7 @@ stripped from the parsed output. A missing property is different from an
 explicit `null`: use `nullable()` when a field may be present with null.
 
 When validation does not change the data, pure object schemas can return the
-original input map as `result.value`. This includes schemas with validation
+original input map directly from `parse()`. This includes schemas with validation
 checks, provided they do not transform or coerce values or apply defaults.
 Unknown-key stripping still creates an output map when needed. Pure typed
 lists can likewise return the original list.
@@ -33,15 +33,15 @@ lists can likewise return the original list.
 final schema = object({'name': string().min(1)});
 final input = {'name': 'Ada'};
 final result = schema.parse(input);
-print(identical(result.value, input)); // true
+print(identical(result, input)); // true
 ```
 
 The input and returned value may therefore share identity: mutations through
 either reference are visible through the other, and read-only input remains
-read-only. Use `Map<String, dynamic>.of(result.value)` if you need an independent,
+read-only. Use `Map<String, dynamic>.of(result)` if you need an independent,
 mutable outer map. Async validation may also reuse unchanged input; schemas
-that change values retain their transformed output. Parsing still returns an
-`AcanthisParseResult`, so access the data through `.value`.
+that change values retain their transformed output. `parse()` returns the
+map directly; `tryParse()` wraps successful output in `AcanthisValid.value`.
 
 To add optional properties, you can use the `optionals()` method.
 

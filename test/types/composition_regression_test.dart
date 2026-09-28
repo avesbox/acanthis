@@ -10,7 +10,7 @@ void main() {
 
       final result = schema.tryParse({'kind': 'c'});
 
-      expect(result.success, isFalse);
+      expect(result.isValid, isFalse);
       expect(result.errors['kind'], contains('union'));
     });
 
@@ -23,27 +23,27 @@ void main() {
         'value': [42, 43],
       });
 
-      expect(result.success, isFalse);
+      expect(result.isValid, isFalse);
       expect(result.errors, contains('value'));
     });
 
     test('nullable transformation runs exactly once', () {
       final schema = string().transform((value) => '${value}x').nullable();
 
-      expect(schema.parse('a').value, 'ax');
+      expect(schema.parse('a'), 'ax');
       expect(schema.tryParse('a').value, 'ax');
     });
 
     test('literal uses its specialised rules through parseAsync', () async {
       final result = await literal('a').tryParseAsync('b');
 
-      expect(result.success, isFalse);
+      expect(result.isValid, isFalse);
       expect(result.errors, contains('literal'));
     });
 
     test('composites return type errors instead of throwing in tryParse', () {
-      expect(object({'value': string()}).tryParse(42).success, isFalse);
-      expect(string().list().tryParse(42).success, isFalse);
+      expect(object({'value': string()}).tryParse(42).isValid, isFalse);
+      expect(string().list().tryParse(42).isValid, isFalse);
     });
 
     test('a nested async rule disables synchronous parsing', () {
@@ -67,10 +67,8 @@ void main() {
       () async {
         final schema = object({'value': string()});
 
-        expect(schema.parse({'value': 'a', 'extra': true}).value, {
-          'value': 'a',
-        });
-        expect((await schema.parseAsync({'value': 'a', 'extra': true})).value, {
+        expect(schema.parse({'value': 'a', 'extra': true}), {'value': 'a'});
+        expect((await schema.parseAsync({'value': 'a', 'extra': true})), {
           'value': 'a',
         });
       },
@@ -79,7 +77,7 @@ void main() {
     test('an explicit null is validated rather than treated as absent', () {
       final result = object({'value': string()}).tryParse({'value': null});
 
-      expect(result.success, isFalse);
+      expect(result.isValid, isFalse);
       expect(result.errors['value'], contains('type'));
       expect(result.errors['value'], isNot(contains('required')));
     });
@@ -100,7 +98,7 @@ void main() {
 
       final result = await schema.tryParseAsync('b');
 
-      expect(result.success, isTrue);
+      expect(result.isValid, isTrue);
       expect(result.errors, isEmpty);
       expect(result.value, 'b');
     });
@@ -112,7 +110,7 @@ void main() {
       final schema = builder.build();
       builder.map((value) => '${value}2');
 
-      expect(schema.parse('a').value, 'a1');
+      expect(schema.parse('a'), 'a1');
     });
 
     test('literal JSON schema uses the standard const keyword', () {
@@ -131,8 +129,8 @@ void main() {
         name: 'remote',
       );
 
-      expect(sync.parse('a').success, isTrue);
-      expect((await async.tryParseAsync('a')).success, isTrue);
+      expect(sync.parse('a'), isA<String>());
+      expect((await async.tryParseAsync('a')).isValid, isTrue);
     });
   });
 }

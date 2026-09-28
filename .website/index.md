@@ -29,8 +29,10 @@ final result = account.tryParse({
   'email': 'ada@example.com',
 });
 
-print(result.success); // true
-print(result.value['name']); // Ada
+print(result.isValid); // true
+if (result is AcanthisValid<Map<String, dynamic>>) {
+  print(result.value['name']); // Ada
+}
 ```
 
 </template>

@@ -11,7 +11,7 @@ final schema = object({
   'age': integer().gte(18).lte(65),
 });
 final value = schema.mockSeeded(seed: 42);
-assert(schema.tryParse(value).success);
+assert(schema.tryParse(value).isValid);
 ```
 
 The supported subset is explicit:

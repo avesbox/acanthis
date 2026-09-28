@@ -8,14 +8,14 @@ SDK that includes a compatible Dart version.
 ## Parsed values can share input identity
 
 Validation without output changes can return the original map or typed list
-through `result.value`. The result wrapper remains an `AcanthisParseResult`.
+directly from `parse`, or through `AcanthisValid.value` from `tryParse`.
 Mutations through the returned container may affect the input, and read-only
 input may produce read-only output.
 
 ```dart
 final input = {'name': 'Ada'};
 final result = object({'name': string()}).parse(input);
-final independent = Map<String, dynamic>.of(result.value);
+final independent = Map<String, dynamic>.of(result);
 ```
 
 This creates an independent outer map, not a deep clone. Use `List.of` for
@@ -43,7 +43,7 @@ errors.
 
 ## New result and session APIs
 
-`validate` and `validateAsync` expose typed success/failure outcomes and
+`tryParse` and `tryParseAsync` expose typed success/failure outcomes and
 structured issues; see [Validation Results](/validation-results).
 Object schemas expose `watch` and `watchAsync` for live sessions. Synchronous
 sessions provide `explain(field)`; there is no `explainAsync` method.
@@ -65,6 +65,32 @@ union branch details. Missing-dependency failures now use the stable
 Built-in coercion messages no longer echo the input value. Custom messages
 remain application-controlled. See [Validation Results](/validation-results)
 for the collection policy, formatting helpers, and localization resolver.
+
+## Parsing return types
+
+`AcanthisParseResult` and `toOutcome()` have been removed. Update callers as follows:
+
+| Previous API | 2.0 API |
+| --- | --- |
+| `schema.parse(input).value` | `schema.parse(input)` |
+| `(await schema.parseAsync(input)).value` | `await schema.parseAsync(input)` |
+| `result.success` | `result.isValid` |
+| `result.value` after `tryParse` | Still `result.value`, on both branches |
+| `schema.tryParse(input).toOutcome()` | `schema.tryParse(input)` |
+| Draft typed `validate` / `validateAsync` | `tryParse` / `tryParseAsync` |
+
+`tryParse` returns `AcanthisOutcome<T>`; `tryParseAsync` returns
+`Future<AcanthisOutcome<T>>`. Both branches expose `value`. Check `isValid` or match the sealed branches
+before treating it as valid data; invalid values are best-effort output.
+The earlier draft name `recoveryValue` has been replaced with `value`.
+Metadata remains available on outcomes and through `schema.metadataEntry`;
+raw values returned by `parse` do not carry metadata.
+
+`validate(input)` returns `String?` and `validateAsync(input)` returns
+`Future<String?>`: null on success, or the first validation error message.
+See the [Flutter form example](/basic-usage#flutter-textformfield) for nullable
+callback input and synchronous validation requirements. Neither method returns
+an outcome. Custom schema overrides must adopt the new return types too.
 
 ## Reproducible recovery and optional output
 

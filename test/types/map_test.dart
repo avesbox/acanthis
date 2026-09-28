@@ -11,11 +11,11 @@ void main() {
       final map = acanthis.object({'key': acanthis.string().min(5).max(20)});
       final result = map.tryParse({'key': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a map validator with a required field,'
@@ -24,7 +24,7 @@ void main() {
       final map = acanthis.object({'key': acanthis.string().min(5).max(20)});
       final result = map.tryParse({});
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         result.errors,
@@ -61,11 +61,11 @@ void main() {
       }).passthrough();
       final result = map.tryParse({'key': 'value', 'other': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value', 'other': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when a nested field enables coercion,'
@@ -78,7 +78,7 @@ void main() {
 
       final result = schema.tryParse({'age': '42', 'active': 'true'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
       expect(result.value['age'], 42);
       expect(result.value['active'], true);
     });
@@ -95,11 +95,11 @@ void main() {
 
       final result = map.tryParse({'other': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'other': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a map validator with the merge property, '
@@ -111,11 +111,11 @@ void main() {
 
       final result = map.tryParse({'key': 'value', 'other': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value', 'other': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a map validator with the merge property, '
@@ -127,7 +127,7 @@ void main() {
 
       final result = map.tryParse({'key': 'value'});
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => map.parse({'key': 'value'}),
@@ -144,11 +144,11 @@ void main() {
 
       final result = map.tryParse({'key': 'value', 'other': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value', 'other': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a map validator with the extend property, '
@@ -159,7 +159,7 @@ void main() {
           .extend({'key': acanthis.string().max(1)});
 
       final result = map.fields['key']?.parse('value');
-      expect(result?.success, true);
+      expect(result, 'value');
     });
 
     test('when creating a map validator with the merge property, '
@@ -170,7 +170,7 @@ void main() {
           .merge({'key': acanthis.string().max(1)});
 
       final result = map.fields['key']?.parse('v');
-      expect(result?.success, true);
+      expect(result, 'v');
     });
 
     test('when creating a map validator with the extend property, '
@@ -182,7 +182,7 @@ void main() {
 
       final result = map.tryParse({'key': 'value'});
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => map.parse({'key': 'value'}),
@@ -199,11 +199,11 @@ void main() {
 
       final result = map.tryParse({'key': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a map validator with the pick property, '
@@ -215,7 +215,7 @@ void main() {
 
       final result = map.tryParse({'other': 'value'});
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => map.parse({'other': 'value'}),
@@ -237,12 +237,12 @@ void main() {
 
       final result = map.tryParse({'key': 'value'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = map.parse({'key': 'value'});
 
-      expect(resultParse.success, true);
-      expect(resultParse.value['key'], 'VALUE');
+      expect(resultParse, (result as AcanthisValid).value);
+      expect(resultParse['key'], 'VALUE');
     });
 
     test('when creating a map validator with nullable transformed fields,'
@@ -254,13 +254,13 @@ void main() {
 
       final result = map.tryParse({'name': 'John Doe'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
       expect(result.value['name'], 'JOHN DOE');
 
       final resultParse = map.parse({'name': 'John Doe'});
 
-      expect(resultParse.success, true);
-      expect(resultParse.value['name'], 'JOHN DOE');
+      expect(resultParse, (result as AcanthisValid).value);
+      expect(resultParse['name'], 'JOHN DOE');
     });
 
     test('when creating a map validator for a complex object,'
@@ -293,7 +293,7 @@ void main() {
         'elements': ['Hell', 5],
       });
 
-      expect(parsed.success, true);
+      expect(parsed, isA<Map<String, dynamic>>());
     });
 
     test('when creating a map validator for a complex object, '
@@ -397,7 +397,7 @@ void main() {
         'elements': ['Hell', 5],
       });
 
-      expect(result.success, false);
+      expect(result.isValid, false);
       expect(result.errors['name'].keys.contains('dependency'), true);
     });
 
@@ -441,7 +441,7 @@ void main() {
         'elements': ['Hell', 5],
       });
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = object.parse({
         'name': 'Hello',
@@ -454,7 +454,7 @@ void main() {
         'elements': ['Hell', 5],
       });
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test(
@@ -485,7 +485,7 @@ void main() {
             'date': DateTime.now(),
           },
         });
-        expect(result.success, true);
+        expect(result.isValid, true);
       },
     );
 
@@ -506,7 +506,7 @@ void main() {
           'date': DateTime.now(),
         },
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
 
     test('when creating a map validator for an object with the partial method and the deep param at true, then nested object fields should be optional', () {
@@ -527,7 +527,7 @@ void main() {
         'name': 'Hello',
         'attributes': {'style': {}, 'date': DateTime.now()},
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
 
     test('when a map validator is created with a lazy object inside, then the object should be recursively parsable', () {
@@ -542,7 +542,7 @@ void main() {
           {'name': 'Hello', 'age': 18, 'attributes': []},
         ],
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
 
     test('when a map validator is created and the maxProperties check is used, '
@@ -562,7 +562,7 @@ void main() {
           {'name': 'Hello', 'attributes': []},
         ],
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
 
     test('when a map validator is created and the minProperties check is used, '
@@ -582,7 +582,7 @@ void main() {
           {'name': 'Hello', 'attributes': [], 'age': 18},
         ],
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
     });
 
     test('when a map validator is created and the type parameter in the passthrough method is used, '
@@ -602,14 +602,14 @@ void main() {
           {'name': 'Hello', 'attributes': [], 'age': 18},
         ],
       });
-      expect(result.success, true);
+      expect(result.isValid, true);
       final result2 = object.tryParse({
         'name': 'Hello',
         'attributes': [
           {'name': 'Hello', 'attributes': [], 'age': '18'},
         ],
       });
-      expect(result2.success, false);
+      expect(result2.isValid, false);
     });
 
     test('when creating a tuple validator from a map validator,'
@@ -619,7 +619,7 @@ void main() {
           .and([string()]);
       final result = schema.tryParse([5, 'Hello']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => schema.parse([5, 'Hello']),
@@ -637,14 +637,14 @@ void main() {
         'World',
       ]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = schema.parse([
         {'name': 'James'},
         'World',
       ]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a union validator from a map validator,'
@@ -654,7 +654,7 @@ void main() {
           .or([string()]);
       final result = schema.tryParse(5);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
     });
@@ -666,11 +666,11 @@ void main() {
           .or([string()]);
       final result = schema.tryParse({'name': 'James'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = schema.parse({'name': 'James'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when the method toJsonSchema is called, then the result should be a valid json schema', () {

@@ -1,3 +1,5 @@
+import 'package:acanthis/src/issue_sink.dart';
+
 import 'dart:convert';
 
 import 'package:acanthis/acanthis.dart';
@@ -69,7 +71,7 @@ void main() {
     ]);
     expect(result.issues.map((issue) => issue.path), [[], []]);
     expect(result.errors, {'minLength': result.issues.last.message});
-    expect((result.toOutcome() as AcanthisInvalid).issues, result.issues);
+    expect((result as AcanthisInvalid).issues, result.issues);
   });
 
   test(
@@ -398,11 +400,7 @@ void main() {
       code: 'email',
       message: 'Invalid email',
     );
-    final result = AcanthisParseResult(
-      value: null,
-      success: false,
-      issues: [issue, issue],
-    );
+    final result = outcomeFromDiagnostics(value: null, issues: [issue, issue]);
     expect(result.issues, [issue, issue]);
     expect(result.errors, {
       'email': {'email': 'Invalid email'},

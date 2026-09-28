@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -204,15 +205,15 @@ void main() {
           final result = schema.tryParse(input);
           final asyncResult = await schema.tryParseAsync(input);
           expect(
-            asyncResult.success,
-            result.success,
+            asyncResult.isValid,
+            result.isValid,
             reason: 'schema $index input $input',
           );
-          expect(schema.validate(input).isValid, result.success);
-          if (result.success) {
+          expect(schema.tryParse(input).isValid, result.isValid);
+          if (result.isValid) {
             expect(asyncResult.value, result.value);
-            expect(schema.parse(input).value, result.value);
-            expect((await schema.parseAsync(input)).value, result.value);
+            expect(schema.parse(input), result.value);
+            expect((await schema.parseAsync(input)), result.value);
           }
           cases.add({
             'label': 'schema $index',
@@ -221,8 +222,8 @@ void main() {
             'openApiInput': openApiInput,
             'openApiOutput': openApiOutput,
             'input': input,
-            'valid': result.success,
-            if (result.success) 'output': result.value,
+            'valid': result.isValid,
+            if (result.isValid) 'output': result.value,
           });
         }
       }

@@ -107,7 +107,7 @@ void main(List<String> arguments) async {
       'birthDate': DateTime(1990, 10, 20).toIso8601String(),
     },
   ]);
-  print(usersResult.value);
+  if (usersResult case AcanthisValid(:final value)) print(value);
 
   final creditCard = CreditCard(number: '4111111111111111');
   final wireTransfer = WireTransfer(iban: 'DE89370400440532013000');
@@ -206,7 +206,7 @@ void main(List<String> arguments) async {
     'email': 'john.doe@example.com',
     'password': 'password123',
   });
-  print(res.value);
+  if (res case AcanthisValid(:final value)) print(value);
   final schema = AcanthisType.object({
     'name': .string(),
     'close_at': .date().coerce(),
@@ -216,5 +216,7 @@ void main(List<String> arguments) async {
     'name': 'test',
     'close_at': '2026-06-10T10:20:52+00:00',
   });
-  print(v.value['close_at'].runtimeType); // DateTime object
+  if (v case AcanthisValid(:final value)) {
+    print(value['close_at'].runtimeType); // DateTime object
+  }
 }

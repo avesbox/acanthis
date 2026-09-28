@@ -42,8 +42,10 @@ A schema combines a type with checks. Parsing applies those checks to an input a
 final email = string().email();
 final result = email.tryParse('ada@example.com');
 
-print(result.success); // true
-print(result.value); // ada@example.com
+print(result.isValid); // true
+if (result is AcanthisValid<String>) {
+  print(result.value); // ada@example.com
+}
 ```
 
 Schema methods return new instances, so you can reuse a base schema and extend its checks. Successful validation can preserve input identity; it does not guarantee a deep copy. See [input sharing in 2.0](/migration-2#parsed-values-can-share-input-identity).

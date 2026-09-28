@@ -1,3 +1,4 @@
+import 'package:acanthis/src/results.dart';
 import 'package:acanthis/src/issue_sink.dart';
 import 'package:acanthis/src/exceptions/validation_error.dart';
 import 'package:acanthis/src/operations/checks.dart';
@@ -75,7 +76,8 @@ class AcanthisTemplate extends AcanthisType<String> {
     return switch (value) {
       String() => value,
       num() || bool() || DateTime() => value.toString(),
-      _ => throw ValidationError(
+      _ => throw ValidationError.diagnostic(
+        code: 'type',
         'Invalid type: ${value.runtimeType}, expected coercible string value',
       ),
     };
@@ -171,7 +173,11 @@ class AcanthisTemplate extends AcanthisType<String> {
     value ??= defaultValue;
     final coerced = coerceInput(value);
     if (!_matches(coerced)) {
-      throw ValidationError('Value does not match template literal');
+      throw ValidationError.diagnostic(
+        'Value does not match template literal',
+        code: 'templateLiteral',
+        parameters: {'pattern': pattern},
+      );
     }
     return super.parseInternal(coerced);
   }
@@ -198,19 +204,19 @@ class AcanthisTemplate extends AcanthisType<String> {
   }
 
   @override
-  Future<AcanthisParseResult<String>> tryParseAsync(dynamic value) async {
+  Future<AcanthisOutcome<String>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     final result = await super.tryParseAsyncOperations(value);
-    if (!result.success || _matches(result.value)) return result;
-    return AcanthisParseResult(
+    if (!result.isValid || _matches(result.value)) return result;
+    return outcomeFromDiagnostics(
       value: defaultValue ?? result.value,
       errors: IssueSink.single(
         'templateLiteral',
         'Value does not match template literal',
         parameters: {'pattern': pattern},
       ),
-      success: false,
+
       metadata: metadataEntry,
     );
   }

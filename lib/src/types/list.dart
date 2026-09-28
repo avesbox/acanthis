@@ -1,3 +1,6 @@
+import '../exceptions/validation_error.dart';
+
+import 'package:acanthis/src/results.dart';
 import 'package:acanthis/src/seeded_mock.dart';
 import 'package:acanthis/src/issue_sink.dart';
 
@@ -70,18 +73,22 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
           final strings = raw as List<String>;
           final parseString = (element as AcanthisString).compiledParseInternal;
           for (var i = 0; i < strings.length; i++) {
-            parseString(strings[i]);
+            try {
+              parseString(strings[i]);
+            } on ValidationError catch (error) {
+              throw error.prefixed(i);
+            }
           }
           return super.parseInternal(raw);
         }
         for (var i = 0; i < raw.length; i++) {
-          element.parseInternal(raw[i]);
+          _parseElement(raw[i], i);
         }
         return super.parseInternal(raw);
       }
       List<T>? changed;
       for (var i = 0; i < raw.length; i++) {
-        final parsed = element.parseInternal(raw[i]);
+        final parsed = _parseElement(raw[i], i);
         if (!identical(parsed, raw[i])) {
           (changed ??= List<T>.from(raw))[i] = parsed;
         }
@@ -92,9 +99,17 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     }
     final parsed = List<T?>.filled(raw.length, null);
     for (var i = 0; i < raw.length; i++) {
-      parsed[i] = element.parseInternal(raw[i]);
+      parsed[i] = _parseElement(raw[i], i);
     }
     return super.parseInternal(parsed.cast<T>());
+  }
+
+  T _parseElement(dynamic value, int index) {
+    try {
+      return element.parseInternal(value);
+    } on ValidationError catch (error) {
+      throw error.prefixed(index);
+    }
   }
 
   @override
@@ -155,34 +170,35 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> parseAsync(dynamic value) async {
+  Future<List<T>> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     final raw = value as List<dynamic>;
     final parsed = <T>[];
     for (var i = 0; i < raw.length; i++) {
-      final parsedElement = await element.parseAsync(raw[i]);
-      parsed.add(parsedElement.value);
+      try {
+        final parsedElement = await element.parseAsync(raw[i]);
+        parsed.add(parsedElement);
+      } on ValidationError catch (error) {
+        throw error.prefixed(i);
+      }
     }
     final result = await super.parseAsync(parsed);
-    return AcanthisParseResult(
-      value: _reuseUnchangedInput(value, result.value),
-      metadata: result.metadata,
-    );
+    return _reuseUnchangedInput(value, result);
   }
 
   @override
-  Future<AcanthisParseResult<List<T>>> tryParseAsync(dynamic value) async {
+  Future<AcanthisOutcome<List<T>>> tryParseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return tryParse(value);
     if (value is! List) {
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: IssueSink.single(
           inputErrorKey,
           'Invalid type: ${value.runtimeType}, expected List',
         ),
-        success: false,
+
         metadata: metadataEntry,
       );
     }
@@ -199,32 +215,28 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
     final result = await super.tryParseAsyncOperations(parsed);
     final mergedErrors = IssueSink.of(errors)..addAll(result.errors);
     final success = mergedErrors.isEmpty;
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: success
           ? _reuseUnchangedInput(value, result.value)
           : defaultValue ?? _reuseUnchangedInput(value, result.value),
       errors: mergedErrors,
       metadata: result.metadata,
-      success: success,
     );
   }
 
   /// Override of [parse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> parse(dynamic value) {
+  List<T> parse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException('Cannot use parse with async operations');
     }
-    return AcanthisParseResult<List<T>>(
-      value: parseInternal(value),
-      metadata: metadataEntry,
-    );
+    return parseInternal(value);
   }
 
   /// Override of [tryParse] from [AcanthisType]
   @override
-  AcanthisParseResult<List<T>> tryParse(dynamic value) {
+  AcanthisOutcome<List<T>> tryParse(dynamic value) {
     value ??= defaultValue;
     if (isAsync) {
       throw AsyncValidationException(
@@ -232,23 +244,22 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
       );
     }
     if (value is! List) {
-      return AcanthisParseResult(
+      return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: IssueSink.single(
           inputErrorKey,
           'Invalid type: ${value.runtimeType}, expected List',
         ),
-        success: false,
+
         metadata: metadataEntry,
       );
     }
     final errors = IssueSink();
     final parsed = tryParseInternal(value, errors: errors);
     final success = errors.isEmpty;
-    return AcanthisParseResult(
+    return outcomeFromDiagnostics(
       value: success ? parsed : defaultValue ?? parsed,
       errors: errors,
-      success: success,
       metadata: metadataEntry,
     );
   }
@@ -524,7 +535,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
           : pool[random.nextInt(pool.length)];
       if (!unique || !result.contains(candidate)) result.add(candidate);
     }
-    if (result.length != minLength || !tryParse(result).success) {
+    if (result.length != minLength || !tryParse(result).isValid) {
       throw const AcanthisMockException(
         'Unable to generate a valid list within 10000 attempts; use mockSeeded for the documented safe subset',
       );

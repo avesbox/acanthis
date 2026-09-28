@@ -11,12 +11,12 @@ void main() {
       ]) {
         final result = child.list().tryParse(['', 'valid', 'x', 'valid']);
 
-        expect(result.success, isFalse);
+        expect(result.isValid, isFalse);
         expect(result.errors.keys, ['0', '2']);
         expect(result.errors['0'], isNotEmpty);
         expect(result.errors['2'], isNotEmpty);
         expect(identical(result.errors['0'], result.errors['2']), isFalse);
-        expect(child.list().tryParse(['valid']).success, isTrue);
+        expect(child.list().tryParse(['valid']).isValid, isTrue);
       }
     },
   );
@@ -31,13 +31,13 @@ void main() {
         final schema = object({'a': child, 'b': child, 'c': child});
         final result = schema.tryParse({'a': '', 'b': 'valid', 'c': 'x'});
 
-        expect(result.success, isFalse);
+        expect(result.isValid, isFalse);
         expect(result.errors.keys, ['a', 'c']);
         expect(result.errors['a'], isNotEmpty);
         expect(result.errors['c'], isNotEmpty);
         expect(identical(result.errors['a'], result.errors['c']), isFalse);
         expect(
-          schema.tryParse({'a': 'ok', 'b': 'ok', 'c': 'ok'}).success,
+          schema.tryParse({'a': 'ok', 'b': 'ok', 'c': 'ok'}).isValid,
           isTrue,
         );
       }

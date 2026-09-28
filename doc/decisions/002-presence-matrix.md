@@ -61,7 +61,7 @@ them on output; preserve/reject policies apply on both sides.
 The supported subset includes structural JSON schemas: objects, lists, nullable
 values, ordinary unions, strings, booleans, `num` numbers, and JSON scalar
 literals. Audited built-in constraints and stable recursive objects are also
-supported; see [the export contract](schema-export-contract.md) for the exact
+supported; see [the export contract](003-schema-export-contract.md) for the exact
 constraints and recursion requirements. Unsupported checks, coercion,
 transformations, guards, dates, and int/double-specific schemas throw
 `AcanthisSchemaExportException` with a schema path. Custom check callbacks are not

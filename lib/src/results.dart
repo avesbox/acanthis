@@ -4,7 +4,8 @@ import 'dart:collection';
 import 'package:meta/meta.dart';
 
 import 'registries/metadata_registry.dart';
-import 'types/types.dart';
+import 'issue_sink.dart';
+import 'i18n.dart';
 
 /// A stable, machine-readable validation diagnostic.
 @immutable
@@ -64,7 +65,8 @@ class AcanthisIssue {
   }
 
   String formatMessage({AcanthisMessageResolver? resolver}) =>
-      resolver?.call(code, parameters) ?? message;
+      (resolver ?? AcanthisI18n.current.resolver)?.call(code, parameters) ??
+      message;
 
   Map<String, Object?> toJson({AcanthisMessageResolver? resolver}) => {
     'path': path,
@@ -256,34 +258,50 @@ sealed class AcanthisOutcome<T> {
   const AcanthisOutcome();
 
   bool get isValid;
+
+  /// Parsed output. On failure this is best-effort output and may not satisfy
+  /// the schema. Check [isValid] or match the outcome before trusting it.
+  T get value;
+
+  MetadataEntry<T>? get metadata;
+
+  List<AcanthisIssue> get issues;
+
+  /// Lossy legacy projection. Prefer [issues] for complete diagnostics.
+  Map<String, dynamic> get errors => IssueSink.fromIssues(issues);
 }
 
 final class AcanthisValid<T> extends AcanthisOutcome<T> {
   const AcanthisValid(this.value, {this.metadata});
 
+  @override
   final T value;
+  @override
   final MetadataEntry<T>? metadata;
 
   @override
   bool get isValid => true;
+
+  @override
+  List<AcanthisIssue> get issues => const [];
 }
 
 final class AcanthisInvalid<T> extends AcanthisOutcome<T> {
-  const AcanthisInvalid(this.issues, {this.recoveryValue, this.metadata});
+  AcanthisInvalid(
+    List<AcanthisIssue> issues, {
+    required this.value,
+    this.metadata,
+  }) : issues = List.unmodifiable(issues);
 
+  @override
   final List<AcanthisIssue> issues;
-  final T? recoveryValue;
+  @override
+  final T value;
+  @override
   final MetadataEntry<T>? metadata;
 
   @override
   bool get isValid => false;
-}
-
-extension AcanthisOutcomeConversion<T> on AcanthisParseResult<T> {
-  AcanthisOutcome<T> toOutcome() {
-    if (success) return AcanthisValid(value, metadata: metadata);
-    return AcanthisInvalid(issues, recoveryValue: value, metadata: metadata);
-  }
 }
 
 List<AcanthisIssue> issuesFromLegacyErrors(
@@ -305,13 +323,4 @@ List<AcanthisIssue> issuesFromLegacyErrors(
     }
   }
   return List.unmodifiable(issues);
-}
-
-extension AcanthisOutcomeParsing<T> on AcanthisType<T> {
-  /// Typed companion to [tryParse]. It preserves the legacy result API while
-  /// allowing callers to handle success and failure exhaustively.
-  AcanthisOutcome<T> validate(dynamic value) => tryParse(value).toOutcome();
-
-  Future<AcanthisOutcome<T>> validateAsync(dynamic value) async =>
-      (await tryParseAsync(value)).toOutcome();
 }

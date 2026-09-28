@@ -30,11 +30,11 @@ void main() {
       ]) {
         final factory = object({'name': string()}).tryParse(input);
         final direct = AcanthisMap<dynamic>({'name': string()}).tryParse(input);
-        expect(factory.success, direct.success);
+        expect(factory.isValid, direct.isValid);
         expect(factory.value, direct.value);
         expect(factory.issues, direct.issues);
       }
-      expect(_ReplacingMap().parse({'name': 'ok'}).value, {'custom': true});
+      expect(_ReplacingMap().parse({'name': 'ok'}), {'custom': true});
     },
   );
 
@@ -45,7 +45,7 @@ void main() {
           .min(2, message: 'minimum')
           .max(3, message: 'maximum');
       final input = <String>['ab', 'abc'];
-      expect(identical(strings.list().parse(input).value, input), isTrue);
+      expect(identical(strings.list().parse(input), input), isTrue);
       expect(
         () => strings.list().parse(<String>['a', 'abcd']),
         throwsA(
@@ -58,11 +58,11 @@ void main() {
           isA<ValidationError>().having((e) => e.message, 'message', 'maximum'),
         ),
       );
-      expect(strings.list().parse(<dynamic>['ab']).value, ['ab']);
+      expect(strings.list().parse(<dynamic>['ab']), ['ab']);
       final dynamicInput = <dynamic>['ab'];
       expect(
         identical(
-          AcanthisList<dynamic>(strings).parse(dynamicInput).value,
+          AcanthisList<dynamic>(strings).parse(dynamicInput),
           dynamicInput,
         ),
         isTrue,
@@ -86,7 +86,7 @@ void main() {
           name: 'mutating callback',
         )
         .list();
-    expect(schema.parse(input).value, ['original']);
+    expect(schema.parse(input), ['original']);
     expect(input, ['changed by callback']);
   });
 
@@ -153,16 +153,13 @@ void main() {
     'primitive shortcuts preserve custom coercion and replacement hooks',
     () {
       expect(_CoercingString().tryParse(42).value, '42');
-      expect(_CoercingString().tryParse(42).success, isTrue);
+      expect(_CoercingString().tryParse(42).isValid, isTrue);
       final input = <String>['a', 'b'];
-      expect(_ReplacingString().list().parse(input).value, ['a!', 'b!']);
+      expect(_ReplacingString().list().parse(input), ['a!', 'b!']);
       expect(input, ['a', 'b']);
-      expect(
-        identical(string().min(1).list().parse(input).value, input),
-        isTrue,
-      );
-      expect(string().coerce().list().parse([42]).value, ['42']);
-      expect(string().transform((v) => '$v!').list().parse(input).value, [
+      expect(identical(string().min(1).list().parse(input), input), isTrue);
+      expect(string().coerce().list().parse([42]), ['42']);
+      expect(string().transform((v) => '$v!').list().parse(input), [
         'a!',
         'b!',
       ]);
@@ -181,7 +178,7 @@ void main() {
         final async = await schema
             .refineAsync(onCheck: (_) async => true, error: '', name: 'pass')
             .tryParseAsync(42);
-        expect(sync.success, isFalse);
+        expect(sync.isValid, isFalse);
         expect(sync.value, async.value);
         expect(sync.issues, async.issues);
       }

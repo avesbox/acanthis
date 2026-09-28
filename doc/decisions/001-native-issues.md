@@ -6,7 +6,8 @@ Decision date: 2026-09-12. Accepted for the current 2.0 working tree.
 data, never the check that failed. `['account', 'email']` plus code `email`
 replaces the unreleased draft path `['account', 'email', 'email']`.
 Published 1.x did not expose that draft structured API. Keep the legacy
-`AcanthisParseResult.errors` surface for callers and custom schemas.
+`errors` projection for callers and custom schemas. The final 2.0 API exposes
+it on `AcanthisOutcome`; `AcanthisParseResult` has been removed.
 
 ## Contract
 
@@ -39,7 +40,9 @@ Built-in validators emit directly into an ordered `IssueSink`. Its Map
 interface preserves the `tryParseInternal(..., errors: ...)` extension point.
 Legacy writes such as `errors['email'] = 'Invalid email'` become native root
 issues at write time; attaching a child prefixes its data path.
-`AcanthisParseResult(issues: ...)` also accepts native diagnostics directly.
+`AcanthisInvalid(issues, ...)` accepts native diagnostics directly and snapshots
+the issue list. Successful parsing returns `AcanthisValid` from `tryParse`, or
+the raw value from `parse`.
 
 The legacy projection nests maps using stringified path keys and places
 `code: message` at the leaf. It is intentionally lossy: duplicate codes use

@@ -17,9 +17,11 @@ void main() {
             )
           : leaf;
       final map = object({'a': child});
-      expect((await map.parseAsync({'a': 'v'})).value, {'a': 'v!'});
-      expect((await map.tryParseAsync({'a': 'v'})).value, {'a': 'v!'});
-      expect((await child.list().parseAsync(['v'])).value, ['v!']);
+      expect((await map.parseAsync({'a': 'v'})), {'a': 'v!'});
+      expect((await map.tryParseAsync({'a': 'v'})).value, {
+        'a': 'v!',
+      });
+      expect((await child.list().parseAsync(['v'])), ['v!']);
       expect((await child.list().tryParseAsync(['v'])).value, ['v!']);
       expect(calls, 4);
     }
@@ -44,13 +46,13 @@ void main() {
         };
         for (final result in [
           schema.parse(input),
-          schema.tryParse(input),
+          (schema.tryParse(input) as AcanthisValid).value,
           await schema.parseAsync(input),
-          await schema.tryParseAsync(input),
+          (await schema.tryParseAsync(input) as AcanthisValid).value,
         ]) {
-          expect(result.success, isTrue);
-          expect(result.value, expected);
-          expect(identical(result.value, input), isFalse);
+          expect(result, isA<Object>());
+          expect(result, expected);
+          expect(identical(result, input), isFalse);
           expect(nested['extra'], isTrue);
         }
         final clean = {
@@ -59,7 +61,7 @@ void main() {
             {'a': 'ok'},
           ],
         };
-        expect(identical(schema.parse(clean).value, clean), isTrue);
+        expect(identical(schema.parse(clean), clean), isTrue);
       }
     },
   );
@@ -74,11 +76,11 @@ void main() {
       final map = object({'a': leaf});
       final list = leaf.list();
       for (final value in [42, null, 'wrong']) {
-        expect((await map.tryParseAsync(value)).success, isFalse);
-        expect((await list.tryParseAsync(value)).success, isFalse);
+        expect((await map.tryParseAsync(value)).isValid, isFalse);
+        expect((await list.tryParseAsync(value)).isValid, isFalse);
       }
       expect(
-        (await map.tryParseAsync(<dynamic, dynamic>{1: true})).success,
+        (await map.tryParseAsync(<dynamic, dynamic>{1: true})).isValid,
         isFalse,
       );
       final parent = object({'child': map, 'items': list});
@@ -102,7 +104,7 @@ void main() {
       'child': {'a': 'ok', 'extra': true},
       'rootExtra': true,
     };
-    expect(schema.parse(input).value, {
+    expect(schema.parse(input), {
       'child': {'a': 'ok', 'extra': true},
     });
     final remote = string().refineAsync(
@@ -113,6 +115,6 @@ void main() {
     final result = await object({'a': remote})
         .passthrough(type: string())
         .tryParseAsync({'a': 'ok', 'extra': 'ok'});
-    expect(result.success, isTrue);
+    expect(result.isValid, isTrue);
   });
 }

@@ -10,11 +10,11 @@ void main() {
       final list = acanthis.string().min(5).max(20).list();
       final result = list.tryParse(['value']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, ['value']);
     });
 
     test('when creating a list validator with a required field,'
@@ -22,11 +22,11 @@ void main() {
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list();
       final result = list.tryParse([]);
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse([]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator with a min and max check,'
@@ -35,7 +35,7 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().min(2);
       final result = list.tryParse(['value']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value']),
@@ -49,7 +49,7 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().max(1);
       final result = list.tryParse(['value', 'other']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value', 'other']),
@@ -63,7 +63,7 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
       final result = list.tryParse(['value']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value']),
@@ -77,7 +77,7 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
       final result = list.tryParse(['value', 'other', 'another', 'one']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value', 'other', 'another', 'one']),
@@ -91,11 +91,11 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
       final result = list.tryParse(['value', 'other']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value', 'other']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator with a min and max check,'
@@ -104,11 +104,11 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().min(2).max(3);
       final result = list.tryParse(['value', 'other', 'another']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value', 'other', 'another']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator with a unique check,'
@@ -116,21 +116,21 @@ void main() {
         'then the result should be successful', () {
       final list = acanthis.string().min(5).max(20).list().unique();
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value', 'other', 'another', 'oneee']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator and use the unwrap method,'
         'then the element should be returned', () {
       final list = acanthis.string().min(5).max(20).list();
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
-      expect(result.success, true);
+      expect(result.isValid, true);
       final string = list.unwrap();
       final resultParse = string.parse('value');
-      expect(resultParse.success, true);
+      expect(resultParse, 'value');
     });
 
     test('when creating a list validator with a unique check,'
@@ -139,7 +139,7 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().unique();
       final result = list.tryParse(['value', 'other', 'another', 'another']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value', 'other', 'another', 'another']),
@@ -153,7 +153,7 @@ void main() {
       final schema = string().list().and([string()]);
       final result = schema.tryParse([5, 'Hello']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => schema.parse([5, 'Hello']),
@@ -170,14 +170,14 @@ void main() {
         'World',
       ]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = schema.parse([
         ['Hello'],
         'World',
       ]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a union validator from a list validator,'
@@ -186,7 +186,7 @@ void main() {
       final schema = string().list().or([string()]);
       final result = schema.tryParse(5);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => schema.parse(5), throwsA(TypeMatcher<ValidationError>()));
     });
@@ -197,11 +197,11 @@ void main() {
       final schema = string().list().or([string()]);
       final result = schema.tryParse(['Hello', 'World']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = schema.parse(['Hello', 'World']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator with the length check,'
@@ -210,11 +210,11 @@ void main() {
       final list = acanthis.string().min(5).max(20).list().length(4);
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value', 'other', 'another', 'oneee']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list validator with a custom check,'
@@ -234,7 +234,7 @@ void main() {
         'oneee',
       ]);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => list.parse(['value', 'other', 'another', 'another', 'oneee']),
@@ -255,72 +255,60 @@ void main() {
 
       final result = list.tryParse(['value', 'other', 'another', 'oneee']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = list.parse(['value', 'other', 'another', 'oneee']);
 
-      expect(resultParse.success, true);
-      expect(resultParse.value, ['VALUE', 'OTHER', 'ANOTHER', 'ONEEE']);
+      expect(resultParse, (result as AcanthisValid).value);
+      expect(resultParse, ['VALUE', 'OTHER', 'ANOTHER', 'ONEEE']);
     });
   });
 
-  test(
-    'when creating with anyOf check, and the list is valid, then the result should be successful',
-    () {
-      final list = acanthis.string().list().anyOf(['value', 'other']);
-      final result = list.tryParse(['other']);
+  test('when creating with anyOf check, and the list is valid, then the result should be successful', () {
+    final list = acanthis.string().list().anyOf(['value', 'other']);
+    final result = list.tryParse(['other']);
 
-      expect(result.success, true);
+    expect(result.isValid, true);
 
-      final resultParse = list.parse(['value']);
+    final resultParse = list.parse(['value']);
 
-      expect(resultParse.success, true);
-    },
-  );
+    expect(resultParse, ['value']);
+  });
 
-  test(
-    'when creating with anyOf check, and the list is invalid, then the result should be unsuccessful',
-    () {
-      final list = acanthis.string().list().anyOf(['value', 'other']);
-      final result = list.tryParse(['another']);
+  test('when creating with anyOf check, and the list is invalid, then the result should be unsuccessful', () {
+    final list = acanthis.string().list().anyOf(['value', 'other']);
+    final result = list.tryParse(['another']);
 
-      expect(result.success, false);
+    expect(result.isValid, false);
 
-      expect(
-        () => list.parse(['another']),
-        throwsA(TypeMatcher<ValidationError>()),
-      );
-    },
-  );
+    expect(
+      () => list.parse(['another']),
+      throwsA(TypeMatcher<ValidationError>()),
+    );
+  });
 
-  test(
-    'when creating with everyOf check, and the list is valid, then the result should be successful',
-    () {
-      final list = acanthis.string().list().everyOf(['value', 'other']);
-      final result = list.tryParse(['value', 'other']);
+  test('when creating with everyOf check, and the list is valid, then the result should be successful', () {
+    final list = acanthis.string().list().everyOf(['value', 'other']);
+    final result = list.tryParse(['value', 'other']);
 
-      expect(result.success, true);
+    expect(result.isValid, true);
 
-      final resultParse = list.parse(['value', 'other']);
+    final resultParse = list.parse(['value', 'other']);
 
-      expect(resultParse.success, true);
-    },
-  );
+    expect(resultParse, (result as AcanthisValid).value);
+  });
 
-  test(
-    'when creating with everyOf check, and the list is invalid, then the result should be unsuccessful',
-    () {
-      final list = acanthis.string().list().everyOf(['value', 'other']);
-      final result = list.tryParse(['value', 'another']);
+  test('when creating with everyOf check, and the list is invalid, then the result should be unsuccessful', () {
+    final list = acanthis.string().list().everyOf(['value', 'other']);
+    final result = list.tryParse(['value', 'another']);
 
-      expect(result.success, false);
+    expect(result.isValid, false);
 
-      expect(
-        () => list.parse(['value', 'another']),
-        throwsA(TypeMatcher<ValidationError>()),
-      );
-    },
-  );
+    expect(
+      () => list.parse(['value', 'another']),
+      throwsA(TypeMatcher<ValidationError>()),
+    );
+  });
 
   test('when creating a list validator,'
       'and use the toJsonSchema method, '

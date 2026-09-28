@@ -236,7 +236,7 @@ Future<void> preflight() async {
       final result = work.async
           ? await work.run(schema, index)
           : work.run(schema, index);
-      if (result is AcanthisParseResult) {
+      if (result is AcanthisOutcome) {
         if (work.name.startsWith('issues')) {
           final size = int.parse(
             RegExp(r'issues(\d+)').firstMatch(work.name)![1]!,
@@ -244,12 +244,13 @@ Future<void> preflight() async {
           if (result.issues.length != size * 3)
             throw StateError('Lost duplicate issues: ${work.name}');
         }
-        if (work.name.contains('.invalid') && result.success)
+        if (work.name.contains('.invalid') && result.isValid)
           throw StateError('Accepted invalid union');
-        if (work.name.endsWith('.last') && !result.success)
+        if (work.name.endsWith('.last') && !result.isValid)
           throw StateError('Rejected last union branch');
         if (work.name.startsWith('transformed') &&
-            (!result.success || (result.value as Map)['a/b'][0] != 'ADA'))
+            (result is! AcanthisValid ||
+                (result.value as Map)['a/b'][0] != 'ADA'))
           throw StateError('Wrong transformed output');
       }
     }

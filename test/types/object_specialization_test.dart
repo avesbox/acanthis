@@ -59,13 +59,16 @@ void main() {
         ]) {
           final expected = generic.tryParse(payload);
           final actual = fast.tryParse(payload);
-          expect(actual.success, expected.success);
+          expect(actual.isValid, expected.isValid);
           expect(actual.errors, expected.errors);
           expect(actual.value, expected.value);
-          expect(actual.value.keys.toList(), expected.value.keys.toList());
-          if (actual.success) {
-            final parsed = fast.parse(payload).value;
-            expect(parsed, generic.parse(payload).value);
+          expect(
+            actual.value.keys.toList(),
+            expected.value.keys.toList(),
+          );
+          if (actual.isValid) {
+            final parsed = fast.parse(payload);
+            expect(parsed, generic.parse(payload));
             expect(
               identical(parsed, payload),
               !nested && !payload.containsKey('extra'),
@@ -77,7 +80,7 @@ void main() {
             );
           }
         }
-        expect(fast.tryParse({'a': 'A', 'b': second}).success, isTrue);
+        expect(fast.tryParse({'a': 'A', 'b': second}).isValid, isTrue);
       }
     },
   );
@@ -97,14 +100,14 @@ void main() {
       'double': 1.5,
       'number': 2,
     };
-    expect(schema.parse(valid).value, valid);
-    expect(schema.tryParse(valid).success, isTrue);
+    expect(schema.parse(valid), valid);
+    expect(schema.tryParse(valid).isValid, isTrue);
     for (final field in valid.keys) {
-      expect(schema.tryParse({...valid, field: null}).success, isFalse);
-      expect(schema.tryParse({...valid}..remove(field)).success, isFalse);
+      expect(schema.tryParse({...valid, field: null}).isValid, isFalse);
+      expect(schema.tryParse({...valid}..remove(field)).isValid, isFalse);
     }
-    expect(schema.tryParse({...valid, 'integer': 1.5}).success, isFalse);
-    expect(schema.tryParse({...valid, 'double': '1.5'}).success, isFalse);
+    expect(schema.tryParse({...valid, 'integer': 1.5}).isValid, isFalse);
+    expect(schema.tryParse({...valid, 'double': '1.5'}).isValid, isFalse);
   });
 
   test('optional, nullable, defaults, coercion and transforms use normal semantics', () {
@@ -121,7 +124,7 @@ void main() {
       'coerced': 42,
       'transformed': 'ok',
     });
-    expect(result.success, isFalse);
+    expect(result.isValid, isFalse);
     expect(result.value['default'], 'fallback');
     expect(result.value['coerced'], '42');
     expect(result.value['transformed'], 'ok!');
@@ -129,8 +132,10 @@ void main() {
   });
 
   test('custom subclasses and object refinements are never bypassed', () {
-    expect(_CustomMap().parse({'a': 'ok'}).value, {'custom': true});
-    expect(_CustomMap().tryParse({'a': 'ok'}).value, {'custom': true});
+    expect(_CustomMap().parse({'a': 'ok'}), {'custom': true});
+    expect(_CustomMap().tryParse({'a': 'ok'}).value, {
+      'custom': true,
+    });
     final child = _CustomString();
     final schema = object({'a': child});
     schema.parse({'a': 'ok'});
@@ -145,7 +150,7 @@ void main() {
       error: 'rejected',
       name: 'rule',
     );
-    expect(refined.tryParse({'a': 'ok'}).success, isFalse);
+    expect(refined.tryParse({'a': 'ok'}).isValid, isFalse);
     expect(calls, 1);
   });
 
@@ -164,7 +169,7 @@ void main() {
       'right': {'flag': true},
       'last': 'ok',
     };
-    expect(schema.parse(payload).value, payload);
+    expect(schema.parse(payload), payload);
     expect(
       schema
           .tryParse({
@@ -175,16 +180,16 @@ void main() {
           .keys,
       ['right'],
     );
-    expect(schema.tryParse(payload).success, isTrue);
+    expect(schema.tryParse(payload).isValid, isTrue);
   });
 
   test('generic map keys and empty schemas retain copy/stripping behavior', () {
     final schema = object({'a': string()});
-    expect(schema.parse(<dynamic, dynamic>{'a': 'ok'}).value, {'a': 'ok'});
+    expect(schema.parse(<dynamic, dynamic>{'a': 'ok'}), {'a': 'ok'});
     expect(
       () => schema.parse(<dynamic, dynamic>{'a': 'ok', 1: 'bad'}),
       throwsA(isA<TypeError>()),
     );
-    expect(object({}).parse({'unknown': true}).value, isEmpty);
+    expect(object({}).parse({'unknown': true}), isEmpty);
   });
 }

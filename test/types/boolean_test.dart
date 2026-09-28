@@ -9,11 +9,11 @@ void main() {
       final b = boolean();
       final result = b.tryParse(true);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse(true);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a boolean validator, '
@@ -22,11 +22,11 @@ void main() {
       final b = boolean();
       final result = b.tryParse(false);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse(false);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a boolean validator, '
@@ -36,11 +36,11 @@ void main() {
       final b = boolean().isFalse();
       final result = b.tryParse(false);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse(false);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a boolean validator, '
@@ -50,7 +50,7 @@ void main() {
       final b = boolean().isFalse();
       final result = b.tryParse(true);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => b.parse(true), throwsA(TypeMatcher<ValidationError>()));
     });
@@ -62,11 +62,11 @@ void main() {
       final b = boolean().isTrue();
       final result = b.tryParse(true);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse(true);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a boolean validator, '
@@ -76,7 +76,7 @@ void main() {
       final b = boolean().isTrue();
       final result = b.tryParse(false);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => b.parse(false), throwsA(TypeMatcher<ValidationError>()));
     });
@@ -87,11 +87,11 @@ void main() {
       final b = boolean().list();
       final result = b.tryParse([true, false]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse([true, false]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a tuple validator from a date validator,'
@@ -100,7 +100,7 @@ void main() {
       final bool = boolean().and([string()]);
       final result = bool.tryParse([5, 'Hello']);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(
         () => bool.parse([5, 'Hello']),
@@ -114,11 +114,11 @@ void main() {
       final bool = boolean().and([string()]);
       final result = bool.tryParse([true, 'Hello']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = bool.parse([true, 'Hello']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a union validator from a bool validator,'
@@ -127,7 +127,7 @@ void main() {
       final bool = boolean().or([string()]);
       final result = bool.tryParse(5);
 
-      expect(result.success, false);
+      expect(result.isValid, false);
 
       expect(() => bool.parse(5), throwsA(TypeMatcher<ValidationError>()));
     });
@@ -138,11 +138,11 @@ void main() {
       final bool = boolean().or([string()]);
       final result = bool.tryParse(true);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = bool.parse(true);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when coercion is enabled,'
@@ -152,9 +152,9 @@ void main() {
 
       final result = schema.tryParse('true');
 
-      expect(result.success, true);
+      expect(result.isValid, true);
       expect(result.value, true);
-      expect(schema.parse(1).value, true);
+      expect(schema.parse(1), true);
     });
 
     test('when coercion is enabled,'
@@ -164,7 +164,7 @@ void main() {
 
       final result = schema.tryParse('truthy');
 
-      expect(result.success, false);
+      expect(result.isValid, false);
       expect(result.errors.containsKey('type'), true);
     });
   });

@@ -91,7 +91,7 @@ class AcanthisLiveSession<V> {
 
   void _validateAll() {
     final result = schema.tryParse(_input);
-    final outcome = result.toOutcome();
+    final outcome = result;
     _issuesByField.clear();
     switch (outcome) {
       case AcanthisValid<Map<String, V>> valid:
@@ -107,7 +107,7 @@ class AcanthisLiveSession<V> {
           final field = issue.path.isEmpty ? null : issue.path.first.toString();
           (_issuesByField[field] ??= []).add(issue);
         }
-        _refreshIndependentValues(result.value);
+        _refreshIndependentValues(invalid.value);
     }
     _lastExecutedFields = Set.unmodifiable(schema.fields.keys.toSet());
     _lastFullValidation = true;
@@ -116,7 +116,7 @@ class AcanthisLiveSession<V> {
   void _validateField(String field) {
     final validator = schema.fields[field]!;
     final result = validator.tryParse(_input[field]);
-    final outcome = result.toOutcome();
+    final outcome = result;
     _issuesByField.remove(field);
     switch (outcome) {
       case AcanthisValid<dynamic> valid:
@@ -202,7 +202,7 @@ class AcanthisAsyncLiveSession<V> {
   }
 
   Future<void> _validate(int revision) async {
-    final outcome = (await schema.tryParseAsync(_input)).toOutcome();
+    final outcome = (await schema.tryParseAsync(_input));
     if (revision != _revision) return;
     switch (outcome) {
       case AcanthisValid<Map<String, V>> valid:

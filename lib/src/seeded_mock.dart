@@ -45,7 +45,9 @@ extension AcanthisSeededMock<T> on AcanthisType<T> {
       generator.remaining = maxNodes;
       final candidate = generator.generate(this, 0);
       final result = tryParse(candidate);
-      if (result.success && tryParse(result.value).success) return result.value;
+      if (result is AcanthisValid<T> && tryParse(result.value).isValid) {
+        return result.value;
+      }
     }
     throw AcanthisMockException(
       'No valid value found after $maxAttempts attempts: constraints are contradictory or outside the bounded search domain',

@@ -30,13 +30,13 @@ Future<void> main(List<String> args) async {
     Map<String, dynamic> invalid,
   ) {
     final original = jsonEncode(payload);
-    if (!a.tryParse(payload).success || !lAccepts(payload)) {
+    if (!a.tryParse(payload).isValid || !lAccepts(payload)) {
       throw StateError('$name: a library rejected the valid payload');
     }
     a.parse(payload);
     vValidate(payload);
     if (mode == 'verify' &&
-        (a.tryParse(invalid).success || lAccepts(invalid))) {
+        (a.tryParse(invalid).isValid || lAccepts(invalid))) {
       throw StateError('$name: a library accepted the invalid payload');
     }
     if (mode == 'verify') {

@@ -57,7 +57,8 @@ class AcanthisDate extends AcanthisType<DateTime> {
 
   DateTime _convertToDate(dynamic value) {
     if (value is! String && value is! DateTime && value is! int) {
-      throw ValidationError(
+      throw ValidationError.diagnostic(
+        code: 'date',
         'Invalid type: ${value.runtimeType}, expected date-like value',
       );
     }
@@ -70,7 +71,7 @@ class AcanthisDate extends AcanthisType<DateTime> {
       date = DateTime.tryParse(value);
     }
     if (date == null) {
-      throw ValidationError('Invalid date format');
+      throw ValidationError.diagnostic('Invalid date format', code: 'date');
     }
     return date;
   }

@@ -8,11 +8,7 @@ void main() {
     errors['email'] = 'First';
     errors['email'] = 'Second';
     errors['child'] = <String, dynamic>{'required': 'Missing'};
-    final result = AcanthisParseResult(
-      value: null,
-      errors: errors,
-      success: false,
-    );
+    final result = outcomeFromDiagnostics(value: null, errors: errors);
     expect(result.issues.map((issue) => issue.path), [
       [],
       [],
@@ -30,19 +26,15 @@ void main() {
   });
 
   test('legacy round trip never guesses integer indices', () {
-    final result = AcanthisParseResult(
+    final result = outcomeFromDiagnostics(
       value: null,
-      success: false,
+
       issues: [
         AcanthisIssue(path: ['items', 0], code: 'type', message: 'Invalid'),
       ],
     );
     final projected = Map<String, dynamic>.of(result.errors);
-    final restored = AcanthisParseResult(
-      value: null,
-      errors: projected,
-      success: false,
-    );
+    final restored = outcomeFromDiagnostics(value: null, errors: projected);
     expect(result.issues.single.path, ['items', 0]);
     expect(restored.issues.single.path, ['items', '0']);
   });

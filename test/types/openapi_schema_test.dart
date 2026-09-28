@@ -14,16 +14,16 @@ void main() {
     final schema = union<String>(branches);
     // Both branches accept this value: oneOf would incorrectly reject it.
     expect(
-      branches.where((branch) => branch.tryParse('Ada').success),
+      branches.where((branch) => branch.tryParse('Ada').isValid),
       hasLength(2),
     );
-    expect(schema.parse('Ada').value, 'Ada');
-    expect((await schema.parseAsync('Ada')).value, 'Ada');
+    expect(schema.parse('Ada'), 'Ada');
+    expect((await schema.parseAsync('Ada')), 'Ada');
     expect(schema.toOpenApiSchema(), {
       'anyOf': branches.map((branch) => branch.toOpenApiSchema()).toList(),
     });
     expect(schema.toOpenApiSchema(), schema.toJsonSchema());
-    expect(schema.tryParse(42).success, isFalse);
+    expect(schema.tryParse(42).isValid, isFalse);
   });
   group('AcanthisType.toOpenApiSchema', () {
     test('boolean exposes literal enums when pinned', () {

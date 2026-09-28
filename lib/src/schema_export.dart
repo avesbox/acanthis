@@ -305,7 +305,7 @@ class _ContractExporter {
       schema = {...schema, 'allOf': constraints};
     }
     if (type.hasDefault) {
-      if (!type.tryParse(null).success) {
+      if (!type.tryParse(null).isValid) {
         unsupported('The default does not satisfy its schema.');
       }
       if (mode == AcanthisSchemaMode.input) {

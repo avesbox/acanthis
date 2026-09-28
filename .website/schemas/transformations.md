@@ -22,8 +22,10 @@ To provide a default value for a schema, you can use the `withDefault()` method.
 
 ```dart
 final name = string().min(2).max(100).withDefault('Unknown');
-name.tryParse('A').value; // 'Unknown' (the result is still unsuccessful)
-name.tryParse('Acanthis').value; // 'Acanthis'
+final invalid = name.tryParse('A') as AcanthisInvalid<String>;
+print(invalid.value); // 'Unknown'; validation still failed
+final valid = name.tryParse('Acanthis') as AcanthisValid<String>;
+print(valid.value); // 'Acanthis'
 ```
 
 ::: warning

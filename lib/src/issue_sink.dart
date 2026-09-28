@@ -1,3 +1,7 @@
+import 'package:meta/meta.dart';
+
+import 'registries/metadata_registry.dart';
+
 import 'dart:collection';
 
 import 'results.dart';
@@ -116,4 +120,20 @@ extension IssueEmission on Map<String, dynamic> {
       this[segment.toString()] = Map<String, dynamic>.of(child);
     }
   }
+}
+
+/// Builds the public outcome at the boundary of the diagnostic accumulator.
+@internal
+AcanthisOutcome<T> outcomeFromDiagnostics<T>({
+  required T value,
+  Map<String, dynamic> errors = const {},
+  List<AcanthisIssue>? issues,
+  MetadataEntry<T>? metadata,
+}) {
+  final diagnostics =
+      issues ??
+      (errors is IssueSink ? errors.issues : issuesFromLegacyErrors(errors));
+  return diagnostics.isEmpty
+      ? AcanthisValid(value, metadata: metadata)
+      : AcanthisInvalid(diagnostics, value: value, metadata: metadata);
 }

@@ -9,11 +9,11 @@ void main() {
       final nullable = string().nullable();
       final result = nullable.tryParse('This is a test');
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse('This is a test');
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator on a string,'
@@ -22,11 +22,11 @@ void main() {
       final nullable = string().nullable();
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator on a number,'
@@ -35,11 +35,11 @@ void main() {
       final nullable = number().nullable();
       final result = nullable.tryParse(1);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(1);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator on a number,'
@@ -48,11 +48,11 @@ void main() {
       final nullable = number().nullable();
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator on a date,'
@@ -61,11 +61,11 @@ void main() {
       final nullable = date().nullable();
       final result = nullable.tryParse(DateTime(2020, 1, 1));
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(DateTime(2020, 1, 1));
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator on a date,'
@@ -74,37 +74,31 @@ void main() {
       final nullable = date().nullable();
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
-    test(
-      'when creating an enumerated nullable validator, and the value is in the list of valid values or nulll, then the result should be successful',
-      () {
-        final schema = number().nullable().enumerated([1, 2, 3]);
-        final result = schema.tryParse(1);
+    test('when creating an enumerated nullable validator, and the value is in the list of valid values or nulll, then the result should be successful', () {
+      final schema = number().nullable().enumerated([1, 2, 3]);
+      final result = schema.tryParse(1);
 
-        expect(result.success, true);
+      expect(result.isValid, true);
 
-        final resultParse = schema.parse(1);
-        expect(resultParse.success, true);
-      },
-    );
+      final resultParse = schema.parse(1);
+      expect(resultParse, (result as AcanthisValid).value);
+    });
 
-    test(
-      'when creating an enumerated nullable validator, and the value is not in the list of valid values or null, then the result should be unsuccessful',
-      () {
-        final schema = number().nullable().enumerated([1, 2, 3]);
-        final result = schema.tryParse(4);
+    test('when creating an enumerated nullable validator, and the value is not in the list of valid values or null, then the result should be unsuccessful', () {
+      final schema = number().nullable().enumerated([1, 2, 3]);
+      final result = schema.tryParse(4);
 
-        expect(result.success, false);
+      expect(result.isValid, false);
 
-        expect(() => schema.parse(4), throwsA(TypeMatcher<ValidationError>()));
-      },
-    );
+      expect(() => schema.parse(4), throwsA(TypeMatcher<ValidationError>()));
+    });
 
     test('when creating a list of nullable strings,'
         'and the value is not null, '
@@ -113,11 +107,11 @@ void main() {
 
       final result = nullable.tryParse(['This is a test']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(['This is a test']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a list of nullable strings,'
@@ -127,11 +121,11 @@ void main() {
 
       final result = nullable.tryParse([null]);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse([null]);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable list of strings,'
@@ -141,11 +135,11 @@ void main() {
 
       final result = nullable.tryParse(['This is a test']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(['This is a test']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable list of strings,'
@@ -155,11 +149,11 @@ void main() {
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable list of nullable strings,'
@@ -169,11 +163,11 @@ void main() {
 
       final result = nullable.tryParse(['This is a test']);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(['This is a test']);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable list of nullable strings,'
@@ -183,11 +177,11 @@ void main() {
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map,'
@@ -197,11 +191,11 @@ void main() {
 
       final result = nullable.tryParse({'key': 'This is a test'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse({'key': 'This is a test'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map,'
@@ -211,11 +205,11 @@ void main() {
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map with nullable values,'
@@ -225,11 +219,11 @@ void main() {
 
       final result = nullable.tryParse({'key': 'This is a test'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse({'key': 'This is a test'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map with nullable values,'
@@ -239,11 +233,11 @@ void main() {
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map with nullable keys,'
@@ -253,11 +247,11 @@ void main() {
 
       final result = nullable.tryParse({'key': 'This is a test'});
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse({'key': 'This is a test'});
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map with nullable keys,'
@@ -267,28 +261,27 @@ void main() {
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable map with a default value,'
         'and the value is null, '
         'then the result should be successful', () {
-      final nullable = object({
-        'key': string(),
-      }).nullable(defaultValue: {'key': 'This is a null value'});
+      final nullable = object({'key': string()})
+          .nullable(defaultValue: {'key': 'This is a null value'});
 
       final result = nullable.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = nullable.parse(null);
 
-      expect(resultParse.success, true);
-      expect(resultParse.value, {'key': 'This is a null value'});
+      expect(resultParse, (result as AcanthisValid).value);
+      expect(resultParse, {'key': 'This is a null value'});
     });
 
     test('when creating a nullable boolean validator, '
@@ -297,11 +290,11 @@ void main() {
       final b = boolean().nullable();
       final result = b.tryParse(null);
 
-      expect(result.success, true);
+      expect(result.isValid, true);
 
       final resultParse = b.parse(null);
 
-      expect(resultParse.success, true);
+      expect(resultParse, (result as AcanthisValid).value);
     });
 
     test('when creating a nullable validator,'

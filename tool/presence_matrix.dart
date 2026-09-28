@@ -72,16 +72,20 @@ Future<List<Map<String, Object?>>> presenceMatrix() async {
         try {
           final value = Map<String, dynamic>.of(input.value);
           final result = switch (mode) {
-            'parse' => current.parse(value),
-            'parseAsync' || 'asyncParse' => await current.parseAsync(value),
+            'parse' => AcanthisValid(current.parse(value)),
+            'parseAsync' ||
+            'asyncParse' => AcanthisValid(await current.parseAsync(value)),
             'tryParseAsync' ||
             'asyncTryParse' => await current.tryParseAsync(value),
             _ => current.tryParse(value),
           };
           modes[mode] = {
-            'success': result.success,
-            'value': result.value,
-            if (!result.success)
+            'success': result.isValid,
+            'value': switch (result) {
+              AcanthisValid(:final value) => value,
+              AcanthisInvalid(:final value) => value,
+            },
+            if (!result.isValid)
               'issues': [
                 for (final issue in result.issues)
                   {'path': issue.path, 'code': issue.code},

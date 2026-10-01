@@ -40,7 +40,7 @@ h2 em { color: var(--vp-c-brand-1); }
 .schema-stamp > span { font: 26px Georgia, serif; }
 .schema-stamp small { font-size: 10px; margin-top: 3px; }
 .flow-fork { width: 12%; height: 90px; color: var(--vp-c-brand-1); opacity: .5; }
-.outcomes { display: grid; gap: 24px; }
+.outcomes { display: grid; gap: 48px; }
 .outcome { display: flex; align-items: center; gap: 7px; font-size: 11px; white-space: nowrap; }
 .outcome > span { display: grid; place-items: center; width: 19px; height: 19px; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; }
 .good > span { color: #34745b; }

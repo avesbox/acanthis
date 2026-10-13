@@ -166,6 +166,12 @@ class AcanthisUnion<T> extends AcanthisType<T> {
         'Value does not match any union entry',
         branches: branches,
       );
+    if (defaultValue == null && value is! T) {
+      return AcanthisInvalid<T>.withoutValue(
+        errors.issues,
+        metadata: metadataEntry,
+      );
+    }
     return outcomeFromDiagnostics(
       value: valueOnFailure(value),
       errors: errors,

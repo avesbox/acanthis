@@ -1,5 +1,8 @@
 # JSON Schema
 
+See [export compatibility](/export-compatibility) to compare audited and legacy
+APIs and check which runtime features can be represented.
+
 ## Audited input and output contracts
 
 Use `exportJsonSchema` to target JSON Schema 2020-12 with an explicit contract:

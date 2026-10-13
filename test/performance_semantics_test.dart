@@ -69,7 +69,11 @@ void main() {
       );
       expect(
         () => strings.list().parse(<dynamic>[42]),
-        throwsA(isA<TypeError>()),
+        throwsA(
+          isA<ValidationError>()
+              .having((e) => e.issue!.path, 'path', [0])
+              .having((e) => e.issue!.code, 'code', 'type'),
+        ),
       );
     },
   );

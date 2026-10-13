@@ -1,0 +1,92 @@
+{
+  "runtime": "3.13.3 (stable) (Tue Sep 1 01:07:17 2026 -0700) on \"windows_x64\"",
+  "os": "windows",
+  "processors": 12,
+  "samples": {
+    "collect": {
+      "microsecondsPerOperation": [
+        0.5831,
+        0.57035,
+        0.56175,
+        0.5682,
+        0.5431,
+        0.55355,
+        0.58395
+      ],
+      "median": 0.5682
+    },
+    "fallback": {
+      "microsecondsPerOperation": [
+        2.7408,
+        2.89035,
+        2.77445,
+        2.7363,
+        2.86585,
+        2.9356,
+        2.72155
+      ],
+      "median": 2.77445
+    },
+    "english": {
+      "microsecondsPerOperation": [
+        3.2465,
+        3.24555,
+        3.11435,
+        3.16455,
+        3.1721,
+        3.20975,
+        3.5675
+      ],
+      "median": 3.20975
+    },
+    "italian": {
+      "microsecondsPerOperation": [
+        3.11625,
+        2.9875,
+        3.18515,
+        3.031,
+        3.39285,
+        3.28925,
+        3.1044
+      ],
+      "median": 3.11625
+    },
+    "transport": {
+      "microsecondsPerOperation": [
+        2.4008,
+        2.80255,
+        2.638,
+        2.6262,
+        2.47815,
+        2.39805,
+        2.433
+      ],
+      "median": 2.47815
+    },
+    "validateFallback": {
+      "microsecondsPerOperation": [
+        4.4754,
+        4.329,
+        4.3225,
+        4.3399,
+        4.17555,
+        4.4017,
+        4.33225
+      ],
+      "median": 4.33225
+    },
+    "validateItalian": {
+      "microsecondsPerOperation": [
+        4.54845,
+        4.5553,
+        4.51425,
+        4.5262,
+        4.6201,
+        4.505,
+        4.58645
+      ],
+      "median": 4.54845
+    }
+  },
+  "sink": 137315000
+}

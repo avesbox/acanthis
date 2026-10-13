@@ -1,4 +1,4 @@
-export 'src/types/types.dart';
+export 'src/types/types.dart' hide AcanthisFieldOperation, validationInput;
 export 'src/types/string.dart';
 export 'src/types/number.dart';
 export 'src/types/map.dart';
@@ -18,8 +18,10 @@ export 'src/exceptions/validation_error.dart';
 export 'src/exceptions/async_exception.dart';
 export 'src/exceptions/build_validator_exception.dart';
 export 'src/registries/metadata_registry.dart';
+export 'src/registries/schema_registry.dart';
 export 'src/results.dart' hide singleIssueParameter;
 export 'src/i18n.dart';
+export 'src/issue_codes.dart';
 export 'src/live.dart';
 export 'src/seeded_mock.dart';
 

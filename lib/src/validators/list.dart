@@ -153,7 +153,7 @@ class EveryOfListCheck<T> extends AcanthisCheck<List<T>> {
          error:
              messageBuilder?.call(items) ??
              message ??
-             'The list must have all of the values in $items',
+             'The list must contain only values from $items',
          name: 'everyOf',
        );
 

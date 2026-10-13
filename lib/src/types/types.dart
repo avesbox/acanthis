@@ -9,6 +9,73 @@ import 'package:acanthis/src/operations/operation.dart';
 import 'package:acanthis/src/operations/transformations.dart';
 import 'package:meta/meta.dart';
 
+/// Normalize container input casts without catching callback exceptions.
+@internal
+T validationInput<T>(dynamic value) {
+  if (value is T) return value;
+  throw ValidationError.diagnostic(
+    'Invalid type: ${value.runtimeType}, expected $T',
+    code: 'type',
+  );
+}
+
+/// Internal field operation retaining child schemas and their diagnostics.
+@internal
+class AcanthisFieldOperation<T> extends AcanthisOperation<T> {
+  final String name;
+  final dynamic Function(T) getter;
+  final AcanthisType<dynamic> schema;
+  final bool optional;
+  const AcanthisFieldOperation(
+    this.name,
+    this.getter,
+    this.schema,
+    this.optional,
+  );
+
+  @override
+  T call(T value) {
+    final input = getter(value);
+    if (optional && input == null) return value;
+    try {
+      schema.parse(input);
+    } on ValidationError catch (error) {
+      throw error.prefixed(name);
+    }
+    return value;
+  }
+
+  Future<T> parseAsync(T value) async {
+    final input = getter(value);
+    if (optional && input == null) return value;
+    try {
+      await schema.parseAsync(input);
+    } on ValidationError catch (error) {
+      throw error.prefixed(name);
+    }
+    return value;
+  }
+
+  T collect(T value, Map<String, dynamic> errors) {
+    final input = getter(value);
+    if (!optional || input != null) {
+      errors.addChild(
+        name,
+        IssueSink.fromIssues(schema.tryParse(input).issues),
+      );
+    }
+    return value;
+  }
+
+  Future<void> collectAsync(T value, Map<String, dynamic> errors) async {
+    final input = getter(value);
+    if (!optional || input != null) {
+      final result = await schema.tryParseAsync(input);
+      errors.addChild(name, IssueSink.fromIssues(result.issues));
+    }
+  }
+}
+
 /// A class to validate types
 @immutable
 abstract class AcanthisType<O> {
@@ -79,6 +146,10 @@ abstract class AcanthisType<O> {
     O Function(O) compiled = (value) => value;
     for (final operation in operations) {
       switch (operation) {
+        case AcanthisFieldOperation<O>():
+          final previous = compiled;
+          compiled = (value) => operation(previous(value));
+          break;
         case CustomCauseCheck<O>():
           final previous = compiled;
           final current = operation;
@@ -146,6 +217,18 @@ abstract class AcanthisType<O> {
     O Function(O, Map<String, dynamic>) compiled = (value, _) => value;
     for (final operation in operations) {
       switch (operation) {
+        case AcanthisFieldOperation<O>():
+          final previous = compiled;
+          compiled = (value, errors) {
+            final parsed = previous(value, errors);
+            if (errors.isNotEmpty &&
+                AcanthisValidationScope.current.fieldPolicy ==
+                    AcanthisCollectionPolicy.first) {
+              return parsed;
+            }
+            return operation.collect(parsed, errors);
+          };
+          break;
         case CustomCauseCheck<O>():
           final previous = compiled;
           final current = operation;
@@ -246,8 +329,21 @@ abstract class AcanthisType<O> {
 
   O parseInternal(dynamic value) {
     value ??= defaultValue;
-    if (__operations.isEmpty) return coerceInput(value);
-    return compiledParseInternal(coerceInput(value ?? defaultValue));
+    final typed = _coerceForParsing(value);
+    if (__operations.isEmpty) return typed;
+    return compiledParseInternal(typed);
+  }
+
+  // Normalize only input conversion, never TypeErrors from user callbacks.
+  O _coerceForParsing(dynamic value) {
+    try {
+      return coerceInput(value);
+    } on TypeError {
+      throw ValidationError.diagnostic(
+        _invalidTypeMessage(value),
+        code: inputErrorKey,
+      );
+    }
   }
 
   /// Returns null on success or the first [ValidationError.message] on failure.
@@ -302,7 +398,16 @@ abstract class AcanthisType<O> {
         errors,
       );
     } on ValidationError catch (e) {
-      errors.addIssue(e.key.isNotEmpty ? e.key : inputErrorKey, e.message);
+      errors.addAll(
+        IssueSink.fromIssues([
+          e.issue ??
+              AcanthisIssue(
+                path: [],
+                code: e.key.isNotEmpty ? e.key : inputErrorKey,
+                message: e.message,
+              ),
+        ]),
+      );
       return valueOnFailure(value);
     } on TypeError {
       errors.addIssue(inputErrorKey, _invalidTypeMessage(value));
@@ -337,13 +442,16 @@ abstract class AcanthisType<O> {
     if (!isAsync) {
       return parse(value);
     }
-    final typedValue = coerceInput(value ?? defaultValue);
+    final typedValue = _coerceForParsing(value ?? defaultValue);
     if (operations.isEmpty) {
       return typedValue;
     }
     O newValue = typedValue;
     for (var operation in operations) {
       switch (operation) {
+        case AcanthisFieldOperation<O>():
+          newValue = await operation.parseAsync(newValue);
+          break;
         case AcanthisCheck<O>():
           if (operation is CustomCauseCheck<O>) {
             final cause = operation.cause(newValue);
@@ -415,6 +523,9 @@ abstract class AcanthisType<O> {
           break;
         }
         switch (operation) {
+          case AcanthisFieldOperation<O>():
+            await operation.collectAsync(newValue, errors);
+            break;
           case AcanthisCheck<O>():
             if (operation is CustomCauseCheck<O>) {
               final cause = operation.cause(newValue);
@@ -458,7 +569,16 @@ abstract class AcanthisType<O> {
         metadata: metadataEntry,
       );
     } on ValidationError catch (e) {
-      errors.addIssue(e.key.isNotEmpty ? e.key : inputErrorKey, e.message);
+      errors.addAll(
+        IssueSink.fromIssues([
+          e.issue ??
+              AcanthisIssue(
+                path: [],
+                code: e.key.isNotEmpty ? e.key : inputErrorKey,
+                message: e.message,
+              ),
+        ]),
+      );
       return outcomeFromDiagnostics(
         value: valueOnFailure(value),
         errors: errors,

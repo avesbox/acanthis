@@ -6,6 +6,9 @@ description: Allow null explicitly and distinguish it from an absent object fiel
 
 Allow null explicitly and distinguish it from an absent object field.
 
+For missing keys, defaults, and PATCH updates, see the
+[presence and defaults decision table](/presence-and-defaults).
+
 ## Nullables
 
 Use the `nullable()` method to create a nullable schema. This method allows you to validate and transform nullables.

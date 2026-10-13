@@ -39,6 +39,10 @@ abstract final class AcanthisMessageCatalogs {
 }
 
 const _fixed = <String, (String, String)>{
+  'hexColor': (
+    'Value must be a valid hex color',
+    'Il valore deve essere un colore esadecimale valido',
+  ),
   'type': ('Invalid value type', 'Tipo di valore non valido'),
   'date': ('Invalid date', 'Data non valida'),
   'required': ('A value is required', 'È richiesto un valore'),
@@ -235,7 +239,7 @@ String? _resolve(String code, Map<String, Object?> p, bool it) {
                 ? 'Il valore deve terminare con $value'
                 : 'Value must end with $value');
     case 'enumerated':
-      if (p['values'] is! List) return null;
+      if ((p['values'] ?? p['enumValues']) is! List) return null;
       return it
           ? 'Il valore deve essere uno dei valori consentiti'
           : 'Value must be one of the enumerated values';

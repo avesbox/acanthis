@@ -1,0 +1,15 @@
+name: acanthis_flutter_error_contract
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  acanthis:
+    path: ../..
+dev_dependencies:
+  lints: 6.0.0
+  flutter_test:
+    sdk: flutter

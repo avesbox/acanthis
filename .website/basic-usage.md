@@ -75,6 +75,9 @@ For custom messages or localization, continue to [custom error messages](/error-
 
 ### `validate()` with Flutter's `TextFormField` {#flutter-textformfield}
 
+For async checks and multiple dependent fields, see the complete
+[Flutter live-form recipe](/flutter-live-form).
+
 `validate()` returns `null` for valid input and the first `ValidationError`
 message for invalid input. This matches Flutter's
 [`validator` callback](https://api.flutter.dev/flutter/widgets/FormField/validator.html).
@@ -128,8 +131,8 @@ class _EmailFormState extends State<EmailForm> {
 You can also pass `validator: schema.validate` directly when the schema accepts
 the callback's possible `null` value, for example with a nullable schema.
 `string().nullable()` accepts null, but still checks a supplied empty string.
-Passing null or an incompatible type to a non-nullable string schema can throw
-`TypeError`; `validate()` only converts `ValidationError` into a message.
+Passing null or an incompatible type to a non-nullable string schema produces
+a structured `type` validation failure; `validate()` returns its message.
 Uncaught exceptions from transformations propagate. Custom refinements retain
 their existing behavior of converting thrown exceptions into check failures.
 

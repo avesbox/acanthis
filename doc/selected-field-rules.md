@@ -2,6 +2,13 @@
 
 Design date: 2026-09-12. Implemented: 2026-09-28.
 
+Implementation rechecked on 2026-10-12 against the current working tree:
+selected-field rules and sync/async live scheduling are implemented. The full
+suite passed all 491 tests and `dart analyze --fatal-infos` reported no issues.
+This includes the truth-table, collection-policy, pending/stale revision, and
+200-revision nested-edit parity tests listed below. The conservative subtree
+caching and full-validation fallbacks remain intentional implementation limits.
+
 The original design and truth tables below are retained as rationale. Public
 APIs are documented in [contextual rules](../.website/contextual-rules.md) and
 [live editing](../.website/live-validation.md). `AcanthisPath`, `AcanthisRule<C>`,

@@ -1,5 +1,8 @@
 # Open API Schema
 
+See the [export compatibility table](/export-compatibility) for supported
+constraints and the differences between audited and legacy exports.
+
 ## Audited OpenAPI 3.1 export
 
 Use `exportOpenApiSchema` to generate an OpenAPI 3.1 Schema Object:

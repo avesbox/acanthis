@@ -740,7 +740,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     _checkUnknownKeys(value);
     final input = isPure && value is Map<String, V>
         ? value
-        : Map<String, dynamic>.from(value as Map);
+        : _parseInput(value);
     if (isPure) {
       Map<String, dynamic>? changed;
       for (int i = 0; i < _length; i++) {
@@ -873,6 +873,17 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     }
   }
 
+  Map<String, dynamic> _parseInput(dynamic value) {
+    try {
+      return Map<String, dynamic>.from(value as Map);
+    } on TypeError {
+      throw ValidationError.diagnostic(
+        'Invalid type: ${value.runtimeType}, expected Map with String keys',
+        code: 'type',
+      );
+    }
+  }
+
   @override
   Map<String, V> tryParseInternal(
     dynamic value, {
@@ -999,7 +1010,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             throw error.prefixed(key);
           } on TypeError catch (_) {
             errors.addIssue(
-              'type',
+              'passthrough',
               '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}',
               path: [key],
             );
@@ -1023,7 +1034,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
     _checkUnknownKeys(value);
-    final input = Map<String, dynamic>.from(value as Map);
+    final input = _parseInput(value);
     final parsed = <String, V>{};
     // Parse each field
     for (var entry in _fields.entries) {
@@ -1177,7 +1188,7 @@ class AcanthisMap<V> extends AcanthisType<Map<String, V>> {
             throw error.prefixed(key);
           } on TypeError catch (_) {
             errors.addIssue(
-              'type',
+              'passthrough',
               '$key expose a value of type ${objValue.runtimeType}, but the passthrough type is ${_passthroughType.runtimeType}',
               path: [key],
             );

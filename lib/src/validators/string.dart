@@ -442,7 +442,13 @@ class PatternHexColorStringChecks extends AcanthisCheck<String> {
 /// String Check for enumerated String validation.
 class EnumeratedStringCheck<T extends Enum> extends AcanthisCheck<String> {
   @override
-  Map<String, Object?> get parameters => {'enumValues': enumValues};
+  Map<String, Object?> get parameters => {
+    'enumValues': enumValues,
+    'values': [
+      for (final entry in enumValues)
+        nameTransformer?.call(entry.name) ?? entry.name,
+    ],
+  };
 
   final List<T> enumValues;
   final String Function(String name)? nameTransformer;

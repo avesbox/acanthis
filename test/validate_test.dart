@@ -63,10 +63,7 @@ void main() {
           union<String>([schema]).validateAsync('Ada'),
           throwsA(same(error)),
         );
-        await expectLater(
-          string().validateAsync(null),
-          throwsA(isA<TypeError>()),
-        );
+        expect(await string().validateAsync(null), contains('Invalid type'));
       },
     );
   });
@@ -168,9 +165,9 @@ void main() {
       expect(schema.validate('bad'), 'Invalid email');
     });
 
-    test('propagates type errors for incompatible non-nullable inputs', () {
-      expect(() => string().validate(null), throwsA(isA<TypeError>()));
-      expect(() => string().validate(42), throwsA(isA<TypeError>()));
+    test('reports incompatible non-nullable inputs as validation failures', () {
+      expect(string().validate(null), contains('Invalid type'));
+      expect(string().validate(42), contains('Invalid type'));
     });
 
     test('propagates non-validation exceptions from transformations', () {

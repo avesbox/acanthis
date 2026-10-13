@@ -11,6 +11,12 @@ Validate existing Dart instances and describe class fields.
 Use `instance<T>()` to validate already constructed Dart objects (class instances) without converting them to `Map`.  
 You attach field validators via getters. Read the original instance directly from `parse()`; field validators do not rewrite the instance’s properties.
 
+Each field runs its complete child schema once, including nested containers and
+transformations. Transformed child values feed its checks but are not assigned
+back to the instance. Failures retain their original code and parameters under
+the declared field path: `['email']` with code `minLength`, rather than a root
+code such as `email.minLength`. Async child schemas require async entry points.
+
 ```dart
 class User {
   final String name;

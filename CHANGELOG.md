@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.0
+
+- breaking!: normalize invalid input conversion to structured `ValidationError`
+  in throwing parsers; `validate` now returns these type-failure messages.
+  Exceptions from throwing-parser transformation callbacks still propagate.
+- breaking!: instance fields validate their complete child schema once, retaining
+  field/index paths, original codes, parameters, and union branches. Nested
+  checks and transformations now run; the original instance is returned unchanged.
+- breaking!: collecting typed-passthrough assignment failures now use `passthrough`,
+  matching throwing validation. Bounded custom metadata uses explicit cycle,
+  depth, size, and traversal-budget markers.
+- feat: publish `AcanthisIssueCodes` string constants and a versioned,
+  locale-independent `issues.toTransport()` protocol without messages.
+- fix: preserve structured `ValidationError` metadata through base catches;
+  localize enum constraints (including transformed names) and hex colors;
+  correct `everyOf` fallback wording.
+- test: cover built-in producers, scoped localization, transport, instance
+  diagnostics, Flutter fields, and a Serinus/JavaScript integration. The Serinus
+  fixture documents its local Dart 3.13 compatibility workaround.
+- docs: publish the error contract, migration notes, JIT/AOT measurements, and
+  a comparison of both Dart Standard Schema packages with executable probes.
+
 ## 2.0.0
 
 - breaking: remove `AcanthisParseResult` and `toOutcome()`. `parse`/`parseAsync` return raw values; `tryParse`/`tryParseAsync` return sealed `AcanthisValid`/`AcanthisInvalid` outcomes. Both outcome branches expose `value`; invalid values are best-effort output, not validated data.

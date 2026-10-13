@@ -1,4 +1,7 @@
 import 'package:acanthis/src/issue_sink.dart';
+
+import 'types.dart' show validationInput;
+
 import 'package:acanthis/acanthis.dart';
 import 'package:acanthis/src/operations/checks.dart';
 import 'package:acanthis/src/operations/transformations.dart';
@@ -46,7 +49,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
   @override
   Future<List> parseAsync(dynamic value) async {
     value ??= defaultValue;
-    final raw = value as List<dynamic>;
+    final raw = validationInput<List<dynamic>>(value);
     if (raw.length != elements.length && !_variadic) {
       throw ValidationError.diagnostic(
         'Value must have ${elements.length} elements',
@@ -122,7 +125,7 @@ class AcanthisTuple extends AcanthisType<List<dynamic>> {
       throw AsyncValidationException('Cannot use parse with async operations');
     }
     value ??= defaultValue;
-    final raw = value as List<dynamic>;
+    final raw = validationInput<List<dynamic>>(value);
     if (raw.length != elements.length && !_variadic) {
       throw ValidationError.diagnostic(
         'Value must have ${elements.length} elements',

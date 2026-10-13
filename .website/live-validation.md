@@ -3,6 +3,9 @@
 Live sessions keep raw input, ordered issues, and parsed output together. They
 reuse unaffected field results and selected-field rules between edits.
 
+For a complete widget with pending state, async checks, password confirmation,
+and submission, follow the [Flutter live-form recipe](/flutter-live-form).
+
 ## Editing and deltas
 
 ```dart

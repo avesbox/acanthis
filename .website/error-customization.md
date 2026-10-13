@@ -63,3 +63,34 @@ See [localizing custom rule messages](/contextual-rules#localize-custom-rule-mes
 for complete examples covering password confirmation, live sessions, and
 parameter interpolation. The same resolver works with
 `result.issues.formatFields()` and `session.issues.formatFields()`.
+
+## Stable codes and transport
+
+Use `AcanthisIssueCodes.minLength` and the other public string constants when
+matching built-in diagnostics. Custom codes remain ordinary strings; use an
+`app.*` or organization prefix. Codes, constraint parameter shapes, data paths,
+and duplicate/branch order form the machine contract. English messages do not.
+
+`AcanthisMessageCatalogs.english` and `.italian` can reformat the same issues
+without rerunning checks. Use `AcanthisI18n.runWith` for request-scoped locale
+selection. Explicit resolvers take precedence; returning null preserves the
+stored message, and an empty string is a valid translation.
+
+For API responses, use the versioned, locale-independent transport projection:
+
+```dart
+final result = object({'email': string().min(3)}).tryParse({'email': 'x'});
+final payload = result.issues.toTransport();
+// {version: 1, issues: [{path: [email], code: minLength,
+//                       parameters: {value: 3}}]}
+```
+
+The envelope preserves string/int path segments and nested union branches. It
+omits messages and recovery values; existing `toJson()` and `formatJson()` keep
+resolved messages. Put constraints, never submitted secrets, into custom
+parameters. Cyclic or oversized custom metadata is bounded with explicit markers.
+
+The [complete contract and migration notes](https://github.com/avesbox/acanthis/blob/main/doc/error-codes.md)
+list the vocabulary, parameter units, metadata limits, and observable changes.
+In 2.1, instance failures use field paths plus the original check code, and
+invalid input conversions become structured `ValidationError` failures.

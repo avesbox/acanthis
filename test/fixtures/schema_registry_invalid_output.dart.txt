@@ -1,0 +1,6 @@
+// A key's concrete schema must produce its declared output type.
+import 'package:acanthis/acanthis.dart';
+
+void main() {
+  const SchemaKey<List<List<int>>, AcanthisList<List<String>>>('nested');
+}

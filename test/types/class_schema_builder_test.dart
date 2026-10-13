@@ -86,7 +86,9 @@ void main() {
 
       final invalidOutput = pipeline.tryParse({'name': 'A', 'age': 21});
       expect(invalidOutput.isValid, isFalse);
-      expect(invalidOutput.errors.keys, contains('name.minLength'));
+      expect(invalidOutput.issues.single.path, ['name']);
+      expect(invalidOutput.issues.single.code, 'minLength');
+      expect(invalidOutput.issues.single.parameters, {'value': 2});
 
       final refineFailure = pipeline.tryParse({'name': 'Adam', 'age': 16});
       expect(refineFailure.isValid, isFalse);

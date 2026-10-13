@@ -80,6 +80,18 @@ class AcanthisIssue {
       ],
   };
 
+  /// Locale-independent protocol node; excludes messages and submitted input.
+  Map<String, Object?> toTransport() => {
+    'path': path,
+    'code': code,
+    'parameters': parameters,
+    if (branches.isNotEmpty)
+      'branches': [
+        for (final branch in branches)
+          [for (final issue in branch) issue.toTransport()],
+      ],
+  };
+
   /// RFC 6901-style path suitable for transport and form adapters.
   String get jsonPointer => path.fold<String>('', (pointer, segment) {
     final escaped = segment
@@ -178,6 +190,26 @@ typedef AcanthisMessageResolver = String? Function(
 
 /// Freeze JSON-safe constraint metadata without retaining arbitrary objects.
 Object? freezeIssueParameter(Object? value) {
+  // Keep scalar diagnostics allocation-free; traversal state is only needed
+  // for custom containers.
+  if (value == null || value is String || value is bool || value is int) {
+    return value;
+  }
+  return _freezeIssueParameter(value, _ParameterTraversal(), 0);
+}
+
+class _ParameterTraversal {
+  final active = HashSet<Object>.identity();
+  int remaining = 4096;
+}
+
+Object? _freezeIssueParameter(
+  Object? value,
+  _ParameterTraversal state,
+  int depth,
+) {
+  if (state.remaining-- <= 0) return '<max-nodes>';
+  final active = state.active;
   if (value == null || value is String || value is bool || value is int) {
     return value;
   }
@@ -186,13 +218,44 @@ Object? freezeIssueParameter(Object? value) {
   if (value is Duration) return value.inMicroseconds;
   if (value is Enum) return value.name;
   if (value is RegExp) return value.pattern;
+  if (depth >= 32) return '<max-depth>';
   if (value is Iterable) {
-    return List.unmodifiable(value.map(freezeIssueParameter));
+    if (!active.add(value)) return '<cycle>';
+    try {
+      final result = <Object?>[];
+      for (final item in value) {
+        if (result.length == 1024) {
+          result.add('<truncated>');
+          break;
+        }
+        result.add(_freezeIssueParameter(item, state, depth + 1));
+        if (state.remaining <= 0) {
+          result.add('<max-nodes>');
+          break;
+        }
+      }
+      return List.unmodifiable(result);
+    } finally {
+      active.remove(value);
+    }
   }
   if (value is Map<String, Object?>) {
-    return Map.unmodifiable(
-      value.map((key, item) => MapEntry(key, freezeIssueParameter(item))),
-    );
+    if (!active.add(value)) return '<cycle>';
+    try {
+      if (value.length > 1024) return '<truncated-map>';
+      final result = <String, Object?>{};
+      for (final entry in value.entries) {
+        result[entry.key] = _freezeIssueParameter(
+          entry.value,
+          state,
+          depth + 1,
+        );
+        if (state.remaining <= 0) return '<max-nodes>';
+      }
+      return Map.unmodifiable(result);
+    } finally {
+      active.remove(value);
+    }
   }
   return '<${value.runtimeType}>';
 }
@@ -228,6 +291,12 @@ class AcanthisIssueTree {
 }
 
 extension AcanthisIssueFormatting on Iterable<AcanthisIssue> {
+  /// Versioned, locale-independent diagnostics. Custom parameters must contain
+  /// constraints only; this projection cannot redact caller-supplied secrets.
+  Map<String, Object?> toTransport() => {
+    'version': 1,
+    'issues': [for (final issue in this) issue.toTransport()],
+  };
   Map<String, List<String>> formatFields({AcanthisMessageResolver? resolver}) {
     final fields = <String, List<String>>{};
     for (final issue in this) {
@@ -261,6 +330,7 @@ sealed class AcanthisOutcome<T> {
 
   /// Parsed output. On failure this is best-effort output and may not satisfy
   /// the schema. Check [isValid] or match the outcome before trusting it.
+  /// Throws [StateError] if a failed outcome has no typed recovery value.
   T get value;
 
   MetadataEntry<T>? get metadata;
@@ -289,14 +359,30 @@ final class AcanthisValid<T> extends AcanthisOutcome<T> {
 final class AcanthisInvalid<T> extends AcanthisOutcome<T> {
   AcanthisInvalid(
     List<AcanthisIssue> issues, {
-    required this.value,
+    required T this._value,
     this.metadata,
-  }) : issues = List.unmodifiable(issues);
+  }) : hasValue = true,
+       issues = List.unmodifiable(issues);
+
+  /// A failure for which no value of type [T] can be recovered.
+  AcanthisInvalid.withoutValue(List<AcanthisIssue> issues, {this.metadata})
+    : _value = null,
+      hasValue = false,
+      issues = List.unmodifiable(issues);
+
+  final T? _value;
+  final bool hasValue;
 
   @override
   final List<AcanthisIssue> issues;
   @override
-  final T value;
+  T get value {
+    if (!hasValue) {
+      throw StateError('Validation failed without a recovery value');
+    }
+    return _value as T;
+  }
+
   @override
   final MetadataEntry<T>? metadata;
 

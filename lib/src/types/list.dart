@@ -64,7 +64,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   @override
   List<T> parseInternal(covariant dynamic value) {
     value ??= defaultValue;
-    final raw = value as List<dynamic>;
+    final raw = validationInput<List<dynamic>>(value);
     if (isPure) {
       if (_primitiveElements && raw is List<T>) {
         if (element.runtimeType == AcanthisString && raw is List<String>) {
@@ -173,7 +173,7 @@ class AcanthisList<T> extends AcanthisType<List<T>> {
   Future<List<T>> parseAsync(dynamic value) async {
     value ??= defaultValue;
     if (!isAsync) return parse(value);
-    final raw = value as List<dynamic>;
+    final raw = validationInput<List<dynamic>>(value);
     final parsed = <T>[];
     for (var i = 0; i < raw.length; i++) {
       try {

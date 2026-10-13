@@ -219,4 +219,15 @@ void main(List<String> arguments) async {
   if (v case AcanthisValid(:final value)) {
     print(value['close_at'].runtimeType); // DateTime object
   }
+
+  const userKey = SchemaKey<Map<String, dynamic>, AcanthisMap<dynamic>>('user');
+  final registry = (SchemaRegistryBuilder()..add(userKey, registerSchema))
+      .build();
+  final userSchema = registry.get(userKey);
+  userSchema.parse({
+    'name': 'John Doe',
+    'businessName': 'Acme Corp',
+    'mobileNumber': '1234567890',
+    'email': '',
+  });
 }

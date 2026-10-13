@@ -183,7 +183,9 @@ void main() {
     expect(schema.parse(<dynamic, dynamic>{'a': 'ok'}), {'a': 'ok'});
     expect(
       () => schema.parse(<dynamic, dynamic>{'a': 'ok', 1: 'bad'}),
-      throwsA(isA<TypeError>()),
+      throwsA(
+        isA<ValidationError>().having((e) => e.issue!.code, 'code', 'type'),
+      ),
     );
     expect(object({}).parse({'unknown': true}), isEmpty);
   });

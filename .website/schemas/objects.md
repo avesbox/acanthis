@@ -23,6 +23,9 @@ By default, all declared properties are required and unknown properties are
 stripped from the parsed output. A missing property is different from an
 explicit `null`: use `nullable()` when a field may be present with null.
 
+See [presence and defaults](/presence-and-defaults) for a side-by-side behavior
+table, and [request validation](/request-validation) for create/PATCH handlers.
+
 When validation does not change the data, pure object schemas can return the
 original input map directly from `parse()`. This includes schemas with validation
 checks, provided they do not transform or coerce values or apply defaults.

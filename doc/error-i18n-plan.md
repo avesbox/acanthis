@@ -1,7 +1,12 @@
 # Error internationalization plan
 
-Status: proposal, 2026-09-17. This document plans future work; the APIs below
-are not yet available unless explicitly described as existing.
+Original proposal: 2026-09-17. Historical design, rechecked on 2026-10-12:
+catalogs, scoped/default locale configuration, structured `ValidationError`, and
+resolver-aware validation are now implemented. The descriptions of the former
+foundation below are retained as historical context. Consult the
+[current error-code contract](error-codes.md) for implemented behavior and
+[delivery status](error-codes-analysis.md) for verification and the upstream
+Serinus integration limitation.
 
 ## Existing foundation
 

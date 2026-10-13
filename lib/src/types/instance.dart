@@ -4,6 +4,7 @@ import 'package:acanthis/src/operations/transformations.dart';
 import 'package:acanthis/src/registries/metadata_registry.dart';
 
 import '../operations/operation.dart';
+import '../results.dart';
 
 /// Definition of a validated field on an instance
 class _InstanceField<T, P> {
@@ -67,6 +68,34 @@ class InstanceType<T> extends AcanthisType<T> {
   /// Create an empty instance validator
   InstanceType() : this._();
 
+  AcanthisInvalid<T> _invalidType(dynamic value) {
+    return AcanthisInvalid<T>.withoutValue([
+      AcanthisIssue(
+        path: [],
+        code: 'type',
+        message: 'Invalid type: ${value.runtimeType}, expected $T',
+      ),
+    ], metadata: metadataEntry);
+  }
+
+  @override
+  AcanthisOutcome<T> tryParse(dynamic value) {
+    // An unrelated object cannot provide a typed recovery value. In particular,
+    // probing an instance branch in a union must never try to construct T.
+    if (!isAsync && defaultValue == null && value is! T) {
+      return _invalidType(value);
+    }
+    return super.tryParse(value);
+  }
+
+  @override
+  Future<AcanthisOutcome<T>> tryParseAsync(dynamic value) {
+    if (defaultValue == null && value is! T) {
+      return Future.value(_invalidType(value));
+    }
+    return super.tryParseAsync(value);
+  }
+
   /// Add a field validator.
   /// getter extracts the property from the instance.
   /// optional skips validation when the extracted value is null.
@@ -86,47 +115,12 @@ class InstanceType<T> extends AcanthisType<T> {
       ),
     ];
 
-    final newOps = <AcanthisOperation<T>>[...operations];
+    final newOps = <AcanthisOperation<T>>[
+      ...operations,
+      AcanthisFieldOperation<T>(name, getter, validator, optional),
+    ];
 
-    for (final op in validator.operations) {
-      switch (op) {
-        case AcanthisCheck<P>():
-          newOps.add(
-            CustomCheck<T>(
-              (t) {
-                final value = getter(t);
-                if (optional && value == null) return true;
-                return op(value);
-              },
-              error: op.error,
-              name: '$name.${op.name}',
-            ),
-          );
-          break;
-        case AcanthisAsyncCheck<P>():
-          newOps.add(
-            CustomAsyncCheck<T>(
-              (t) async {
-                final value = getter(t);
-                if (optional && value == null) return true;
-                return await op(value);
-              },
-              error: op.error,
-              name: '$name.${op.name}',
-            ),
-          );
-          break;
-        case AcanthisTransformation<P>():
-          // For now ignore nested transformations: instance validator is non-transforming.
-          // (Future enhancement: allow caching transformed property values.)
-          throw UnimplementedError('Nested transformations are not supported');
-        default:
-          break;
-      }
-    }
-
-    final anyAsync =
-        isAsync || validator.operations.any((o) => o is AcanthisAsyncCheck);
+    final anyAsync = isAsync || validator.isAsync;
 
     return InstanceType._(
       operations: newOps,

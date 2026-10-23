@@ -54,7 +54,25 @@ class GenerateDto extends ResolvedCorrectionProducer {
   @override
   Future<void> compute(ChangeBuilder builder) async {
     if (!importsAcanthis(unitResult.libraryElement)) return;
-    final variable = node.thisOrAncestorOfType<VariableDeclaration>();
+    var variable = node.thisOrAncestorOfType<VariableDeclaration>();
+    // `final` and selections spanning the initializer cover the declaration
+    // list or its wrapper, rather than the VariableDeclaration itself.
+    if (variable == null) {
+      for (final declaration in unit.declarations) {
+        if (declaration is TopLevelVariableDeclaration &&
+            declaration.variables.variables.length == 1 &&
+            selectionOffset >= declaration.offset &&
+            selectionOffset <= declaration.end &&
+            (selectionEnd <= declaration.end ||
+                unitResult.content
+                    .substring(declaration.end, selectionEnd)
+                    .trim()
+                    .isEmpty)) {
+          variable = declaration.variables.variables.single;
+          break;
+        }
+      }
+    }
     if (variable == null ||
         variable.parent?.parent is! TopLevelVariableDeclaration) {
       return;

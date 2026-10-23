@@ -83,7 +83,7 @@ From the repository root:
 
 ```sh
 dart pub get
-dart analyze --fatal-infos
+dart analyze . --fatal-infos
 dart test --reporter failures-only
 ```
 

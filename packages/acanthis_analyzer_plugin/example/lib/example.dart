@@ -1,6 +1,6 @@
 import 'package:acanthis/acanthis.dart';
 
-// Select userSchema and invoke "Generate or sync typed schema DTO".
+// On the schema declaration below, invoke "Generate or sync typed schema DTO".
 final userSchema = object({
   'name': string(),
   'age': integer(),

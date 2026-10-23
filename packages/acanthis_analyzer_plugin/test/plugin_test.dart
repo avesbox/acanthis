@@ -57,6 +57,31 @@ void main() {
     );
   });
 
+  test('example DTO assist accepts the name, final keyword and declaration selections', () async {
+    final source = File('example/lib/example.dart').readAsStringSync();
+    final start = source.indexOf('final userSchema');
+    final end = source.indexOf(';', start) + 1;
+    final selections = [
+      (start + 'final '.length, 'userSchema'.length),
+      (start, 0),
+      (start, source.indexOf('\n', start) - start),
+      (start, end - start),
+      (start, end - start + 1),
+    ];
+    for (var i = 0; i < selections.length; i++) {
+      final (offset, length) = selections[i];
+      final assist = await _assist(
+        harness,
+        'selection_$i',
+        source,
+        offset: offset,
+        length: length,
+      );
+      expect(assist.edits, hasLength(1), reason: 'selection $i');
+      expect(assist.edits.single.edits.single.replacement, contains('UserDto'));
+    }
+  });
+
   test(
     'pick, omit, optionals and dependencies use the effective upstream shape',
     () async {
@@ -269,11 +294,13 @@ final result = object({'x': string()}).refineAsync(CallbackAsyncCheck((_, _) asy
         syncPath,
       ) as ResolvedLibraryResult;
       final syncBuilder = ChangeBuilder(session: sync.session);
+      final syncStart = updated.indexOf('final userSchema');
       await GenerateDto(
         context: CorrectionProducerContext.createResolved(
           libraryResult: syncLibrary,
           unitResult: sync,
-          selectionOffset: updated.indexOf('userSchema'),
+          selectionOffset: syncStart,
+          selectionLength: updated.indexOf(';', syncStart) - syncStart + 1,
         ),
       ).compute(syncBuilder);
       final synced = SourceEdit.applySequence(
@@ -304,8 +331,10 @@ final result = object({'x': string()}).refineAsync(CallbackAsyncCheck((_, _) asy
 Future<SourceChange> _assist(
   Harness harness,
   String fileName,
-  String source,
-) async {
+  String source, {
+  int? offset,
+  int length = 0,
+}) async {
   final path = harness.write(fileName, source);
   final result = await harness.resolve(path);
   final library =
@@ -315,7 +344,8 @@ Future<SourceChange> _assist(
     context: CorrectionProducerContext.createResolved(
       libraryResult: library,
       unitResult: result,
-      selectionOffset: source.indexOf('userSchema'),
+      selectionOffset: offset ?? source.indexOf('userSchema'),
+      selectionLength: length,
     ),
   ).compute(builder);
   return builder.sourceChange;

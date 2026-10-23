@@ -30,8 +30,10 @@ standard ignore comments to disable individual diagnostics.
   Its quick fix renames the method. The caller must handle the resulting Future
   (for example, await it in an async function).
 
-Select the name of a top-level schema variable and invoke **Generate or sync typed
-schema DTO**. `userSchema` generates `UserDto` with a `Map<String, dynamic>`
+Place the cursor on a top-level schema declaration (including `final`), or select
+the declaration, and invoke **Generate or sync typed schema DTO** from the IDE's
+code actions/refactor menu. It is an assist, so a menu filtered to diagnostic
+quick fixes will not show it. `userSchema` generates `UserDto` with a `Map<String, dynamic>`
 representation, typed getters, and `implements Map<String, dynamic>`. Output
 types come from the second argument of `Schema<Input, Output>`, including inherited
 implementations. `optionals` makes generated getters nullable for absent keys.

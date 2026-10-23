@@ -65,7 +65,7 @@ void main(List<String> args) async {
     'name': name,
     'schema': schema,
     'inputs': inputs,
-    if (native != null) 'native_expected': native,
+    'native_expected': ?native,
   });
   final natives = <Schema<Object?, Object?>>[
     number(),

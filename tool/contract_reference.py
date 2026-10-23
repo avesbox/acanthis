@@ -36,7 +36,7 @@ result = {
     'openapi_schema_validator_version': version('openapi-schema-validator'),
     'seed': 20261015,
     'pairs': count,
-    'source_sha256': {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in [
+    'source_sha256': {path.as_posix(): hashlib.sha256(path.read_text(encoding='utf-8').encode('utf-8')).hexdigest() for path in [
         Path('tool/generate_v2_contract_reference.dart'), Path('tool/contract_reference.py'),
     ]},
     'cases': cases,

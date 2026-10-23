@@ -169,10 +169,7 @@ final class _CollectionExport {
     if (min == 0 && max == null) return [];
     if (mode == AcanthisSchemaMode.output) {
       return [
-        {
-          if (min > 0) 'minProperties': min,
-          if (max != null) 'maxProperties': max,
-        },
+        {if (min > 0) 'minProperties': min, 'maxProperties': ?max},
       ];
     }
     if (schema.unknownKeyPolicy != AcanthisUnknownKeys.preserve) {
@@ -199,10 +196,7 @@ final class _CollectionExport {
     if (min == 0 && max == null) return [];
     if (defaulted.isEmpty) {
       return [
-        {
-          if (min > 0) 'minProperties': min,
-          if (max != null) 'maxProperties': max,
-        },
+        {if (min > 0) 'minProperties': min, 'maxProperties': ?max},
       ];
     }
     if (defaulted.length > 12) {
@@ -233,7 +227,7 @@ final class _CollectionExport {
             ],
           },
         if (lower > 0) 'minProperties': lower,
-        if (upper != null) 'maxProperties': upper,
+        'maxProperties': ?upper,
       });
     }
     return [

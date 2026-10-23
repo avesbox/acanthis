@@ -497,7 +497,13 @@ void main() {
       for (final entry
           in (corpus['source_sha256'] as Map<String, dynamic>).entries) {
         expect(
-          sha256.convert(File(entry.key).readAsBytesSync()).toString(),
+          sha256
+              .convert(
+                utf8.encode(
+                  File(entry.key).readAsStringSync().replaceAll('\r\n', '\n'),
+                ),
+              )
+              .toString(),
           entry.value,
         );
       }

@@ -23,6 +23,10 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      - name: Install analyzer plugin dependencies
+        working-directory: packages/acanthis_analyzer_plugin
+        run: dart pub get
+
       # Uncomment this step to verify the use of 'dart format' on each commit.
       # - name: Verify formatting
       #   run: dart format --output=none --set-exit-if-changed .
@@ -36,6 +40,10 @@ jobs:
       # want to change this to 'flutter test'.
       - name: Run tests
         run: dart test
+
+      - name: Run analyzer plugin tests
+        working-directory: packages/acanthis_analyzer_plugin
+        run: dart test test/plugin_test.dart
 
       - uses: actions/setup-python@v5
         with:

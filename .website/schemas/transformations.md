@@ -1,136 +1,101 @@
 ---
-description: Convert input values, chain schemas, and provide recovery defaults.
+description: Transform values in order, compose typed pipelines, and control coercion and defaults.
 ---
 
-# Transformations and defaults
+# Transformations
 
-Convert input values, chain schemas, and provide recovery defaults.
+## Same-type transforms
+
+`.transform()` replaces the current value while keeping the schema's output type.
+
+```dart
+final name = string().transform((value) => value.trim()).min(2);
+print(name.parse(' Ada ')); // Ada
+print(name.validate(' A ')); // false
+```
+
+Checks and transforms run in declaration order. `string().min(2).trim()` checks the original length before trimming. Use `.transformAsync(CallbackAsyncTransform<T, T>(...))` and async parsing for asynchronous transformations.
 
 ## Pipes
 
-Pipes are a way to add custom transformation to a schema. They are useful when you want to transform a value from one type to another.
-
-You can use the `pipe()` method to add a custom transformation function to a schema.
+`.pipe(target, transform: converter)` can change the output type. It validates the source, converts its parsed value once, then validates the target.
 
 ```dart
-final name = string().pipe(number(), transform: (value) => int.parse(value));
+final age = string().trim().pipe(integer().gte(18), transform: int.parse);
+final int value = age.parse(' 21 ');
+print(value); // 21
+print(age.validate('17')); // false: the target rejects it.
+print(age.tryParse('hello').issues.first.code); // transform
 ```
 
-The input schema runs first. Only a valid input reaches the mapper; its result
-then passes through the output schema. A successful conversion alone does not
-guarantee a successful pipeline:
+A failed source skips the converter and target, even if it has typed recovery. A failed target keeps only correctly typed target recovery. Converters are synchronous; either schema stage can be async, in which case use async parsing.
+
+### Pipeline defaults
 
 ```dart
-final age = string().pipe(integer().gte(18), transform: int.parse);
-age.parse('21'); // 21
-age.tryParse('17').isValid; // false: output fails gte(18)
-age.tryParse('hello').issues.first.code; // transform
+final age = string().pipe(integer().gte(18), transform: int.parse).withDefault(21);
+print(age.parse(null)); // 21
 ```
 
-A default attached to the pipeline is an output value. On missing/null input it
-is validated by the output schema without running the input mapper.
+A pipeline default is an **output** value. It bypasses the source and converter on missing/null input, but still passes through the target and the pipeline's own operations.
 
-## Default Values
+## Default values
 
-Use `withDefault()` to replace missing/null input before validation and to supply
-best-effort recovery output when a supplied value fails validation. These are
-different outcomes: a valid replacement for null can succeed; recovery from
-invalid input remains unsuccessful.
+For ordinary native schemas, `.withDefault(value)` replaces missing/null input before normal validation.
 
 ```dart
-final name = string().min(2).max(100).withDefault('Unknown');
-final invalid = name.tryParse('A') as AcanthisInvalid<String>;
-print(invalid.value); // 'Unknown'; validation still failed
-final valid = name.tryParse('Acanthis') as AcanthisValid<String>;
-print(valid.value); // 'Acanthis'
+final name = string().min(2).withDefault('Guest');
+print(name.parse(null)); // Guest
+print(name.validate('A')); // false
+print(string().min(2).withDefault('x').validate(null)); // false
 ```
 
-`name.parse(null)` returns `'Unknown'` because the default satisfies the checks.
-`name.parse('A')` throws because the supplied value fails. Defaults also undergo
-validation: `string().min(2).withDefault('x')` fails on null input.
-See the [presence/defaults table](/presence-and-defaults) for optional fields,
-nullable values, and PATCH omission.
+Defaults must pass their checks. Supplied invalid input is not replaced. [Presence and defaults](/presence-and-defaults) explains omitted object fields and PATCH behavior.
 
-## Type Coercion
+## Type coercion
 
-Type coercion allows you to automatically convert values from one type to another during validation. This can be useful when you want to ensure that your data conforms to a specific type without manually transforming it.
-
-To enable type coercion, you can use the `coerce()` method on a schema. This method will attempt to convert the input value to the expected type before validation.
+Enable `.coerce()` to accept the schema's supported conversions before checks and transformations.
 
 ```dart
-final ageSchema = number().coerce();
-
-ageSchema.parse('25'); // ✅ returns 25 as a number
-ageSchema.parse('25.5'); // ✅ returns 25.5 as a number
-ageSchema.parse('invalid'); // ❌ throws ValidationError
+final count = integer().coerce().positive();
+print(count.parse('3')); // 3
+print(count.validate('3.5')); // false
 ```
 
 ### Accepted conversions
 
-| Schema | Accepted input with coercion | Examples / limits |
-| --- | --- | --- |
-| `string().coerce()` | Strings, numbers, booleans, `DateTime` | Uses `toString()`; does not stringify arbitrary maps/lists |
-| `number().coerce()` | Numbers; trimmed strings accepted by `num.tryParse` | `'25.5'` becomes `25.5`; booleans are rejected |
-| `integer().coerce()` | Integers; finite whole numbers; trimmed numeric strings representing whole numbers | `'25.0'` becomes `25`; `25.5` is rejected rather than rounded |
-| `doubleType().coerce()` | Doubles; finite numbers; trimmed strings parsing to finite doubles | `'25'` becomes `25.0` |
-| `boolean().coerce()` | Booleans; numeric 0/1; trimmed, case-insensitive `'true'`, `'false'`, `'0'`, `'1'` | `' FALSE '` becomes `false`; `'yes'` and `2` are rejected |
-| `date()` | `DateTime`, integer milliseconds since epoch, strings accepted by `DateTime.tryParse` | Date conversion is enabled by default; an integer is milliseconds, not seconds |
+| Schema | Additional accepted input |
+| --- | --- |
+| `string().coerce()` | Numbers, booleans, and `DateTime`, using `toString()` |
+| `number().coerce()` | Trimmed strings accepted by `num.tryParse` |
+| `integer().coerce()` | Finite whole numbers and numeric strings representing whole numbers |
+| `doubleType().coerce()` | Finite numbers and strings parsing to finite doubles |
+| `boolean().coerce()` | Numeric 0/1; trimmed, case-insensitive strings true/false/0/1 |
+| `date().coerce()` | Numeric milliseconds since the epoch; date strings already work with `date()` |
 
-Coercion is not a finiteness check: values already of the requested numeric type
-pass the conversion step unchanged. Add `.finite()` when needed. Date parsing
-uses Dart's parser and timezone behavior; it does not force UTC. Null is handled
-by nullable/default policies, not converted to the string `'null'` or boolean false.
+Coercion does not stringify arbitrary maps or lists. Null follows the nullable/default policy. Already correctly typed numeric values bypass conversion; add `.finite()` when required. Date parsing follows Dart's parser and timezone behavior.
 
 ### Execution order
 
-Defaults for missing/null input are resolved before coercion. Coercion precedes
-the schema's checks and transformations, which run in declaration order:
+Missing/null defaults resolve first, then coercion, then declared checks and transforms. A pipe introduces a new source/converter/target boundary. Collecting parsing stops at a transform after a failure; [collection policies](/contextual-rules#collection-policies) can stop earlier.
+
+### `coerce()` and unions {#coerce-and-unions}
 
 ```dart
-final trimmed = string().transform((value) => value.trim()).refine(
-  onCheck: (value) => value.length >= 2,
-  name: 'minLength',
-  error: 'At least two characters',
-);
-trimmed.tryParse(' A ').isValid; // false: the check sees 'A'
-final checkedFirst = string().min(2).transform((value) => value.trim());
-checkedFirst.parse(' A '); // 'A': min(2) checked the original string
+final value = union<Object?>([number().coerce(), string()]);
+print(value.parse('42')); // 42, a number.
+print(value.parse('hello')); // hello, a string.
 ```
 
-Use a pipe when the transformed output must satisfy a separate schema.
-Non-throwing parsing can collect multiple check failures; it is not a guarantee
-that every later operation is skipped. A failed pipeline input does skip its
-mapper and output stage. See [collection policies](/contextual-rules#collection-policies).
+The first successful plain branch supplies the result. Put the branch whose conversion you prefer first.
 
-### Callback exceptions
+## Callback exceptions
 
-| Callback | Failure behavior |
+| Callback | Behavior when it throws |
 | --- | --- |
-| `refine()` / `refineAsync()` | Thrown exceptions become failed checks using the configured error |
-| `pipe(..., transform: ...)` | Mapper exceptions become a `transform` validation failure |
-| `transform(...)` | Arbitrary callback exceptions propagate |
-| Selected-field rule callbacks | Exceptions propagate as application errors |
+| Pipeline converter | `FormatException` becomes a `transform` issue; other exceptions propagate |
+| Refinement, transform, rule, getter, or factory | Exceptions propagate |
 
-`tryParse()` handles validation failures, not every application exception.
-Use async entry points for async schemas. If a remote refinement should report a
-service outage differently from an unavailable value, handle that distinction
-explicitly in your service/UI instead of relying on the refinement's catch behavior.
+`tryParse()` handles validation failures; it does not catch every application error. Handle service failures explicitly when they need a different UI response from invalid input. Native pipelines and arbitrary transformations are rejected by [strict export](/export-compatibility).
 
-### `coerce()` and Unions
-
-When using `coerce()` with union types, the coercion will follow the order of the types defined in the union. The first type that can successfully coerce the value will be used.
-
-```dart
-final unionSchema = union([
-  number().coerce(),
-  string(),
-]);
-
-unionSchema.parse('42'); // ✅ returns 42 as a number
-unionSchema.parse('hello'); // ✅ returns 'hello' as a string
-unionSchema.parse(true); // ❌ throws ValidationError
-```
-
----
-
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+Built-in decoding transforms can report malformed encoded input as a `transform` issue. This does not make arbitrary exceptions from application transforms into validation failures.

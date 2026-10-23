@@ -19,14 +19,14 @@ class User {
   }
 }
 
-AcanthisMap<dynamic> get registerSchema => object({
+ObjectSchema get registerSchema => object({
   'name': string().min(3).max(100).toUpperCase(),
   'businessName': string().min(3).max(150).toUpperCase(),
   'mobileNumber': string().length(10),
   'email': string().email(),
   'password': string().min(6).max(128),
 });
-AcanthisMap<dynamic> get updateSchema => object({
+ObjectSchema get updateSchema => object({
   'name': string().min(3).max(100).toUpperCase().nullable(),
   'businessName': string().min(3).max(150).toUpperCase().nullable(),
   'mobileNumber': string().length(10).nullable(),
@@ -50,10 +50,10 @@ class WireTransfer extends Payment {
 
 void main(List<String> arguments) async {
   final userValidator = instance<User>()
-      .field('name', (u) => u.name, .string().contains('Doe'))
-      .field('age', (u) => u.age, .integer())
-      .field('email', (u) => u.email, .string().email())
-      .field('birthDate', (u) => u.birthDate, .date())
+      .field('name', (u) => u.name, string().contains('Doe'))
+      .field('age', (u) => u.age, integer())
+      .field('email', (u) => u.email, string().email())
+      .field('birthDate', (u) => u.birthDate, date())
       .withRefs(
         (refs) =>
             refs.ref('birthDate', (u) => u.birthDate).ref('age', (u) => u.age),
@@ -68,16 +68,16 @@ void main(List<String> arguments) async {
     birthDate: DateTime(2015, 1, 1),
   );
   final result = userValidator.tryParse(user);
-  print(result.errors);
+  print(result.issues);
 
   final usersMapper = classSchema<List, List<User>>()
       .input(
         object({
-          'name': .string().min(1),
-          'age': .integer().gte(0),
-          'email': .string().email(),
-          'birthDate': .string().dateTime().pipe(
-            .date(),
+          'name': string().min(1),
+          'age': integer().gte(0),
+          'email': string().email(),
+          'birthDate': string().dateTime().pipe(
+            date(),
             transform: (value) => DateTime.parse(value),
           ),
         }).list(),
@@ -118,7 +118,7 @@ void main(List<String> arguments) async {
       schema: instance<CreditCard>().field(
         'number',
         (c) => c.number,
-        .string().min(13).max(19),
+        string().min(13).max(19),
       ),
     ),
     variant<WireTransfer>(
@@ -126,7 +126,7 @@ void main(List<String> arguments) async {
       schema: instance<WireTransfer>().field(
         'iban',
         (w) => w.iban,
-        .string().min(15).max(34),
+        string().min(15).max(34),
       ),
     ),
   ]);
@@ -137,15 +137,15 @@ void main(List<String> arguments) async {
     literal('wire_transfer'),
     variant<CreditCard>(
       guard: (p) => p is CreditCard,
-      schema: .instance<CreditCard>().field(
+      schema: instance<CreditCard>().field(
         'number',
         (c) => c.number,
-        .string().min(13).max(19),
+        string().min(13).max(19),
       ),
     ),
     object({
-      'type': .string().contained(['credit_card', 'wire_transfer']),
-      'data': .union([
+      'type': string().contained(['credit_card', 'wire_transfer']),
+      'data': union([
         AcanthisType.instance<CreditCard>(),
         AcanthisType.instance<WireTransfer>(),
       ]),
@@ -178,15 +178,15 @@ void main(List<String> arguments) async {
   print(numericInput.parse('hello')); // passes
 
   final mapWithLiterals = AcanthisType.object({
-    'type': .literal('Acanthis'),
-    'name': .string(),
+    'type': literal('Acanthis'),
+    'name': string(),
   });
 
   print(mapWithLiterals.parse({'type': 'Acanthis', 'name': 'Example'}));
 
   final mapWithDefault = AcanthisType.object({
-    'type': .string().withDefault('Acanthis'),
-    'name': .string().withDefault('Unknown'),
+    'type': string().withDefault('Acanthis'),
+    'name': string().withDefault('Unknown'),
   });
   print(mapWithDefault.tryParse({}));
   final listWithDefault = AcanthisType.string().list().min(1).withDefault([
@@ -208,8 +208,8 @@ void main(List<String> arguments) async {
   });
   if (res case AcanthisValid(:final value)) print(value);
   final schema = AcanthisType.object({
-    'name': .string(),
-    'close_at': .date().coerce(),
+    'name': string(),
+    'close_at': date().coerce(),
   });
 
   final v = schema.tryParse({
@@ -220,14 +220,15 @@ void main(List<String> arguments) async {
     print(value['close_at'].runtimeType); // DateTime object
   }
 
-  const userKey = SchemaKey<Map<String, dynamic>, AcanthisMap<dynamic>>('user');
+  const userKey = SchemaKey<Map<String, dynamic>, ObjectSchema>('user');
   final registry = (SchemaRegistryBuilder()..add(userKey, registerSchema))
       .build();
   final userSchema = registry.get(userKey);
-  userSchema.parse({
+  final invalidUser = userSchema.tryParse({
     'name': 'John Doe',
     'businessName': 'Acme Corp',
     'mobileNumber': '1234567890',
     'email': '',
   });
+  print(invalidUser.issues.formatFields());
 }

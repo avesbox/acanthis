@@ -1,5 +1,6 @@
 import 'package:benchmarks/shared/acanthis_benchmark.dart';
 import 'package:luthor/luthor.dart';
+import 'package:benchmarks/shared/payloads.dart';
 
 class LuthorNestedObjectValidator extends AcanthisBenchmark {
   LuthorNestedObjectValidator() : super(name: 'LuthorNestedObjectValidator');
@@ -8,19 +9,15 @@ class LuthorNestedObjectValidator extends AcanthisBenchmark {
     LuthorNestedObjectValidator().report();
   }
 
+  final validator = l.schema({
+    'username': l.string(),
+    'password': l.string(),
+    'contact': l.schema({'name': l.string(), 'address': l.string()}),
+  });
+
   @override
   void run() {
-    final validator = l.schema({
-      'username': l.string(),
-      'password': l.string(),
-      'contact': l.schema({'name': l.string(), 'address': l.string()}),
-    });
-    final payload = {
-      'username': 'John Doe',
-      'password': 'secret',
-      'contact': {'name': 'John Doe', 'address': '123 Main St'},
-    };
-    validator.validateSchema(payload);
+    validator.validate(Payloads.nestedObjectPayload);
   }
 }
 
@@ -31,15 +28,11 @@ class LuthorFlatObjectValidator extends AcanthisBenchmark {
     LuthorFlatObjectValidator().report();
   }
 
+  final validator = l.schema({'firstname': l.string(), 'lastname': l.string()});
+
   @override
   void run() {
-    final validator = l.schema({
-      'firstname': l.string(),
-      'lastname': l.string(),
-    });
-
-    final payload = {'firstname': 'John', 'lastname': 'Doe'};
-    validator.validateSchema(payload);
+    validator.validate(Payloads.flatObjectPayload);
   }
 }
 
@@ -50,22 +43,12 @@ class LuthorArrayObjectValidator extends AcanthisBenchmark {
     LuthorArrayObjectValidator().report();
   }
 
+  final validator = l.schema({
+    'contacts': l.list(l.schema({'type': l.string(), 'value': l.string()})),
+  });
+
   @override
   void run() {
-    final validator = l.schema({
-      'contacts': l.list(
-        validators: [
-          l.schema({'type': l.string(), 'value': l.string()}),
-        ],
-      ),
-    });
-
-    final payload = {
-      'contacts': [
-        {'type': 'email', 'value': 'foo@bar.com'},
-        {'type': 'phone', 'value': '12345678'},
-      ],
-    };
-    validator.validateSchema(payload);
+    validator.validate(Payloads.objectArrayPayload);
   }
 }

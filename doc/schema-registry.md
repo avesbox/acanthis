@@ -1,5 +1,8 @@
 # Schema registry
 
+For V2 (`ObjectSchema` / `RecordSchema`), see the updated
+[metadata, registries and mocks guide](../docs/v2/metadata-and-mocks.md).
+
 `SchemaRegistry` is an optional catalog of existing validators. Ordinary imports
 still work. Create a builder during application setup, publish its snapshot, and
 resolve validators once while composing schemas or binding application handlers.
@@ -140,7 +143,7 @@ runtime replacement, and remote schema loading until specific uses justify them.
 | Metadata and export | Audited export selects presentation metadata and ignores arbitrary reference overrides | `meta(id: ...)` does not register a schema or provide named audited references |
 | Structural ownership | Object construction stores the supplied field map; `fields` exposes an unmodifiable view of it | A frozen registry cannot promise deeply immutable schemas merely by freezing its own map |
 
-The retained [probe](../tool/schema_registry_analysis_probe.dart) ran successfully
+The original V1 [probe](../tool/schema_registry_analysis_probe.dart) ran successfully
 with six explicit checks:
 
 1. Billing and shipping fields hold the exact same address schema instance.
@@ -154,7 +157,9 @@ The sixth check observes ownership, not reliable validation after mutation:
 object caches may already reflect the original fields. Treat such mutation as
 unsupported usage; do not infer safe schema replacement from it.
 
-Reproduce with `dart run tool/schema_registry_analysis_probe.dart`. The earlier
+The retained probe now runs against V2 and checks that object construction
+snapshots the field map. Run it with `dart run tool/schema_registry_analysis_probe.dart`;
+the six observations above record the original V1 baseline. The earlier
 Error Codes/Branding baseline passed 463 tests; those results are historical
 evidence, not tests of the registry. At the original analysis date, registry
 implementations, framework bindings, and named bundle export had not been

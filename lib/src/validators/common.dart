@@ -1,26 +1,14 @@
-import 'package:acanthis/src/operations/checks.dart';
+import '../common/issue.dart' show singleIssueParameter;
+import '../common/operations.dart';
 
-/// Common checks for Exact values.
-class ExactCheck<T> extends AcanthisCheck<T> {
-  @override
-  Map<String, Object?> get parameters => {'value': value};
-
+final class ExactCheck<T> implements Check<T> {
+  ExactCheck({required this.value})
+    : parameters = singleIssueParameter('value', value);
   final T value;
-
-  ExactCheck({
-    required this.value,
-    String? message,
-    String Function(T value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be exactly $value',
-         name: 'exact',
-       );
+  final Map<String, Object?> parameters;
 
   @override
-  bool call(T value) {
-    return value == this.value;
+  void evaluate(T value, CheckContext context) {
+    if (value != this.value) context.addIssue('exact', parameters: parameters);
   }
 }

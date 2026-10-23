@@ -1,49 +1,64 @@
-# Bounded seeded mocking
+---
+description: Control mock generation with seeded input providers and explicit search and size budgets.
+---
 
-Use `schema.mockSeeded(seed: 42)` for deterministic generation with a validation
-guarantee. Every returned value passes the schema; the generator validates both
-the candidate and returned value. Repeatability is for the same schema, limits,
-seed and Dart SDK, not a promise of identical random sequences across SDK releases.
+# Seeded mocking
+
+`.mockSeeded()` generates typed, validated output within explicit limits.
 
 ```dart
-final schema = object({
+final account = object({
   'name': string().min(2).max(12),
   'age': integer().gte(18).lte(65),
 });
-final value = schema.mockSeeded(seed: 42);
-assert(schema.tryParse(value).isValid);
+final sample = account.mockSeeded(
+  seed: 42,
+  maxAttempts: 64,
+  maxDepth: 16,
+  maxCollectionLength: 256,
+  maxNodes: 4096,
+);
+print(account.validate(sample)); // true
 ```
 
-The supported subset is explicit:
+The displayed limits are the defaults. `.mock()` and `.mock(seed)` use this same engine. Identical results require the same schema, library version, seed, limits, generators, SDK, and deterministic callbacks. Cross-SDK random sequences are not guaranteed.
 
-- Standard string schemas with min/max/exact length, required/nonempty, email,
-  and exact-value checks; numeric `int`, `double`, and `num` schemas with `gte`,
-  `lte`, and exact-value checks; booleans and their true/false checks.
-- Primitive string/numeric/boolean literals, and nullable primitive schemas.
-- Ordinary dynamic-valued object schemas with supported children and no
-  cross-field callbacks; tuples with supported children.
-- Lists of string, integer, double, num, bool, dynamic, or dynamic-valued maps.
-  List length/min/max/unique checks are supported for string, int and dynamic
-  element types. Other operations or generic combinations fail explicitly.
+## Supported constraints {#supported-subset}
 
-Numeric sampling is restricted to `[-1000, 1000]` intersected with schema bounds.
-Email sampling uses deterministic `u<number>@example.com` addresses. This is a
-bounded candidate generator, not a general constraint solver: a satisfiable
-schema can lie outside its search domain.
+Automatic generation covers native numeric bounds and choices, booleans, scalar literals, nullable values, string lengths/exact values/enums, email/case/UUID/URL/URI/date-time/Base64 checks, list membership/length/uniqueness, objects, records, tuples, plain unions, and scalar templates. Dates support fixed bounds and fixed-date differences; clock-relative checks are rejected for reproducibility.
 
-Defaults are still handled by validation; they are not assumed to be valid.
-Dates, unions, templates, pipelines, instance schemas, lazy recursion, custom
-subclasses, arbitrary refinements, transformations, async checks and cross-field
-callbacks are outside this contract. Opaque operations are rejected before
-execution, so a callback that never returns is not invoked by the generator.
+Unconstrained numeric candidates start around -1000 to 1000; explicit bounds can move that range. Sampling bounds must fit the JSON safe integer range. Defaults are inspected and validated. This is a candidate generator, so sparse valid domains can exhaust the attempt budget.
 
-Defaults are 64 attempts, depth 16, collection length 256, and 4096 visited nodes
-per schema inspection or candidate. Override them using `maxAttempts`,
-`maxDepth`, `maxCollectionLength`, and `maxNodes`. Contradictions, unsupported
-features, exhausted search and resource limits throw `AcanthisMockException`
-with a `reason`; no invalid value is silently returned.
+[Instances with factories and pipelines](/schemas/mocking#instances-and-pipelines) support explicit construction and output validation. Pipelines generate source input and validate the converted target. Root pipeline generation uses source candidates; nested null candidates follow ordinary pipeline default behavior.
 
-Legacy `mock([seed])` remains a compatibility, best-effort API and does not gain
-this validation guarantee. Its list generator now has a finite attempt cap,
-samples repeated values when uniqueness is not requested, and reports impossible
-or unsuccessful generation rather than looping forever on a finite domain.
+## Custom generators
+
+Supply a raw input candidate for the exact schema instance that needs one.
+
+```dart
+final sku = string().pattern(RegExp(r'^SKU-\d{3}$'));
+final catalog = object({'codes': sku.list().length(3)});
+final sample = catalog.mockSeeded(seed: 42, generators: {
+  sku: (random) => 'SKU-${100 + random.nextInt(900)}',
+});
+print(catalog.validate(sample)); // true
+```
+
+The generator map is snapshotted using schema identity; a fluent clone is a different key. Providers share the seeded random stream across nested values and retries. Return **input**, including for a pipeline. Normal parsing creates and checks its typed output.
+
+A provider explicitly permits synchronous checks, transforms, field rules, and variant guards in that subtree. Unsupported siblings still fail inspection before a provider runs. Arbitrary regex and unsupported formats need providers; async schemas and lazy resolvers remain rejected. Providers do not change exports or the schema itself.
+
+## Budgets and failures {#limits}
+
+| Limit | Default | Bounds |
+| --- | --- | --- |
+| `maxAttempts` | 64 | Positive |
+| `maxDepth` | 16 | 1–128 |
+| `maxCollectionLength` | 256 | Positive |
+| `maxNodes` | 4096 | Positive |
+
+Inspection, defaults, generated inputs, and described outputs are bounded. Provider candidates are checked before parsing and outputs afterward. Outputs must be inspectable scalars, maps, lists, or field-described instances. Ambiguous union outputs are inspected conservatively across matching shapes.
+
+Invalid candidates retry within the outer attempt budget. Contradictions, unsupported schemas, or exhaustion throw `AcanthisMockException`; invalid limits throw `ArgumentError`. Provider and programming exceptions propagate. Pipeline `FormatException` can produce a failed candidate and retry. Cancellation stays separate control flow.
+
+Budgets do not bound arbitrary work inside a callback or hidden domain state. Keep providers, getters, factories, and checks pure and deterministic. See the repository's `example/seeded_generators.dart` for a runnable provider example.

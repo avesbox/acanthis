@@ -5,16 +5,25 @@ import 'dart:io';
 Future<void> main(List<String> args) async {
   final directory = Directory.systemTemp.createTempSync('acanthis-export-');
   try {
+    const suites = {
+      'PRIMITIVE': 'contract_test.dart',
+      'BOOLEAN': 'boolean_export_test.dart',
+      'NULLABLE': 'nullable_export_test.dart',
+      'LITERAL': 'literal_export_test.dart',
+      'COLLECTION': 'collection_export_test.dart',
+      'OBJECT_HELPERS': 'object_helpers_export_test.dart',
+    };
+    String corpus(String name) =>
+        '${directory.path}/${name.toLowerCase()}.json';
     final environment = {
-      'EXPORT_CORPUS_PATH': '${directory.path}/structural.json',
-      'EXPORT_AUDIT_CORPUS_PATH': '${directory.path}/audit.json',
+      for (final name in suites.keys) '${name}_EXPORT_CORPUS': corpus(name),
       if (args.isNotEmpty) 'PYTHONPATH': Directory(args.first).absolute.path,
     };
     final tests = await Process.run(Platform.resolvedExecutable, [
       'run',
       'test',
-      'test/schema_export_contract_test.dart',
-      'test/schema_export_audit_test.dart',
+      '--reporter=expanded',
+      for (final test in suites.values) 'test/$test',
     ], environment: environment);
     stdout.write(tests.stdout);
     stderr.write(tests.stderr);
@@ -22,10 +31,14 @@ Future<void> main(List<String> args) async {
       exitCode = tests.exitCode;
       return;
     }
-    for (final corpus in ['structural', 'audit']) {
+    for (final name in suites.keys) {
+      if (!File(corpus(name)).existsSync()) {
+        throw StateError('The $name export suite did not generate its corpus');
+      }
+      stdout.writeln('Auditing ${name.toLowerCase()} exports...');
       final validation = await Process.run('python', [
         'tool/verify_schema_export.py',
-        '${directory.path}/$corpus.json',
+        corpus(name),
       ], environment: environment);
       stdout.write(validation.stdout);
       stderr.write(validation.stderr);

@@ -1,154 +1,129 @@
+---
+description: Validate object edits incrementally, debounce asynchronous checks, and track revisions and issue deltas.
+---
+
 # Live validation
 
-Live sessions keep raw input, ordered issues, and parsed output together. They
-reuse unaffected field results and selected-field rules between edits.
+A live session keeps an object's raw input, parsed output, and issues together across edits. It reuses unaffected top-level field results and [declared rules](/contextual-rules).
 
-For a complete widget with pending state, async checks, password confirmation,
-and submission, follow the [Flutter live-form recipe](/flutter-live-form).
-
-## Editing and deltas
+## Create a session
 
 ```dart
 final schema = object({
   'name': string().min(2),
   'email': string().email(),
+});
+final session = schema.watch({'name': 'Ada', 'email': 'invalid'});
+
+print(session.revision); // 0
+print(session.validated); // null: input is invalid.
+final delta = session.set('email', 'ada@example.com');
+print(delta.revision); // 1
+print(delta.executedFields); // {email}
+print(session.validated?['name']); // Ada
+```
+
+`watch()` validates immediately and requires a synchronous `ObjectSchema`. Use ordinary parsing for one-off validation. Record schemas do not expose live sessions.
+
+## Edit fields and paths {#editing-and-deltas}
+
+```dart
+final schema = object({
+  'name': string(),
   'addresses': object({'city': string()}).list(),
   'nickname': string().nullable(),
 }).optionals(['nickname']);
 final session = schema.watch({
   'name': 'Ada',
-  'email': 'ada@example.com',
   'addresses': [{'city': 'Rome'}],
 });
 
+session.set('nickname', null); // Present null.
+session.remove('nickname'); // Absent key.
+session.setPath(['addresses', 0, 'city'], 'Milan');
 final delta = session.batch([
   AcanthisEdit.set(['name'], 'Grace'),
-  AcanthisEdit.set(['addresses', 0, 'city'], 'Paris'),
+  AcanthisEdit.remove(['addresses', 0]),
 ]);
-print(delta.revision); // 1: the batch is one coherent revision.
-print(delta.executedFields); // {name, addresses}
-print(delta.addedIssues);
-print(delta.removedIssues);
-print(session.validated);
-
-session.set('nickname', null); // Present with a null value.
-session.remove('nickname');    // Absent.
-session.setPath(['addresses', 0, 'city'], 'Milan');
-session.removePath(['addresses', 0]);
+print(delta.revision); // 4: the batch is one revision.
 ```
 
-`set` and `remove` address a top-level field; `setPath` and `removePath` accept
-nested paths. Batches apply edits in order on a private copy and publish one
-revision. Invalid destinations reject the whole batch without changing the input
-or revision. Parents must already exist. Setting a list index equal to its length
-appends; removing an element shifts later indices. Removing an absent map key is
-allowed. Removal of a required field produces a required issue; defaults and
-PATCH omission retain the schema's ordinary behavior.
+A batch applies edits in order on a private copy, then publishes one revision. An invalid destination rejects the batch without changing input or revision. Parents must exist. Setting index `list.length` appends; removing a list element shifts later indices. Removing an absent map key is allowed. Missing required fields, defaults, and PATCH omission follow ordinary parsing rules.
 
-Both session types expose `input`, `issues`, `validated`, and `revision`.
-`validated` is null when invalid or awaiting async validation. `issues` retains
-the last settled issues while a revision is pending. Raw input snapshots deeply
-copy and freeze JSON-like maps and lists. Parsed output has a read-only top-level
-map and preserves the schema's value types: treat nested parsed values and
-opaque domain objects as immutable, just as cached callback inputs.
+## Read state and deltas
 
-Deltas contain their own `input`, `issues`, `validated`, and `revision`, plus:
+Sessions expose `input`, `issues`, `validated`, and `revision`. `validated` is null while invalid or awaiting async validation. While pending, issues retain the last settled result.
 
-| Member | Meaning |
+| Delta member | Meaning |
 | --- | --- |
-| `addedIssues` / `removedIssues` | Multiset differences; equal repeated issues are preserved |
-| `changedIssues` | Removed issues followed by added issues, for compatibility |
-| `executedFields` | Top-level field subtrees evaluated |
-| `executedRules` | Rule IDs reevaluated, including rules skipped for invalid/missing inputs |
-| `fullValidation` | Whether the conservative fallback was used |
-| `isCurrent` | Whether this revision was current when its result completed |
-| `settled` | False for a debounced revision superseded before validation started |
+| `input`, `issues`, `validated`, `revision` | The revision's own result snapshot |
+| `addedIssues`, `removedIssues` | Multiset differences, preserving repeated issues |
+| `changedIssues` | Removed issues followed by added issues |
+| `executedFields`, `executedRules` | Evaluated top-level fields and rule IDs |
+| `fullValidation` | Whether scheduling fell back to a complete parse |
+| `isCurrent` | Whether the revision was current when it completed |
+| `settled` | False if a queued revision was superseded before validation began |
+
+`session.explain(field)` explains why a field was rerun or reused in the latest update. Format session or delta issues with the ordinary [issue formatters](/validation-results#presentation-and-localization).
+
+Raw JSON-like input snapshots are deeply copied and frozen. Parsed output has a read-only outer map; treat nested parsed values and opaque objects as immutable because results can be cached.
 
 ## Dependency scheduling
 
-[Selected-field rules](./contextual-rules.md) declare input paths. Editing a
-field reruns that field subtree and rules that read it, reusing other parsed
-fields and rule issues. A nested edit reruns its top-level subtree, including
-its nested validators. Rules reading any part of that subtree are reevaluated:
-this accounts for ancestor transformations and list index shifts. An unrelated
-top-level field is reused. Field transforms therefore run once for each executed
-field, and never again merely to feed a selected rule.
+A nested edit reruns its top-level field subtree. Rules reading any part of that subtree are reevaluated, accounting for ancestor transforms and shifted indices. Unrelated fields are reused. A field transform does not rerun just to supply a rule input.
 
-Rule issues are cached by rule ID, not issue path/code. If two rules report the
-same issue, changing one rule's input removes only its own contribution. Losing
-eligibility clears the old rule issue. Rule failures never invalidate other
-rules' prerequisites. Diagnostics remain in field and rule declaration order.
+Rules cache issues by rule ID. If two rules emit the same issue, changing one removes only its contribution. A rule losing eligibility clears its old issues. Issue order follows field and rule declarations.
 
-Object refinements, whole-object transforms, legacy `addFieldDependency`, and
-`objectPolicy: first` use full validation. Their undeclared dependencies or
-stopping behavior require it. Keep callbacks deterministic for input and context;
-external changes must be represented by a context update or another edit.
+Whole-object refinements, transforms, legacy field dependencies, and `objectPolicy: first` require full validation. A context update also invalidates every field and rule because nested checks can read context.
 
 ```dart
-final session = schema.watch(initial,
-  scope: AcanthisValidationScope(context: services),
+final schema = object({'name': string()});
+final session = schema.watch({'name': 'Ada'},
+  scope: AcanthisValidationScope(context: {'region': 'EU'}),
 );
-final delta = session.updateContext(newServices);
+final delta = session.updateContext({'region': 'US'});
+print(delta.executedFields); // {name}
 ```
 
-Context updates create a revision and invalidate all fields and rules, including
-nested checks that may access context without declaring dependencies.
+Represent external changes with a context update or an edit. Keep callbacks deterministic for the supplied input and context.
 
-## Async scheduling and cancellation
+## Async checks and debouncing {#async-scheduling-and-cancellation}
 
 ```dart
 final schema = object({
-  'username': string().min(3).refineAsync(
-    onCheck: (value) async {
-      final signal = AcanthisValidationScope.current.cancellation;
-      if (signal?.isCancelled ?? false) return true;
-      // A client that supports cancellation can observe signal.whenCancelled.
-      return api.isUsernameAvailable(value);
+  'username': string().min(3).refineAsync(CallbackAsyncCheck(
+    (value, context) async {
+      context.throwIfCancelled();
+      final available = await Future.value(value != 'admin');
+      context.throwIfCancelled();
+      if (!available) context.addIssue('usernameTaken');
     },
-    error: 'Username is unavailable',
-    name: 'available',
-  ),
+  )),
 });
 final session = await schema.watchAsync(
   {'username': 'ada'},
-  debounce: Duration(milliseconds: 150),
-  scope: AcanthisValidationScope(
-    fieldPolicy: AcanthisCollectionPolicy.first,
-  ),
+  debounce: const Duration(milliseconds: 150),
+  scope: AcanthisValidationScope(fieldPolicy: AcanthisCollectionPolicy.first),
 );
-final pending = session.set('username', 'grace');
-print(session.pendingFields); // Fields waiting for validation or still running.
-final delta = await pending;
-if (delta.isCurrent && delta.settled) print(delta.issues);
-session.dispose();
+
+try {
+  final pending = session.set('username', 'grace');
+  print(session.pendingFields);
+  final delta = await pending;
+  if (delta.isCurrent && delta.settled) print(delta.validated);
+} finally {
+  session.dispose();
+}
 ```
 
-Initial validation is immediate; subsequent edits can be debounced. Superseded
-queued updates complete with `settled == false`. Edits accumulated during a
-pending revision remain dirty until a current revision settles. A running stale
-revision can finish and return its own snapshot, but cannot overwrite current
-state. `isCurrent` is a completion-time flag; compare `delta.revision` with
-`session.revision` again if using a retained delta later.
+Initial validation runs immediately. Later edits can be debounced. Superseded queued updates complete with `settled == false`; a running stale update can return its own result but cannot overwrite current state. `isCurrent` describes completion time. Compare the delta revision with `session.revision` again if using it later.
 
-`pendingFields` tracks field subtrees, clearing each as it finishes. Selected
-async rules run after field validation; an empty pending-field set alone does
-not mean a revision has settled. Await the update Future. In fallback mode,
-fields remain pending until the whole validation completes.
+Await the update Future before submitting. An empty `pendingFields` set alone does not prove completion: async rules can still be running after fields finish. Edits made during a pending revision stay dirty until a current revision settles.
 
-Every new async revision cancels the previous cooperative signal. Underlying
-Dart Futures continue unless the callback/client observes `isCancelled` or
-`whenCancelled`; revision guards still protect state. `dispose()` cancels the
-signal, invalidates in-flight publication, and rejects subsequent edits. It does
-not forcibly terminate arbitrary Futures. Callback errors propagate to the
-update Future, clear pending state, and leave `validated` null; a later edit can
-retry. Sync callback errors likewise propagate and clear `validated`.
+## Cancellation and disposal
 
-## Performance
+Each new async revision cancels the previous cooperative signal. Callbacks or clients must observe cancellation to stop their own work. Revision checks still prevent stale publication when an underlying Future continues.
 
-Scheduling saves validator work, but snapshots, cache lookup, and deltas have a
-cost. With 24 cheap string fields and one rule, the September 28 benchmark runs
-one field per edit. JIT/AOT async live updates were about 13–15% faster than full
-validation; synchronous live updates were slower than the cheap full pass.
-Use full parsing for one-off validation and sessions when editing state and
-avoiding expensive repeated checks matter. Reproducible measurements are in
-`benchmark/rules-live/` in the repository.
+`dispose()` cancels the signal and rejects further edits. Callback errors propagate to the update Future, clear pending state, and leave `validated` null; a later edit can retry. Dispose sessions when their owning widget or component is removed.
+
+For a complete widget with pending state, confirmation rules, and submission, follow the [Flutter recipe](/flutter-live-form).

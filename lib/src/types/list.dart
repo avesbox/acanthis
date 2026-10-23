@@ -1,549 +1,440 @@
-import '../exceptions/validation_error.dart';
-
-import 'package:acanthis/src/results.dart';
-import 'package:acanthis/src/seeded_mock.dart';
-import 'package:acanthis/src/issue_sink.dart';
-
-import 'dart:math' as math;
-
-import 'package:acanthis/src/exceptions/async_exception.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:acanthis/src/validators/list.dart';
-import 'package:acanthis/src/validators/string.dart';
-import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:nanoid2/nanoid2.dart';
-
-import 'types.dart';
+import '../registries/metadata_registry.dart';
+import '../common/validation_scope.dart';
+import '../common/issue_sink.dart';
+import '../common/issue.dart';
+import '../common/operations.dart';
+import '../common/results.dart';
+import '../common/schema.dart';
+import '../common/schema_graph.dart';
+import '../common/fast_schema.dart';
+import '../validators/list.dart';
+import '../validators/string.dart';
+import 'nullable.dart';
 import 'string.dart';
-import 'number.dart';
-import 'boolean.dart';
 
-/// A class to validate list types
-class AcanthisList<T> extends AcanthisType<List<T>> {
-  /// The element of the list
-  final AcanthisType<T> element;
-
-  final bool _localPure;
-
-  // Exact primitive schemas with checks cannot replace a successfully parsed
-  // element. Subclasses retain the copy-on-change path and their custom hooks.
-  late final bool _primitiveElements =
-      (element.runtimeType == AcanthisString ||
-          element.runtimeType == AcanthisBoolean ||
-          element.runtimeType == (AcanthisNumeric<int>) ||
-          element.runtimeType == (AcanthisNumeric<double>) ||
-          element.runtimeType == (AcanthisNumeric<num>)) &&
-      element.operations.every(
-        (operation) =>
-            operation.runtimeType == MinStringLengthCheck ||
-            operation.runtimeType == MaxStringLengthCheck ||
-            operation.runtimeType == ExactStringLengthCheck,
+/// An ordered, immutable list definition with invocation-local parsing state.
+final class AcanthisList<T> extends Schema<List<T>, List<T>>
+    with
+        CheckableSchema<List<T>, List<T>>,
+        TransformableSchema<List<T>, List<T>>,
+        ValidationSchema<List<T>, List<T>>,
+        AsyncSchema<List<T>, List<T>>,
+        DefaultSchema<List<T>, List<T>>,
+        NullableSchema<List<T>, List<T>>
+    implements SchemaGraphNode, FastSchema<List<T>> {
+  AcanthisList(this.element) : _tail = null, defaultValue = null;
+  AcanthisList._(this.element, this._tail, this.defaultValue);
+  final Schema<Object?, T> element;
+  final _Node<T>? _tail;
+  @override
+  final List<T>? defaultValue;
+  late final List<_Step<T>> _steps = _materialize(_tail);
+  @override
+  late final List<Check<List<T>>> checks = List.unmodifiable(
+    _steps.whereType<_CheckStep<T>>().map((s) => s.operation),
+  );
+  @override
+  late final List<Transform<List<T>, List<T>>> transformations =
+      List.unmodifiable(
+        _steps.whereType<_TransformStep<T>>().map((s) => s.operation),
       );
-
+  late final List<AsyncCheck<List<T>>> asyncChecks = List.unmodifiable(
+    _steps.whereType<_AsyncCheckStep<T>>().map((s) => s.operation),
+  );
   @override
-  bool get isPure =>
-      _localPure &&
-      element.isPure &&
-      element.defaultValue == null &&
-      defaultValue == null &&
-      super.isPure;
-
-  /// Constructor of the list type
-  AcanthisList(
-    this.element, {
-    super.operations,
-    bool isAsync = false,
-    bool isPure = true,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-  }) : _localPure = isPure,
-       super(isAsync: isAsync || element.isAsync);
-
+  late final bool isAsync = schemaGraphIsAsync(this);
   @override
-  List<T> parseInternal(covariant dynamic value) {
-    value ??= defaultValue;
-    final raw = validationInput<List<dynamic>>(value);
-    if (isPure) {
-      if (_primitiveElements && raw is List<T>) {
-        if (element.runtimeType == AcanthisString && raw is List<String>) {
-          // Resolve the concretely typed executor once for the whole batch.
-          // Keep the dynamic entry point below for covariant element schemas.
-          final strings = raw as List<String>;
-          final parseString = (element as AcanthisString).compiledParseInternal;
-          for (var i = 0; i < strings.length; i++) {
-            try {
-              parseString(strings[i]);
-            } on ValidationError catch (error) {
-              throw error.prefixed(i);
-            }
-          }
-          return super.parseInternal(raw);
-        }
-        for (var i = 0; i < raw.length; i++) {
-          _parseElement(raw[i], i);
-        }
-        return super.parseInternal(raw);
-      }
-      List<T>? changed;
-      for (var i = 0; i < raw.length; i++) {
-        final parsed = _parseElement(raw[i], i);
-        if (!identical(parsed, raw[i])) {
-          (changed ??= List<T>.from(raw))[i] = parsed;
-        }
-      }
-      return super.parseInternal(
-        changed ?? (raw is List<T> ? raw : raw.cast<T>()),
-      );
-    }
-    final parsed = List<T?>.filled(raw.length, null);
-    for (var i = 0; i < raw.length; i++) {
-      parsed[i] = _parseElement(raw[i], i);
-    }
-    return super.parseInternal(parsed.cast<T>());
-  }
-
-  T _parseElement(dynamic value, int index) {
-    try {
-      return element.parseInternal(value);
-    } on ValidationError catch (error) {
-      throw error.prefixed(index);
-    }
-  }
-
+  bool get hasLocalAsync => _tail?.isAsync ?? false;
   @override
-  List<T> valueOnFailure(dynamic value) => defaultValue ?? <T>[];
-
-  List<T> _reuseUnchangedInput(dynamic input, List<T> output) {
-    if (!isPure || input is! List<T> || input.length != output.length) {
-      return output;
-    }
-    for (var i = 0; i < output.length; i++) {
-      if (!identical(input[i], output[i])) return output;
-    }
-    return input;
-  }
-
+  Iterable<Schema<Object?, Object?>> get schemaChildren => [element];
+  AcanthisList<T> _append(_Step<T> step) => copySchemaMetadata(
+    this,
+    AcanthisList<T>._(element, _Node(_tail, step), defaultValue),
+  );
   @override
-  List<T> tryParseInternal(
-    covariant dynamic value, {
-    required Map<String, dynamic> errors,
-  }) {
-    value ??= defaultValue;
-    if (value is! List) {
-      errors.addIssue(
-        inputErrorKey,
-        'Invalid type: ${value.runtimeType}, expected List',
-      );
-      return valueOnFailure(value);
-    }
-    final raw = value;
-    if (isPure) {
-      List<dynamic>? changed;
-      final elementErrors = IssueSink();
-      for (var i = 0; i < raw.length; i++) {
-        final parsed = element.tryParseInternal(raw[i], errors: elementErrors);
-        if (!identical(parsed, raw[i])) {
-          (changed ??= List<dynamic>.of(raw))[i] = parsed;
-        }
-        if (elementErrors.isNotEmpty) {
-          errors.addChild(i, elementErrors);
-          elementErrors.clear();
-        }
-      }
-      return super.tryParseInternal(
-        changed?.cast<T>() ?? (raw is List<T> ? raw : raw.cast<T>()),
-        errors: errors,
-      );
-    }
-    final parsed = List<T?>.filled(raw.length, null);
-    final elementErrors = IssueSink();
-    for (var i = 0; i < raw.length; i++) {
-      parsed[i] = element.tryParseInternal(raw[i], errors: elementErrors);
-      if (elementErrors.isNotEmpty) {
-        errors.addChild(i, elementErrors);
-        elementErrors.clear();
-      }
-    }
-    return super.tryParseInternal(parsed.cast<T>(), errors: errors);
-  }
-
+  AcanthisList<T> withCheck(Check<List<T>> check) => _append(_CheckStep(check));
   @override
-  Future<List<T>> parseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return parse(value);
-    final raw = validationInput<List<dynamic>>(value);
-    final parsed = <T>[];
-    for (var i = 0; i < raw.length; i++) {
-      try {
-        final parsedElement = await element.parseAsync(raw[i]);
-        parsed.add(parsedElement);
-      } on ValidationError catch (error) {
-        throw error.prefixed(i);
-      }
-    }
-    final result = await super.parseAsync(parsed);
-    return _reuseUnchangedInput(value, result);
-  }
-
+  AcanthisList<T> refine({
+    required bool Function(List<T>) onCheck,
+    String? error,
+    String name = 'custom',
+  }) => withCheck(
+    PredicateCheck<List<T>>.refinement(
+      onCheck: onCheck,
+      error: error,
+      name: name,
+    ),
+  );
+  AcanthisList<T> refineAsync(AsyncCheck<List<T>> check) =>
+      _append(_AsyncCheckStep(check));
   @override
-  Future<AcanthisOutcome<List<T>>> tryParseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return tryParse(value);
-    if (value is! List) {
-      return outcomeFromDiagnostics(
-        value: valueOnFailure(value),
-        errors: IssueSink.single(
-          inputErrorKey,
-          'Invalid type: ${value.runtimeType}, expected List',
-        ),
-
-        metadata: metadataEntry,
-      );
-    }
-    final raw = value;
-    final parsed = <T>[];
-    final errors = IssueSink();
-    for (var i = 0; i < raw.length; i++) {
-      final parsedElement = await element.tryParseAsync(raw[i]);
-      parsed.add(parsedElement.value);
-      if (parsedElement.errors.isNotEmpty) {
-        errors.addChild(i, parsedElement.errors);
-      }
-    }
-    final result = await super.tryParseAsyncOperations(parsed);
-    final mergedErrors = IssueSink.of(errors)..addAll(result.errors);
-    final success = mergedErrors.isEmpty;
-    return outcomeFromDiagnostics(
-      value: success
-          ? _reuseUnchangedInput(value, result.value)
-          : defaultValue ?? _reuseUnchangedInput(value, result.value),
-      errors: mergedErrors,
-      metadata: result.metadata,
-    );
-  }
-
-  /// Override of [parse] from [AcanthisType]
+  AcanthisList<T> transform(List<T> Function(List<T>) onTransform) =>
+      withTransform(CallbackTransform<List<T>, List<T>>(onTransform));
   @override
-  List<T> parse(dynamic value) {
-    value ??= defaultValue;
-    if (isAsync) {
-      throw AsyncValidationException('Cannot use parse with async operations');
-    }
-    return parseInternal(value);
-  }
-
-  /// Override of [tryParse] from [AcanthisType]
+  AcanthisList<T> withTransform(Transform<List<T>, List<T>> transform) =>
+      _append(_TransformStep(transform));
+  AcanthisList<T> transformAsync(AsyncTransform<List<T>, List<T>> transform) =>
+      _append(_AsyncTransformStep(transform));
+  AcanthisList<T> withDefault(List<T> value) => copySchemaMetadata(
+    this,
+    AcanthisList<T>._(element, _tail, List<T>.unmodifiable(value)),
+  );
+  AcanthisList<T> min(int length) => withCheck(MinItemsListCheck<T>(length));
+  AcanthisList<T> max(int length) => withCheck(MaxItemsListCheck<T>(length));
+  AcanthisList<T> length(int length) => withCheck(LengthListCheck<T>(length));
+  AcanthisList<T> unique() => withCheck(UniqueItemsListCheck<T>());
+  AcanthisList<T> contains(T value) => withCheck(ContainsListCheck<T>(value));
+  AcanthisList<T> anyOf(List<T> values) => withCheck(AnyOfListCheck<T>(values));
+  AcanthisList<T> everyOf(List<T> values) =>
+      withCheck(EveryOfListCheck<T>(values));
+  Schema<Object?, T> unwrap() => element;
   @override
-  AcanthisOutcome<List<T>> tryParse(dynamic value) {
-    value ??= defaultValue;
-    if (isAsync) {
-      throw AsyncValidationException(
-        'Cannot use tryParse with async operations',
-      );
-    }
-    if (value is! List) {
-      return outcomeFromDiagnostics(
-        value: valueOnFailure(value),
-        errors: IssueSink.single(
-          inputErrorKey,
-          'Invalid type: ${value.runtimeType}, expected List',
-        ),
-
-        metadata: metadataEntry,
-      );
-    }
-    final errors = IssueSink();
-    final parsed = tryParseInternal(value, errors: errors);
-    final success = errors.isEmpty;
-    return outcomeFromDiagnostics(
-      value: success ? parsed : defaultValue ?? parsed,
-      errors: errors,
-      metadata: metadataEntry,
-    );
-  }
-
-  /// Add a check to the list to check if it is at least [length] elements long
-  AcanthisList<T> min(
-    int length, {
-    String? message,
-    String Function(int minItems)? messageBuilder,
-  }) {
-    return withCheck(
-      MinItemsListCheck(
-        length,
-        message: message,
-        messageBuilder: messageBuilder,
+  AcanthisList<T> meta(MetadataEntry<List<T>> metadata) => attachSchemaMetadata(
+    copySchemaMetadata(this, AcanthisList<T>._(element, _tail, defaultValue)),
+    metadata,
+  );
+  @override
+  List<T> parse(Object? input) => parseOutcome(input).valueOrThrow;
+  @override
+  AcanthisOutcome<List<T>> parseOutcome(Object? input) => _run(input, false);
+  @override
+  AcanthisOutcome<List<T>> tryParse(Object? input) => _run(input, true);
+  @override
+  Future<List<T>> parseAsync(Object? input) async =>
+      (await parseOutcomeAsync(input)).valueOrThrow;
+  @override
+  Future<AcanthisOutcome<List<T>>> parseOutcomeAsync(Object? input) =>
+      _runAsync(input, false);
+  @override
+  Future<AcanthisOutcome<List<T>>> tryParseAsync(Object? input) =>
+      _runAsync(input, true);
+  @override
+  bool validate(Object? input) => parseOutcome(input).isValid;
+  @override
+  bool tryValidate(Object? input) => tryParse(input).isValid;
+  @override
+  late final bool canFast =
+      _tail == null &&
+      element is FastSchema<T> &&
+      (element as FastSchema<T>).canFast;
+  late final List<StringCheck>? _stringChecks =
+      element is AcanthisString && (element as AcanthisString).canFast
+      ? (element as AcanthisString).checks.cast<StringCheck>().toList(
+          growable: false,
+        )
+      : null;
+  late final List<AcanthisIssue> _stringIssues = [
+    for (final check in _stringChecks!)
+      AcanthisIssue(
+        path: const [],
+        code: check.code,
+        parameters: check.parameters,
       ),
-    );
-  }
-
-  /// Add a check to the list to check if it contains at least one of the [values]
-  AcanthisList<T> anyOf(
-    List<T> values, {
-    String? message,
-    String Function(List<T> items)? messageBuilder,
-  }) {
-    return withCheck(
-      AnyOfListCheck<T>(
-        values,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the list to check if it contains all of the [values]
-  AcanthisList<T> everyOf(
-    List<T> values, {
-    String? message,
-    String Function(List<T> items)? messageBuilder,
-  }) {
-    return withCheck(
-      EveryOfListCheck<T>(
-        values,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the list to check if it is at most [length] elements long
-  AcanthisList<T> max(
-    int length, {
-    String? message,
-    String Function(int maxItems)? messageBuilder,
-  }) {
-    return withCheck(
-      MaxItemsListCheck<T>(
-        length,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the list to check if all elements are unique
-  ///
-  /// In Zod is the same as creating a set.
-  AcanthisList<T> unique({String? message}) {
-    return withCheck(UniqueItemsListCheck<T>(message: message));
-  }
-
-  /// Add a check to the list to check if it has exactly [value] elements
-  AcanthisList<T> length(
-    int value, {
-    String? message,
-    String Function(int length)? messageBuilder,
-  }) {
-    return withCheck(
-      LengthListCheck(value, message: message, messageBuilder: messageBuilder),
-    );
-  }
-
-  /// Returns the element type of the list
-  AcanthisType<T> unwrap() {
-    return element;
-  }
-
+  ];
   @override
-  AcanthisList<T> withAsyncCheck(AcanthisAsyncCheck<List<T>> check) {
-    return AcanthisList(
-      element,
-      operations: [...operations, check],
-      isAsync: true,
-      isPure: _localPure,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
+  List<T>? tryFast(Object? input) {
+    if (!canFast || isAsync) return null;
+    input ??= defaultValue;
+    if (input is! List<Object?>) return null;
+    final child = element as FastSchema<T>;
+    final scope = AcanthisValidationScope.current;
+    final original = input is List<T> ? input : null;
+    List<T>? output = original;
+    final building = original == null ? <T>[] : null;
+    for (var i = 0; i < input.length; i++) {
+      scope.throwIfCancelled();
+      final value = child.tryFast(input[i]);
+      if (value == null) return null;
+      if (building != null) {
+        building.add(value);
+      } else if (!identical(value, input[i])) {
+        if (identical(output, original)) output = List<T>.of(original!);
+        output![i] = value;
+      }
+    }
+    return building ?? output;
   }
 
-  @override
-  AcanthisList<T> withCheck(AcanthisCheck<List<T>> check) {
-    return AcanthisList(
-      element,
-      operations: [...operations, check],
-      isAsync: isAsync,
-      isPure: _localPure,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
+  Future<bool> validateAsync(Object? input) async =>
+      (await parseOutcomeAsync(input)).isValid;
+  Future<bool> tryValidateAsync(Object? input) async =>
+      (await tryParseAsync(input)).isValid;
+
+  AcanthisOutcome<List<T>> _invalidInput() =>
+      AcanthisInvalid<List<T>>.withoutValue(
+        IssueSink.single(
+          'type',
+          parameters: const {'expected': 'List'},
+        ).takeIssues(),
+      );
+
+  AcanthisOutcome<List<T>> _run(Object? input, bool collect) {
+    AcanthisValidationScope.current.throwIfCancelled();
+    if (isAsync) throw StateError('This schema requires an async parse method');
+    input ??= defaultValue;
+    if (input is List<String>) {
+      final checks = _stringChecks;
+      if (checks != null) return _runStrings(input, checks, collect);
+    }
+    final fast = tryFast(input);
+    if (fast != null) return AcanthisValid(fast);
+    if (input is! List<Object?>) return _invalidInput();
+    final run = _ListRun<T>(input);
+    for (var i = 0; i < input.length; i++) {
+      AcanthisValidationScope.current.throwIfCancelled();
+      final result = collect
+          ? element.tryParse(input[i])
+          : element.parseOutcome(input[i]);
+      AcanthisValidationScope.current.throwIfCancelled();
+      run.child(i, result);
+      if (!collect && !result.isValid) {
+        return run.finishChildren(complete: false);
+      }
+    }
+    final value = run.values.value;
+    if (value == null) return run.finishChildren(complete: true);
+    return _execute(value, run, collect);
   }
 
-  @override
-  AcanthisList<T> withTransformation(
-    AcanthisTransformation<List<T>> transformation,
+  // Native string checks cannot replace values; share one sink for the batch.
+  AcanthisOutcome<List<T>> _runStrings(
+    List<String> input,
+    List<StringCheck> checks,
+    bool collect,
   ) {
-    return AcanthisList(
-      element,
-      operations: [...operations, transformation],
-      isAsync: isAsync,
-      isPure: false,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisList<T> withDefault(List<T> value) {
-    return AcanthisList(
-      element,
-      operations: operations,
-      isAsync: isAsync,
-      isPure: _localPure,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-    );
-  }
-
-  @override
-  AcanthisList<T> meta(MetadataEntry<List<T>> metadata) {
-    String key = this.key;
-    if (key.isEmpty) {
-      key = nanoid();
+    final scope = AcanthisValidationScope.current;
+    final collectChecks =
+        collect && scope.fieldPolicy == AcanthisCollectionPolicy.all;
+    IssueSink? sink;
+    for (var i = 0; i < input.length; i++) {
+      scope.throwIfCancelled();
+      final value = input[i];
+      for (var j = 0; j < checks.length; j++) {
+        final check = checks[j];
+        if (!check.test(value)) {
+          (sink ??= IssueSink()).add(_stringIssues[j].prefixed(i));
+          if (!collectChecks) break;
+        }
+      }
+      scope.throwIfCancelled();
+      if (!collect && sink != null) break;
     }
-    MetadataRegistry().add(key, metadata);
-    return AcanthisList(
-      element,
-      operations: operations,
-      isAsync: isAsync,
-      isPure: _localPure,
-      key: key,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
-    );
+    final value = input as List<T>;
+    if (_tail == null || (!collect && sink != null)) {
+      return sink == null
+          ? AcanthisValid(value)
+          : AcanthisInvalid(sink.takeIssues(), value: value);
+    }
+    return _execute(value, _ListRun<T>(input).._sink = sink, collect);
   }
 
-  @override
-  Map<String, dynamic> toJsonSchema() {
-    final checks = operations.whereType<AcanthisCheck>().toList();
-    final lengthChecksMap = {};
-    for (var lengthCheck in checks) {
-      if (lengthCheck is MinItemsListCheck) {
-        lengthChecksMap['minItems'] = lengthCheck.minItems;
-      } else if (lengthCheck is MaxItemsListCheck) {
-        lengthChecksMap['maxItems'] = lengthCheck.maxItems;
-      } else if (lengthCheck is LengthListCheck) {
-        lengthChecksMap['minItems'] = lengthCheck.length;
-        lengthChecksMap['maxItems'] = lengthCheck.length;
+  AcanthisOutcome<List<T>> _execute(
+    List<T> value,
+    _ListRun<T> run,
+    bool collect,
+  ) {
+    final operationScope = AcanthisValidationScope.current;
+    final collectOperations =
+        collect && operationScope.fieldPolicy == AcanthisCollectionPolicy.all;
+    for (final step in _steps) {
+      operationScope.throwIfCancelled();
+      switch (step) {
+        case _CheckStep<T>(:final operation):
+          run.check(value, operation);
+        case _TransformStep<T>(:final operation):
+          if (run.hasIssues) return run.finish(value);
+          value = operation.apply(value);
+        case _AsyncCheckStep<T>() || _AsyncTransformStep<T>():
+          throw StateError('Async step in synchronous execution');
+      }
+      operationScope.throwIfCancelled();
+      if (!collectOperations && run.hasIssues) break;
+    }
+    return run.finish(value);
+  }
+
+  Future<AcanthisOutcome<List<T>>> _runAsync(
+    Object? input,
+    bool collect,
+  ) async {
+    final scope = AcanthisValidationScope.current;
+    scope.throwIfCancelled();
+    if (!isAsync) return _run(input, collect);
+    input ??= defaultValue;
+    if (input is! List<Object?>) return _invalidInput();
+    final run = _ListRun<T>(input);
+    final child = element;
+    for (var i = 0; i < input.length; i++) {
+      AcanthisValidationScope.current.throwIfCancelled();
+      final AcanthisOutcome<T> result;
+      if (child is AsyncSchema<Object?, T>) {
+        result = await (collect
+            ? child.tryParseAsync(input[i])
+            : child.parseOutcomeAsync(input[i]));
+      } else {
+        result = collect
+            ? child.tryParse(input[i])
+            : child.parseOutcome(input[i]);
+      }
+      AcanthisValidationScope.current.throwIfCancelled();
+      run.child(i, result);
+      if (!collect && !result.isValid) {
+        return run.finishChildren(complete: false);
       }
     }
-    final uniqueItems = checks.whereType<UniqueItemsListCheck>().isNotEmpty;
-    return {
-      'type': 'array',
-      if (metadataEntry != null) ...metadataEntry!.toJson(),
-      'items': element.toJsonSchema(),
-      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if (uniqueItems) 'uniqueItems': true,
-    };
-  }
-
-  @override
-  Map<String, dynamic> toOpenApiSchema() {
-    final checks = operations.whereType<AcanthisCheck>().toList();
-    final lengthChecksMap = {};
-    for (var lengthCheck in checks) {
-      if (lengthCheck is MinItemsListCheck) {
-        lengthChecksMap['minItems'] = lengthCheck.minItems;
-      } else if (lengthCheck is MaxItemsListCheck) {
-        lengthChecksMap['maxItems'] = lengthCheck.maxItems;
-      } else if (lengthCheck is LengthListCheck) {
-        lengthChecksMap['minItems'] = lengthCheck.length;
-        lengthChecksMap['maxItems'] = lengthCheck.length;
+    final childValues = run.values.value;
+    if (childValues == null) return run.finishChildren(complete: true);
+    List<T> value = childValues;
+    final operationScope = AcanthisValidationScope.current;
+    final collectOperations =
+        collect && operationScope.fieldPolicy == AcanthisCollectionPolicy.all;
+    for (final step in _steps) {
+      operationScope.throwIfCancelled();
+      switch (step) {
+        case _CheckStep<T>(:final operation):
+          run.check(value, operation);
+        case _AsyncCheckStep<T>(:final operation):
+          await operation.evaluate(value, run.context);
+        case _TransformStep<T>(:final operation):
+          if (run.hasIssues) return run.finish(value);
+          value = operation.apply(value);
+        case _AsyncTransformStep<T>(:final operation):
+          if (run.hasIssues) return run.finish(value);
+          value = await operation.apply(value);
       }
+      operationScope.throwIfCancelled();
+      if (!collectOperations && run.hasIssues) break;
     }
-    final uniqueItems = checks.whereType<UniqueItemsListCheck>().isNotEmpty;
-    final everyOf = operations.whereType<EveryOfListCheck<T>>().firstOrNull;
-    if (everyOf != null) {
-      return {
-        'type': 'array',
-        'items': element.toOpenApiSchema(),
-        if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-        if (uniqueItems) 'uniqueItems': true,
-      };
-    }
-    final anyOf = operations.whereType<AnyOfListCheck<T>>().firstOrNull;
-    if (anyOf != null) {
-      return {
-        'type': 'array',
-        'items': {
-          'oneOf': anyOf.items.map((e) => element.toOpenApiSchema()).toList(),
-        },
-        if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-        if (uniqueItems) 'uniqueItems': true,
-      };
-    }
-    return {
-      'type': 'array',
-      'items': element.toOpenApiSchema(),
-      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if (uniqueItems) 'uniqueItems': true,
-    };
-  }
-
-  @override
-  List<T> mock([int? seed]) {
-    final random = math.Random(seed);
-    final lengthChecks = operations.whereType<MinItemsListCheck>().toList();
-    int minLength = 0;
-    for (var check in lengthChecks) {
-      if (check.minItems > minLength) {
-        minLength = check.minItems;
-      }
-    }
-    final maxLengthChecks = operations.whereType<MaxItemsListCheck>().toList();
-    int maxLength = minLength + 10; // Default max length
-    for (var check in maxLengthChecks) {
-      if (check.maxItems < maxLength) {
-        maxLength = check.maxItems;
-      }
-    }
-    final lengthCheck = operations.whereType<LengthListCheck>().firstOrNull;
-    if (lengthCheck != null) {
-      minLength = lengthCheck.length;
-      maxLength = lengthCheck.length;
-    }
-    final anyOf = operations.whereType<AnyOfListCheck<T>>().firstOrNull;
-    final everyOf = operations.whereType<EveryOfListCheck<T>>().firstOrNull;
-    final possibleValues = <T>{};
-    if (anyOf != null) {
-      possibleValues.addAll(anyOf.items);
-    }
-    if (everyOf != null) {
-      possibleValues.addAll(everyOf.items);
-    }
-    if (minLength < 0 || maxLength < minLength || minLength > 10000) {
-      throw const AcanthisMockException(
-        'Invalid or excessive list length bounds',
-      );
-    }
-    final unique = operations.any((op) => op is UniqueItemsListCheck<T>);
-    final result = <T>[];
-    final pool = possibleValues.toList();
-    for (
-      var attempt = 0;
-      result.length < minLength && attempt < 10000;
-      attempt++
-    ) {
-      final candidate = pool.isEmpty
-          ? element.mock(random.nextInt(1 << 30))
-          : pool[random.nextInt(pool.length)];
-      if (!unique || !result.contains(candidate)) result.add(candidate);
-    }
-    if (result.length != minLength || !tryParse(result).isValid) {
-      throw const AcanthisMockException(
-        'Unable to generate a valid list within 10000 attempts; use mockSeeded for the documented safe subset',
-      );
-    }
-    return result;
+    return run.finish(value);
   }
 }
 
-AcanthisList<T> list<T>(AcanthisType<T> element) {
-  return AcanthisList<T>(element);
+AcanthisList<T> list<T>(Schema<Object?, T> element) => AcanthisList<T>(element);
+
+extension ListSchemaComposition<I, O> on Schema<I, O> {
+  AcanthisList<O> list() => AcanthisList<O>(this);
+}
+
+final class _ListValues<T> {
+  _ListValues(this.raw) : original = raw is List<T> ? raw : null {
+    if (original == null) _changed = <T>[];
+  }
+  final List<Object?> raw;
+  final List<T>? original;
+  List<T>? _changed;
+  bool hasValue = true;
+  void put(int index, T value) {
+    final typed = original;
+    if (typed == null) {
+      _changed!.add(value);
+    } else if (!identical(value, raw[index])) {
+      (_changed ??= List<T>.of(typed))[index] = value;
+    }
+  }
+
+  List<T>? get value => hasValue ? (_changed ?? original) : null;
+}
+
+final class _ListRun<T> {
+  _ListRun(List<Object?> raw) : values = _ListValues<T>(raw);
+  final _ListValues<T> values;
+  List<Object?>? _partial;
+  IssueSink? _sink;
+  IssueSink get sink => _sink ??= IssueSink();
+  bool get hasIssues => _sink?.isNotEmpty ?? false;
+  late final CheckContext context = CheckContext.createContext(sink);
+  void child(int index, AcanthisOutcome<T> result) {
+    if (result is AcanthisInvalid<T> && !result.hasValue) {
+      _partial ??= [
+        for (var i = 0; i < values.raw.length; i++)
+          i < (values._changed?.length ?? 0)
+              ? values._changed![i]
+              : values.raw[i],
+      ];
+      _partial![index] = result.partialValue;
+      values.hasValue = false;
+    } else {
+      values.put(index, result.value);
+      if (_partial != null) _partial![index] = result.value;
+    }
+    for (final issue in result.issues) {
+      sink.add(issue.prefixed(index));
+    }
+  }
+
+  void check(List<T> value, Check<List<T>> operation) {
+    if (operation is ListCheck<T>) {
+      if (!operation.test(value)) {
+        sink.addIssue(operation.code, parameters: operation.parameters);
+      }
+    } else {
+      operation.evaluate(value, context);
+    }
+  }
+
+  AcanthisOutcome<List<T>> finishChildren({required bool complete}) {
+    final value = values.value;
+    if (value == null || (!complete && values.original == null)) {
+      return AcanthisInvalid<List<T>>.withoutValue(
+        sink.takeIssues(),
+        partialValue: complete ? _partial : null,
+      );
+    }
+    return finish(value);
+  }
+
+  AcanthisOutcome<List<T>> finish(List<T> value) => !hasIssues
+      ? AcanthisValid(value)
+      : AcanthisInvalid(sink.takeIssues(), value: value);
+}
+
+sealed class _Step<T> {
+  const _Step();
+}
+
+final class _CheckStep<T> extends _Step<T> {
+  const _CheckStep(this.operation);
+  final Check<List<T>> operation;
+}
+
+final class _TransformStep<T> extends _Step<T> {
+  const _TransformStep(this.operation);
+  final Transform<List<T>, List<T>> operation;
+}
+
+final class _AsyncCheckStep<T> extends _Step<T> {
+  const _AsyncCheckStep(this.operation);
+  final AsyncCheck<List<T>> operation;
+}
+
+final class _AsyncTransformStep<T> extends _Step<T> {
+  const _AsyncTransformStep(this.operation);
+  final AsyncTransform<List<T>, List<T>> operation;
+}
+
+final class _Node<T> {
+  _Node(this.previous, this.step)
+    : length = (previous?.length ?? 0) + 1,
+      isAsync =
+          (previous?.isAsync ?? false) ||
+          step is _AsyncCheckStep<T> ||
+          step is _AsyncTransformStep<T>;
+  final _Node<T>? previous;
+  final _Step<T> step;
+  final int length;
+  final bool isAsync;
+}
+
+List<_Step<T>> _materialize<T>(_Node<T>? tail) {
+  if (tail == null) return const [];
+  final steps = List<_Step<T>>.filled(tail.length, tail.step, growable: false);
+  var index = steps.length - 1;
+  for (_Node<T>? node = tail; node != null; node = node.previous) {
+    steps[index--] = node.step;
+  }
+  return steps;
+}
+
+mixin ListableSchema<I, O> on Schema<I, O> {
+  AcanthisList<O> list() => AcanthisList<O>(this);
 }

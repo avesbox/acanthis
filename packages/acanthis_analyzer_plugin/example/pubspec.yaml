@@ -1,0 +1,7 @@
+name: acanthis_plugin_example
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  acanthis:
+    path: ../../..

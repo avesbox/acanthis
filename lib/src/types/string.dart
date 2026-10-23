@@ -1,712 +1,395 @@
-import 'dart:math';
-
-import 'package:acanthis/src/issue_sink.dart';
-
-import 'dart:math' as math;
-
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:acanthis/src/validators/common.dart';
-import 'package:acanthis/src/validators/string.dart';
-import 'package:nanoid2/nanoid2.dart' as n;
-
-import 'dart:convert' as convert;
-
-import '../exceptions/validation_error.dart';
 import '../registries/metadata_registry.dart';
-import 'types.dart';
+import '../common/validation_scope.dart';
+import '../common/issue_sink.dart';
+import '../common/operations.dart';
+import '../common/results.dart';
+import '../common/schema.dart';
+import '../common/fast_schema.dart';
+import '../transformations/string.dart';
+import '../validators/common.dart';
+import '../validators/string.dart';
+import 'list.dart';
+import 'nullable.dart';
 
-/// A class to validate string types
-class AcanthisString extends AcanthisType<String> {
+/// An immutable ordered string schema. Parsing contexts belong to invocations.
+/// [parse] stops after the first failing operation; [tryParse] collects checks
+/// on the current value, stopping at a transformation boundary after failure.
+final class AcanthisString extends Schema<String, String>
+    with
+        CheckableSchema<String, String>,
+        TransformableSchema<String, String>,
+        ValidationSchema<String, String>,
+        AsyncSchema<String, String>,
+        DefaultSchema<String, String>,
+        ListableSchema<String, String>,
+        NullableSchema<String, String>
+    implements FastSchema<String> {
+  AcanthisString({this.coercionEnabled = false, this.defaultValue})
+    : _tail = null;
+
+  AcanthisString._(this._tail, this.coercionEnabled, this.defaultValue);
+
+  final _OperationNode? _tail;
   final bool coercionEnabled;
-
   @override
-  bool get isPure => !coercionEnabled && super.isPure;
-
-  AcanthisString({
-    super.isAsync,
-    super.operations,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-    this.coercionEnabled = false,
-  });
-
-  AcanthisString coerce() {
-    return AcanthisString(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: true,
-    );
-  }
-
-  @override
-  String tryParseInternal(
-    dynamic value, {
-    required Map<String, dynamic> errors,
-  }) {
-    value ??= defaultValue;
-    // Do not intercept subclasses: their coercion hooks can accept other types.
-    if (value is! String && !coercionEnabled && runtimeType == AcanthisString) {
-      errors.addIssue(
-        'type',
-        'Invalid type: ${value.runtimeType}, expected String',
+  final String? defaultValue;
+  bool get isIdentity => _tail == null && !coercionEnabled && !hasDefault;
+  late final bool _fastEligible =
+      !coercionEnabled &&
+      _steps.every(
+        (step) => step is _CheckStep && step.operation is StringCheck,
       );
-      return valueOnFailure(value);
+  @override
+  bool get canFast => isIdentity || _fastEligible;
+  @override
+  String? tryFast(Object? input) {
+    if (!canFast) return null;
+    input ??= defaultValue;
+    if (input is! String) return null;
+    for (final step in _steps) {
+      if (!((step as _CheckStep).operation as StringCheck).test(input)) {
+        return null;
+      }
     }
-    return super.tryParseInternal(value, errors: errors);
+    return input;
   }
+
+  // Fluent calls share immutable nodes. Only a schema that executes or exposes
+  // its definition materializes the ordered fixed-length plan, once.
+  late final List<_StringStep> _steps = _materialize(_tail);
 
   @override
-  String coerceInput(dynamic value) {
-    if (!coercionEnabled) {
-      return super.coerceInput(value);
-    }
-    return switch (value) {
-      String() => value,
-      num() || bool() || DateTime() => value.toString(),
-      _ => throw ValidationError.diagnostic(
-        code: 'type',
-        'Invalid type: ${value.runtimeType}, expected coercible string value',
-      ),
-    };
-  }
+  late final List<Check<String>> checks = List.unmodifiable(
+    _steps.whereType<_CheckStep>().map((step) => step.operation),
+  );
 
-  /// Add a check to the string to check if it is a valid email
-  AcanthisString email({String? message}) {
-    return withCheck(EmailStringCheck(message: message));
-  }
+  @override
+  late final List<Transform<String, String>> transformations =
+      List.unmodifiable(
+        _steps.whereType<_TransformStep>().map((step) => step.operation),
+      );
 
-  /// Add a check to the string to check if its length is at least [length]
-  AcanthisString min(
-    int length, {
-    String? message,
-    String Function(int value)? messageBuilder,
-  }) {
-    return withCheck(
-      MinStringLengthCheck(
-        length,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
+  late final List<AsyncCheck<String>> asyncChecks = List.unmodifiable(
+    _steps.whereType<_AsyncCheckStep>().map((step) => step.operation),
+  );
 
-  /// Add a check to the string to check if its length is at most [length]
-  AcanthisString max(
-    int length, {
-    String? message,
-    String Function(int value)? messageBuilder,
-  }) {
-    return withCheck(
-      MaxStringLengthCheck(
-        length,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
+  @override
+  bool get isAsync => _tail?.isAsync ?? false;
 
-  /// Add a check to the string to check if follows the pattern [pattern]
-  AcanthisString pattern(Pattern pattern, {String? message}) {
-    return withCheck(PatternStringCheck(pattern, message: message));
-  }
+  AcanthisString _append(_StringStep step) => copySchemaMetadata(
+    this,
+    AcanthisString._(
+      _OperationNode(_tail, step),
+      coercionEnabled,
+      defaultValue,
+    ),
+  );
 
-  /// Add a check to the string to check if it contains letters
-  AcanthisString letters({bool strict = true, String? message}) {
-    return withCheck(
-      PatternLettersStringChecks(strict: strict, message: message),
-    );
-  }
+  @override
+  AcanthisString withCheck(Check<String> check) => _append(_CheckStep(check));
 
-  /// Add a check to the string to check if it contains digits
-  AcanthisString digits({bool strict = true, String? message}) {
-    return withCheck(
-      PatternDigitsStringChecks(strict: strict, message: message),
-    );
-  }
+  @override
+  AcanthisString refine({
+    required bool Function(String) onCheck,
+    String? error,
+    String name = 'custom',
+  }) => withCheck(
+    PredicateCheck<String>.refinement(
+      onCheck: onCheck,
+      error: error,
+      name: name,
+    ),
+  );
 
-  /// Add a check to the string to check if it contains alphanumeric characters
-  AcanthisString alphanumeric({bool strict = true, String? message}) {
-    return withCheck(
-      PatternAlphanumericStringChecks(strict: strict, message: message),
-    );
-  }
+  AcanthisString refineAsync(AsyncCheck<String> check) =>
+      _append(_AsyncCheckStep(check));
 
-  /// Add a check to the string to check if it contains alphanumeric characters and spaces
-  AcanthisString alphanumericWithSpaces({bool strict = true, String? message}) {
-    return withCheck(
-      PatternAlphanumericWithSpacesStringChecks(
-        strict: strict,
-        message: message,
-      ),
-    );
-  }
+  @override
+  AcanthisString transform(String Function(String) onTransform) =>
+      withTransform(CallbackTransform<String, String>(onTransform));
 
-  /// Add a check to the string to check if it contains special characters
-  AcanthisString specialCharacters({bool strict = true, String? message}) {
-    return withCheck(
-      PatternSpecialCharactersStringChecks(strict: strict, message: message),
-    );
-  }
+  @override
+  AcanthisString withTransform(Transform<String, String> transform) =>
+      _append(_TransformStep(transform));
 
-  /// Add a check to the string to check if it contains all characters
-  AcanthisString allCharacters({bool strict = true, String? message}) {
-    return withCheck(
-      PatternAllCharactersStringChecks(strict: strict, message: message),
-    );
-  }
+  AcanthisString transformAsync(AsyncTransform<String, String> transform) =>
+      _append(_AsyncTransformStep(transform));
 
-  /// Add a check to the string to check if it is in uppercase
-  AcanthisString upperCase({String? message}) {
-    return withCheck(UpperCaseStringCheck(message: message));
-  }
+  AcanthisString coerce() =>
+      copySchemaMetadata(this, AcanthisString._(_tail, true, defaultValue));
+  @override
+  AcanthisString meta(MetadataEntry<String> metadata) => attachSchemaMetadata(
+    copySchemaMetadata(
+      this,
+      AcanthisString._(_tail, coercionEnabled, defaultValue),
+    ),
+    metadata,
+  );
 
-  /// Add a check to the string to check if it is in lowercase
-  AcanthisString lowerCase({String? message}) {
-    return withCheck(LowerCaseStringCheck(message: message));
-  }
+  AcanthisString withDefault(String value) =>
+      copySchemaMetadata(this, AcanthisString._(_tail, coercionEnabled, value));
 
-  /// Add a check to the string to check if it is in mixed case
-  AcanthisString mixedCase({String? message}) {
-    return withCheck(MixedCaseStringCheck(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid date time
-  AcanthisString dateTime({String? message}) {
-    return withCheck(DateTimeStringCheck(message: message));
-  }
-
-  AcanthisString time({String? message}) {
-    return withCheck(PatternTimeStringChecks(message: message));
-  }
-
-  AcanthisString hexColor({String? message}) {
-    return withCheck(PatternHexColorStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid uri
-  AcanthisString uri({String? message}) {
-    return withCheck(UriStringCheck(message: message));
-  }
-
-  AcanthisString url({String? message}) {
-    return withCheck(UrlStringCheck(message: message));
-  }
-
-  AcanthisString uncompromised({String? message}) {
-    return withAsyncCheck(UncompromisedStringCheck(message: message));
-  }
-
-  /// Add a check to the string to check if it is not empty
-  @Deprecated(
-    'Use notEmpty() instead; required() will be removed in a future release.',
-  )
-  AcanthisString required({String? message}) {
-    return withCheck(RequiredStringCheck(message: message));
-  }
-
-  /// Add a check to the string to check if it is not empty
-  AcanthisString notEmpty({String? message}) {
-    return withCheck(NotEmptyStringCheck(message: message));
-  }
-
-  /// Add a check to the string to check if it's length is exactly [length]
-  AcanthisString length(
-    int length, {
-    String? message,
-    String Function(int value)? messageBuilder,
-  }) {
-    return withCheck(
-      ExactStringLengthCheck(
-        length,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the string to check if it contains [value]
-  AcanthisString contains(
-    String value, {
-    String? message,
-    String Function(String value)? messageBuilder,
-  }) {
-    return withCheck(
-      ContainsStringCheck(
-        value,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the string to check if it starts with [value]
-  AcanthisString startsWith(
-    String value, {
-    String? message,
-    String Function(String value)? messageBuilder,
-  }) {
-    return withCheck(
-      StartsWithStringCheck(
-        value,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the string to check if it ends with [value]
-  AcanthisString endsWith(
-    String value, {
-    String? message,
-    String Function(String value)? messageBuilder,
-  }) {
-    return withCheck(
-      EndsWithStringCheck(
-        value,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the string to check if it is a valid card number
-  AcanthisString card({String? message}) {
-    return withCheck(CardStringCheck(message: message));
-  }
-
-  /// Add a check to the string to check if it is a value in the [enumValues].
-  /// uses [enumvalues[index].name] for the comparison, but you can provide a [nameTransformer] to transform the name property of any item on the list.
-  ///
-  /// - [nameTransformer] A function to transform the name property of every item on the list.
-  ///                     If not provided, the name property of the item will be used as the name of the enum value.
-  ///                     TIP: use conditional logic on [name] to perform different validations on different enum values.
+  AcanthisString email() => withCheck(EmailStringCheck());
+  AcanthisString min(int length) => withCheck(MinStringLengthCheck(length));
+  AcanthisString max(int length) => withCheck(MaxStringLengthCheck(length));
+  AcanthisString length(int length) =>
+      withCheck(ExactStringLengthCheck(length));
+  AcanthisString pattern(Pattern pattern) =>
+      withCheck(PatternStringCheck(pattern));
+  AcanthisString letters({bool strict = true}) =>
+      withCheck(PatternLettersStringChecks(strict: strict));
+  AcanthisString digits({bool strict = true}) =>
+      withCheck(PatternDigitsStringChecks(strict: strict));
+  AcanthisString alphanumeric({bool strict = true}) =>
+      withCheck(PatternAlphanumericStringChecks(strict: strict));
+  AcanthisString alphanumericWithSpaces({bool strict = true}) =>
+      withCheck(PatternAlphanumericWithSpacesStringChecks(strict: strict));
+  AcanthisString specialCharacters({bool strict = true}) =>
+      withCheck(PatternSpecialCharactersStringChecks(strict: strict));
+  AcanthisString allCharacters({bool strict = true}) =>
+      withCheck(PatternAllCharactersStringChecks(strict: strict));
+  AcanthisString upperCase() => withCheck(UpperCaseStringCheck());
+  AcanthisString lowerCase() => withCheck(LowerCaseStringCheck());
+  AcanthisString mixedCase() => withCheck(MixedCaseStringCheck());
+  AcanthisString dateTime() => withCheck(DateTimeStringCheck());
+  AcanthisString time() => withCheck(PatternTimeStringChecks());
+  AcanthisString hexColor() => withCheck(PatternHexColorStringChecks());
+  AcanthisString uri() => withCheck(UriStringCheck());
+  AcanthisString url() => withCheck(UrlStringCheck());
+  AcanthisString uncompromised({PasswordRangeLookup? lookup}) =>
+      refineAsync(UncompromisedStringCheck(lookup: lookup));
+  AcanthisString required() => withCheck(RequiredStringCheck());
+  AcanthisString notEmpty() => withCheck(NotEmptyStringCheck());
+  AcanthisString contains(String value) =>
+      withCheck(ContainsStringCheck(value));
+  AcanthisString startsWith(String value) =>
+      withCheck(StartsWithStringCheck(value));
+  AcanthisString endsWith(String value) =>
+      withCheck(EndsWithStringCheck(value));
+  AcanthisString card() => withCheck(CardStringCheck());
   AcanthisString enumerated<T extends Enum>(
-    List<T> enumValues, {
-    String? message,
-    String Function(String name)? nameTransformer,
-  }) {
-    if (enumValues.isEmpty) {
-      throw ArgumentError('Enumeration values cannot be empty');
-    }
-    return withCheck(
-      EnumeratedStringCheck(
-        enumValues: enumValues,
-        nameTransformer: nameTransformer,
-        message: message,
-      ),
-    );
-  }
+    List<T> values, {
+    String Function(String)? nameTransformer,
+  }) => withCheck(
+    EnumeratedStringCheck(enumValues: values, nameTransformer: nameTransformer),
+  );
+  AcanthisString contained(Iterable<String> values) =>
+      withCheck(ContainedStringCheck(values: values));
+  AcanthisString cuid() => withCheck(PatternCuidStringChecks());
+  AcanthisString cuid2() => withCheck(PatternCuid2StringChecks());
+  AcanthisString ulid() => withCheck(PatternUlidStringChecks());
+  AcanthisString uuid() => withCheck(PatternUuidStringChecks());
+  AcanthisString nanoid() => withCheck(PatternNanoidStringChecks());
+  AcanthisString jwt() => withCheck(PatternJwtStringChecks());
+  AcanthisString base64() => withCheck(PatternBase64StringChecks());
+  AcanthisString exact(String value) =>
+      withCheck(ExactCheck<String>(value: value));
 
-  /// Add a check to the string to check if it is a value in the [enumValues]
-  AcanthisString contained(
-    Iterable<String> values, {
-    String? message,
-    String Function(Iterable<String> value)? messageBuilder,
-  }) {
-    if (values.isEmpty) {
-      throw ArgumentError('Values cannot be empty');
-    }
-    return withCheck(
-      ContainedStringCheck(
-        values: values,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a check to the string to check if it is a valid cuid
-  AcanthisString cuid({String? message}) {
-    return withCheck(PatternCuidStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid cuid2
-  AcanthisString cuid2({String? message}) {
-    return withCheck(PatternCuid2StringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid ulid
-  AcanthisString ulid({String? message}) {
-    return withCheck(PatternUlidStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid uuid
-  AcanthisString uuid({String? message}) {
-    return withCheck(PatternUuidStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid nanoid
-  AcanthisString nanoid({String? message}) {
-    return withCheck(PatternNanoidStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid jwt
-  AcanthisString jwt({String? message}) {
-    return withCheck(PatternJwtStringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid base64 string
-  AcanthisString base64({String? message}) {
-    return withCheck(PatternBase64StringChecks(message: message));
-  }
-
-  /// Add a check to the string to check if it is a valid hex color
-  AcanthisString exact(
-    String value, {
-    String? message,
-    String Function(String value)? messageBuilder,
-  }) {
-    return withCheck(
-      ExactCheck<String>(
-        value: value,
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  /// Add a transformation to the string to encode it to base64
-  AcanthisString encode() {
-    return withTransformation(
-      AcanthisTransformation<String>(
-        transformation: (value) => convert.base64.encode(value.codeUnits),
-      ),
-    );
-  }
-
-  /// Add a transformation to the string to decode it from base64
-  AcanthisString decode() {
-    return withTransformation(
-      AcanthisTransformation<String>(
-        transformation: (value) =>
-            convert.utf8.decode(convert.base64.decode(value)),
-      ),
-    );
-  }
-
-  /// Add a transformation to the string to transform it to uppercase
-  AcanthisString toUpperCase() {
-    return withTransformation(
-      AcanthisTransformation<String>(
-        transformation: (value) => value.toUpperCase(),
-      ),
-    );
-  }
-
-  /// Add a transformation to the string to transform it to lowercase
-  AcanthisString toLowerCase() {
-    return withTransformation(
-      AcanthisTransformation<String>(
-        transformation: (value) => value.toLowerCase(),
-      ),
-    );
-  }
-
-  // AcanthisDate date() {
-  //   addTransformation(AcanthisTransformation(transformation: (value) => DateTime.parse(value)));
-  //   return AcanthisDate();
-  // }
+  AcanthisString encode() => withTransform(const EncodeStringTransform());
+  AcanthisString decode() => withTransform(const DecodeStringTransform());
+  AcanthisString toUpperCase() =>
+      withTransform(const UpperCaseStringTransform());
+  AcanthisString toLowerCase() =>
+      withTransform(const LowerCaseStringTransform());
+  AcanthisString trim() => withTransform(const TrimStringTransform());
 
   @override
-  AcanthisString withAsyncCheck(AcanthisAsyncCheck<String> check) {
-    return AcanthisString(
-      operations: [...operations, check],
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
+  String parse(Object? input) => parseOutcome(input).valueOrThrow;
 
   @override
-  AcanthisString withCheck(AcanthisCheck<String> check) {
-    return AcanthisString(
-      operations: [...operations, check],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
+  AcanthisOutcome<String> parseOutcome(Object? input) =>
+      _run(input, collect: false);
 
   @override
-  AcanthisString withTransformation(
-    AcanthisTransformation<String> transformation,
-  ) {
-    return AcanthisString(
-      operations: [...operations, transformation],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
+  AcanthisOutcome<String> tryParse(Object? input) => _run(input, collect: true);
 
   @override
-  Map<String, dynamic> toJsonSchema() {
-    final lengthChecksMap = _getConstraints();
-    final patternChecksMap = _getPattern();
-    final enumeratedChecksMap = _getEnumeratedChecks();
-    final exactChecksMap = _getExactChecks();
-    if (exactChecksMap.isNotEmpty) {
-      return {
-        'const': exactChecksMap['const'],
-        if (metadataEntry != null) ...metadataEntry!.toJson(),
-      };
+  Future<String> parseAsync(Object? input) async =>
+      (await parseOutcomeAsync(input)).valueOrThrow;
+
+  @override
+  Future<AcanthisOutcome<String>> parseOutcomeAsync(Object? input) =>
+      _runAsync(input, collect: false);
+
+  @override
+  Future<AcanthisOutcome<String>> tryParseAsync(Object? input) =>
+      _runAsync(input, collect: true);
+
+  @override
+  bool validate(Object? input) => parseOutcome(input).isValid;
+
+  @override
+  bool tryValidate(Object? input) => tryParse(input).isValid;
+
+  Future<bool> validateAsync(Object? input) async =>
+      (await parseOutcomeAsync(input)).isValid;
+
+  Future<bool> tryValidateAsync(Object? input) async =>
+      (await tryParseAsync(input)).isValid;
+
+  String? _decodeInput(Object? input) {
+    input ??= defaultValue;
+    if (input is String) return input;
+    if (coercionEnabled &&
+        (input is num || input is bool || input is DateTime)) {
+      return input.toString();
     }
-    if (enumeratedChecksMap.isNotEmpty) {
-      return {
-        'enum': enumeratedChecksMap['enum'],
-        if (metadataEntry != null) ...metadataEntry!.toJson(),
-      };
-    }
-    return {
-      'type': 'string',
-      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if (metadataEntry != null) ...metadataEntry!.toJson(),
-      if (patternChecksMap.isNotEmpty) ...patternChecksMap,
-    };
+    return null;
   }
 
-  Map<String, dynamic> _getExactChecks() {
-    final exactChecks = operations.whereType<ExactCheck>();
-    final exactChecksMap = <String, dynamic>{};
-    for (var check in exactChecks) {
-      exactChecksMap['const'] = check.value;
-    }
-    return exactChecksMap;
-  }
+  AcanthisOutcome<String> _invalidInput() => AcanthisInvalid.withoutValue(
+    IssueSink.single(
+      'type',
+      parameters: const {'expected': 'String'},
+    ).takeIssues(),
+  );
 
-  Map<String, dynamic> _getEnumeratedChecks() {
-    final enumeratedChecks = operations.whereType<EnumeratedStringCheck>();
-    final enumeratedChecksMap = <String, dynamic>{};
-    for (var check in enumeratedChecks) {
-      enumeratedChecksMap['enum'] = check.enumValues
-          .map((e) => e.name)
-          .toList();
-    }
-    return enumeratedChecksMap;
-  }
-
-  Map<String, dynamic> _getConstraints() {
-    final lengthChecks = operations.whereType<AcanthisCheck>();
-    final lengthChecksMap = <String, dynamic>{};
-
-    for (var check in lengthChecks) {
-      if (check is MaxStringLengthCheck) {
-        lengthChecksMap['maxLength'] = check.value;
-      } else if (check is MinStringLengthCheck) {
-        lengthChecksMap['minLength'] = check.value;
-      } else if (check is ExactStringLengthCheck) {
-        lengthChecksMap['maxLength'] = check.value;
-        lengthChecksMap['minLength'] = check.value;
-      } else if (check is NotEmptyStringCheck) {
-        lengthChecksMap['minLength'] = 1;
+  AcanthisOutcome<String> _run(Object? input, {required bool collect}) {
+    final scope = AcanthisValidationScope.current;
+    scope.throwIfCancelled();
+    collect = collect && scope.fieldPolicy == AcanthisCollectionPolicy.all;
+    if (isAsync) throw StateError('This schema requires an async parse method');
+    final decoded = _decodeInput(input);
+    if (decoded == null) return _invalidInput();
+    var value = decoded;
+    if (_tail == null) return AcanthisValid(value);
+    final run = _StringRun();
+    for (final step in _steps) {
+      scope.throwIfCancelled();
+      switch (step) {
+        case _CheckStep(:final operation):
+          run.check(value, operation);
+        case _TransformStep(:final operation):
+          if (run.sink.isNotEmpty) return run.finish(value);
+          final transformed = run.transform(value, operation);
+          if (transformed == null) return run.finish(value);
+          value = transformed;
+        case _AsyncCheckStep() || _AsyncTransformStep():
+          throw StateError('Async step in synchronous execution');
       }
+      scope.throwIfCancelled();
+      if (!collect && run.sink.isNotEmpty) break;
     }
-    return lengthChecksMap;
+    return run.finish(value);
   }
 
-  Map<String, dynamic> _getPattern() {
-    final patternChecks = operations.whereType<AcanthisCheck>();
-    final patternChecksMap = <String, dynamic>{};
-    for (var check in patternChecks) {
-      patternChecksMap['pattern'] = switch (check) {
-        PatternLettersStringChecks() => check.regExp.pattern,
-        PatternDigitsStringChecks() => check.regExp.pattern,
-        PatternAlphanumericStringChecks() => check.regExp.pattern,
-        PatternAlphanumericWithSpacesStringChecks() => check.regExp.pattern,
-        PatternSpecialCharactersStringChecks() => check.regExp.pattern,
-        PatternAllCharactersStringChecks() => check.regExp.pattern,
-        PatternTimeStringChecks() => check.regExp.pattern,
-        PatternCuidStringChecks() => check.regExp.pattern,
-        PatternCuid2StringChecks() => check.regExp.pattern,
-        PatternUlidStringChecks() => check.regExp.pattern,
-        PatternUuidStringChecks() => check.regExp.pattern,
-        PatternNanoidStringChecks() => check.regExp.pattern,
-        PatternJwtStringChecks() => check.regExp.pattern,
-        PatternBase64StringChecks() => check.regExp.pattern,
-        PatternStringCheck() =>
-          check.regExp is RegExp
-              ? (check.regExp as RegExp).pattern
-              : check.regExp,
-        _ => null,
-      };
-      if (patternChecksMap['pattern'] == null) {
-        patternChecksMap.remove('pattern');
+  Future<AcanthisOutcome<String>> _runAsync(
+    Object? input, {
+    required bool collect,
+  }) async {
+    final scope = AcanthisValidationScope.current;
+    scope.throwIfCancelled();
+    collect = collect && scope.fieldPolicy == AcanthisCollectionPolicy.all;
+    if (!isAsync) return _run(input, collect: collect);
+    final decoded = _decodeInput(input);
+    if (decoded == null) return _invalidInput();
+    var value = decoded;
+    final run = _StringRun();
+    for (final step in _steps) {
+      scope.throwIfCancelled();
+      switch (step) {
+        case _CheckStep(:final operation):
+          run.check(value, operation);
+        case _AsyncCheckStep(:final operation):
+          await operation.evaluate(value, run.context);
+        case _TransformStep(:final operation):
+          if (run.sink.isNotEmpty) return run.finish(value);
+          final transformed = run.transform(value, operation);
+          if (transformed == null) return run.finish(value);
+          value = transformed;
+        case _AsyncTransformStep(:final operation):
+          if (run.sink.isNotEmpty) return run.finish(value);
+          value = await operation.apply(value);
       }
+      scope.throwIfCancelled();
+      if (!collect && run.sink.isNotEmpty) break;
     }
-    return patternChecksMap;
-  }
-
-  @override
-  AcanthisString meta(MetadataEntry<String> metadata) {
-    String key = this.key;
-    if (key.isEmpty) {
-      key = n.nanoid();
-    }
-    MetadataRegistry().add(key, metadata);
-    return AcanthisString(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
-  @override
-  AcanthisType<String> withDefault(String value) {
-    return AcanthisString(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
-  Map<String, dynamic> _getContainsChecks() {
-    final containsChecks = operations.whereType<ContainsStringCheck>();
-    final containsChecksMap = <String, dynamic>{};
-    for (var check in containsChecks) {
-      containsChecksMap['pattern'] = '/${check.value}/';
-    }
-    final startsWith = operations.whereType<StartsWithStringCheck>();
-    for (var check in startsWith) {
-      containsChecksMap['pattern'] = '^${check.value}';
-    }
-    final endsWith = operations.whereType<EndsWithStringCheck>();
-    for (var check in endsWith) {
-      containsChecksMap['pattern'] = '${check.value}\$';
-    }
-    return containsChecksMap;
-  }
-
-  @override
-  Map<String, dynamic> toOpenApiSchema() {
-    final lengthChecksMap = _getConstraints();
-    final patternChecksMap = _getPattern();
-    final enumeratedChecksMap = _getEnumeratedChecks();
-    final containsCheck = _getContainsChecks();
-    final exactChecksMap = _getExactChecks();
-    final formatsChecksMap = <String, dynamic>{};
-    for (var check in operations) {
-      if (check is EmailStringCheck) {
-        formatsChecksMap['format'] = 'email';
-      } else if (check is UriStringCheck) {
-        formatsChecksMap['format'] = 'uri';
-      } else if (check is UrlStringCheck) {
-        formatsChecksMap['format'] = 'uri';
-      } else if (check is DateTimeStringCheck) {
-        formatsChecksMap['format'] = 'date-time';
-      } else if (check is PatternTimeStringChecks) {
-        formatsChecksMap['format'] = 'time';
-      } else if (check is PatternUuidStringChecks) {
-        formatsChecksMap['format'] = 'uuid';
-      } else if (check is PatternBase64StringChecks) {
-        formatsChecksMap['format'] = 'byte';
-      }
-    }
-    return {
-      'type': 'string',
-      if (lengthChecksMap.isNotEmpty) ...lengthChecksMap,
-      if (patternChecksMap.isNotEmpty) ...patternChecksMap,
-      if (enumeratedChecksMap.isNotEmpty) 'enum': enumeratedChecksMap.values,
-      if (containsCheck.isNotEmpty) ...containsCheck,
-      if (exactChecksMap.isNotEmpty) 'enum': [exactChecksMap['const']],
-      if (formatsChecksMap.isNotEmpty) ...formatsChecksMap,
-    };
-  }
-
-  @override
-  String mock([int? seed]) {
-    final random = Random(seed);
-    final checks = operations.whereType<AcanthisCheck<String>>().toList();
-
-    final exactCheck = checks.whereType<ExactCheck<String>>().firstOrNull;
-    if (exactCheck != null) {
-      return exactCheck.value;
-    }
-
-    final enumCheck = checks.whereType<EnumeratedStringCheck>().firstOrNull;
-    if (enumCheck != null) {
-      final values = enumCheck.enumValues.map((value) => value.name).toList();
-      return values[random.nextInt(values.length)];
-    }
-
-    int minLength = 0;
-    int? maxLength;
-
-    final exactLengthCheck = checks
-        .whereType<ExactStringLengthCheck>()
-        .firstOrNull;
-    if (exactLengthCheck != null) {
-      minLength = exactLengthCheck.value;
-      maxLength = exactLengthCheck.value;
-    } else {
-      final minLengthChecks = checks.whereType<MinStringLengthCheck>();
-      if (minLengthChecks.isNotEmpty) {
-        minLength = minLengthChecks
-            .map((check) => check.value)
-            .reduce(math.max);
-      }
-
-      final maxLengthChecks = checks.whereType<MaxStringLengthCheck>();
-      if (maxLengthChecks.isNotEmpty) {
-        maxLength = maxLengthChecks
-            .map((check) => check.value)
-            .reduce(math.min);
-      }
-    }
-
-    if (checks.whereType<NotEmptyStringCheck>().isNotEmpty) {
-      minLength = math.max(minLength, 1);
-    }
-
-    final targetLength = maxLength == null
-        ? (minLength > 0 ? minLength : 10)
-        : math.max(minLength, maxLength);
-
-    final patternChecks = checks.whereType<PatternStringCheck>().toList();
-    String pattern = '';
-    if (patternChecks.isNotEmpty) {
-      pattern = patternChecks.first.regExp is RegExp
-          ? (patternChecks.first.regExp as RegExp).pattern
-          : patternChecks.first.regExp.toString();
-    }
-    if (pattern.isNotEmpty) {
-      // This is a very naive way to generate a string that matches the pattern, it only works for very simple patterns.
-      // For more complex patterns, the user should provide a custom mock implementation.
-      final regex = RegExp(pattern);
-      String generated = '';
-      while (!regex.hasMatch(generated) || generated.length < targetLength) {
-        generated += _randomString(random, targetLength);
-      }
-      return generated;
-    }
-    return _randomString(random, targetLength);
-  }
-
-  String _randomString(Random random, int length) {
-    const chars =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return List.generate(
-      length,
-      (index) => chars[random.nextInt(chars.length)],
-    ).join();
+    return run.finish(value);
   }
 }
 
-/// Create a new AcanthisString instance
+/// Construct a strict string schema; opt into scalar/date coercion with coerce().
 AcanthisString string() => AcanthisString();
+
+final class _StringRun {
+  final IssueSink sink = IssueSink();
+  late final CheckContext context = CheckContext.createContext(sink);
+
+  void check(String value, Check<String> operation) {
+    if (operation is StringCheck) {
+      if (!operation.test(value)) {
+        sink.addIssue(operation.code, parameters: operation.parameters);
+      }
+    } else {
+      operation.evaluate(value, context);
+    }
+  }
+
+  String? transform(String value, Transform<String, String> operation) {
+    if (operation is DecodeStringTransform) {
+      try {
+        return operation.apply(value);
+      } on FormatException {
+        sink.addIssue('transform', parameters: const {'operation': 'decode'});
+        return null;
+      }
+    }
+    return operation.apply(value);
+  }
+
+  AcanthisOutcome<String> finish(String value) => sink.isEmpty
+      ? AcanthisValid(value)
+      : AcanthisInvalid(sink.takeIssues(), value: value);
+}
+
+sealed class _StringStep {
+  const _StringStep();
+}
+
+final class _CheckStep extends _StringStep {
+  const _CheckStep(this.operation);
+  final Check<String> operation;
+}
+
+final class _AsyncCheckStep extends _StringStep {
+  const _AsyncCheckStep(this.operation);
+  final AsyncCheck<String> operation;
+}
+
+final class _TransformStep extends _StringStep {
+  const _TransformStep(this.operation);
+  final Transform<String, String> operation;
+}
+
+final class _AsyncTransformStep extends _StringStep {
+  const _AsyncTransformStep(this.operation);
+  final AsyncTransform<String, String> operation;
+}
+
+final class _OperationNode {
+  _OperationNode(this.previous, this.step)
+    : length = (previous?.length ?? 0) + 1,
+      isAsync =
+          (previous?.isAsync ?? false) ||
+          step is _AsyncCheckStep ||
+          step is _AsyncTransformStep;
+  final _OperationNode? previous;
+  final _StringStep step;
+  final int length;
+  final bool isAsync;
+}
+
+List<_StringStep> _materialize(_OperationNode? tail) {
+  if (tail == null) return const [];
+  final steps = List<_StringStep>.filled(
+    tail.length,
+    tail.step,
+    growable: false,
+  );
+  _OperationNode? node = tail;
+  for (var index = steps.length - 1; index >= 0; index--) {
+    steps[index] = node!.step;
+    node = node.previous;
+  }
+  return steps;
+}

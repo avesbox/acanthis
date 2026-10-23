@@ -1,66 +1,69 @@
 ---
-description: Find the schema or operation you need, from primitive values to custom validation.
+description: Choose a native schema, compose it with other schemas, and add checks or transformations.
 ---
 
 # Schema reference {#defining-schemas}
 
-Start with a type, then chain checks and transformations. Each method returns a new schema, so you can reuse a base schema without changing it.
+Start with a factory, then add checks and compose it into larger shapes. Import these APIs from `package:acanthis/acanthis.dart`. Top-level factories are also available through the `Acanthis` facade.
 
 ```dart
-final email = string().email();
-final account = object({'email': email});
+final email = string().trim().email();
+final account = object({'email': email, 'tags': string().list()});
 ```
 
-New to Acanthis? Follow the [quick start](/basic-usage) for a complete example.
+## Types
 
-<div class="doc-cards">
-<a href="/schemas/strings.html"><strong>Strings</strong><span>Validate text, check formats, and transform string values.</span></a>
-<a href="/schemas/numbers.html"><strong>Numbers, booleans, and dates</strong><span>Choose a primitive schema and add the constraints your data needs.</span></a>
-<a href="/schemas/objects.html"><strong>Objects</strong><span>Validate named fields, control unknown keys, and compose reusable object schemas.</span></a>
-<a href="/schemas/collections.html"><strong>Lists and tuples</strong><span>Validate repeated values with lists or fixed positions with tuples.</span></a>
-<a href="/schemas/nullable.html"><strong>Nullable values</strong><span>Allow null explicitly and distinguish it from an absent object field.</span></a>
-<a href="/schemas/instances.html"><strong>Instances and classes</strong><span>Validate existing Dart instances and describe class fields.</span></a>
-<a href="/schemas/unions.html"><strong>Literals and unions</strong><span>Match exact values or accept one of several schema shapes.</span></a>
-<a href="/schemas/refinements.html"><strong>Custom validation</strong><span>Add synchronous or asynchronous rules when built-in checks are not enough.</span></a>
-<a href="/schemas/transformations.html"><strong>Transformations and defaults</strong><span>Convert input values, chain schemas, and provide recovery defaults.</span></a>
-<a href="/schemas/mocking.html"><strong>Mock data</strong><span>Generate sample input and choose between legacy mocking and bounded seeded generation.</span></a>
-</div>
+| Schema | Parsed output | Reference |
+| --- | --- | --- |
+| <span id="string"></span><span id="string-formats"></span><span id="emails"></span>`string()` | `String` | [Strings](/schemas/strings) |
+| <span id="numeric-values"></span>`number()`, `integer()`, `doubleType()` | `num`, `int`, `double` | [Numbers](/schemas/numbers#numeric-values) |
+| <span id="booleans"></span>`boolean()` | `bool` | [Booleans](/schemas/numbers#booleans) |
+| <span id="dates"></span>`date()` | `DateTime` | [Dates](/schemas/numbers#dates) |
+| <span id="objects"></span><span id="extend"></span><span id="merge"></span><span id="pick"></span><span id="omit"></span><span id="partial"></span>`object({...})` | `Map<String, Object?>` | [Objects](/schemas/objects) |
+| `record(keys, values)` | `Map<K, V>` | [Records](/schemas/records) |
+| <span id="lists"></span>`list(element)` or `element.list()` | `List<T>` | [Lists](/schemas/collections#lists) |
+| <span id="tuples"></span><span id="variadic"></span>`tuple([...])` | Heterogeneous list | [Tuples](/schemas/collections#tuples) |
+| <span id="nullables"></span>`schema.nullable()` | `T?` | [Nullable values](/schemas/nullable) |
+| <span id="literals"></span>`literal(value)` | The declared literal type | [Literals](/schemas/unions#literals) |
+| <span id="union"></span>`union<T>([...])` | `T` | [Unions](/schemas/unions#union) |
+| <span id="variant"></span>`variant<T>(guard: ..., schema: ...)` | `T` | [Guarded branches](/schemas/unions#variant) |
+| <span id="template-literals"></span>`template([...])` | `String` | [Templates](/schemas/unions#template-literals) |
+| <span id="recursive-objects"></span>`lazy((parent) => ...)` | The bound child output | [Recursive objects](/schemas/objects#recursive-objects) |
+| <span id="instances"></span><span id="differences-to-object"></span><span id="cross-field-validation-with-refs"></span>`instance<T>()` | Existing `T` | [Instances](/schemas/instances) |
+| <span id="class-schemas"></span>`classSchema<I, T>()...build()` | Constructed `T` | [Classes](/schemas/instances#class-schemas) |
 
-## Find a specific type or operation
+Objects do not infer Dart classes from field names. The child schemas define parsed values; class schemas provide explicit mapping into domain types.
 
-| Type or operation | Reference |
+## Composition
+
+```dart
+final name = string().min(2);
+final shortName = name.max(12);
+final names = name.list();
+final nullableName = name.nullable();
+final nameOrId = name.or<Object?>([integer()]);
+final nameAndAge = name.and([integer()]);
+```
+
+Native fluent methods return new schemas. A check or transform added to `shortName` does not modify `name`. Modifier order matters: `.nullable().list()` permits null elements; `.list().nullable()` permits a null list.
+
+## Operations
+
+| Task | API and guide |
 | --- | --- |
-| <span id="string"></span>String | [View guide](/schemas/strings#string) |
-| <span id="string-formats"></span>String Formats | [View guide](/schemas/strings#string-formats) |
-| <span id="emails"></span>Emails | [View guide](/schemas/strings#emails) |
-| <span id="numeric-values"></span>Numeric values | [View guide](/schemas/numbers#numeric-values) |
-| <span id="booleans"></span>Booleans | [View guide](/schemas/numbers#booleans) |
-| <span id="dates"></span>Dates | [View guide](/schemas/numbers#dates) |
-| <span id="nullables"></span>Nullables | [View guide](/schemas/nullable#nullables) |
-| <span id="objects"></span>Objects | [View guide](/schemas/objects#objects) |
-| <span id="extend"></span>`extend()` | [View guide](/schemas/objects#extend) |
-| <span id="merge"></span>`merge()` | [View guide](/schemas/objects#merge) |
-| <span id="pick"></span>`pick()` | [View guide](/schemas/objects#pick) |
-| <span id="omit"></span>`omit()` | [View guide](/schemas/objects#omit) |
-| <span id="partial"></span>`partial()` | [View guide](/schemas/objects#partial) |
-| <span id="recursive-objects"></span>Recursive Objects | [View guide](/schemas/objects#recursive-objects) |
-| <span id="lists"></span>Lists | [View guide](/schemas/collections#lists) |
-| <span id="instances"></span>Instances | [View guide](/schemas/instances#instances) |
-| <span id="differences-to-object"></span>Differences to `object()` | [View guide](/schemas/instances#differences-to-object) |
-| <span id="cross-field-validation-with-refs"></span>Cross-field validation with refs | [View guide](/schemas/instances#cross-field-validation-with-refs) |
-| <span id="class-schemas"></span>Class Schemas | [View guide](/schemas/instances#class-schemas) |
-| <span id="tuples"></span>Tuples | [View guide](/schemas/collections#tuples) |
-| <span id="variadic"></span>`variadic()` | [View guide](/schemas/collections#variadic) |
-| <span id="literals"></span>Literals | [View guide](/schemas/unions#literals) |
-| <span id="union"></span>Union | [View guide](/schemas/unions#union) |
-| <span id="variant"></span>`variant()` | [View guide](/schemas/unions#variant) |
-| <span id="refinements"></span>Refinements | [View guide](/schemas/refinements#refinements) |
-| <span id="refine"></span>`refine()` | [View guide](/schemas/refinements#refine) |
-| <span id="refineasync"></span>`refineAsync()` | [View guide](/schemas/refinements#refineasync) |
-| <span id="pipes"></span>Pipes | [View guide](/schemas/transformations#pipes) |
-| <span id="default-values"></span>Default Values | [View guide](/schemas/transformations#default-values) |
-| <span id="template-literals"></span>Template Literals | [View guide](/schemas/unions#template-literals) |
-| <span id="mocking-schemas"></span>Mocking schemas | [View guide](/schemas/mocking#mocking-schemas) |
-| <span id="type-coercion"></span>Type Coercion | [View guide](/schemas/transformations#type-coercion) |
-| <span id="coerce-and-unions"></span>`coerce()` and Unions | [View guide](/schemas/transformations#coerce-and-unions) |
-| <span id="seeded-test-data"></span>Seeded test data | [View guide](/schemas/mocking#seeded-test-data) |
+| Parse input or check validity | [parse, tryParse, validate](/validation-results) |
+| <span id="default-values"></span>Change optional fields, defaults, or PATCH behavior | [Presence and defaults](/presence-and-defaults) |
+| <span id="refinements"></span><span id="refine"></span><span id="refineasync"></span>Add a predicate or several issues | [Custom validation](/schemas/refinements) |
+| <span id="pipes"></span><span id="type-coercion"></span><span id="coerce-and-unions"></span>Change values or output types | [Transforms, coercion, and pipes](/schemas/transformations) |
+| Compare parsed object fields | [Cross-field rules](/contextual-rules) |
+| Revalidate incremental edits | [Live validation](/live-validation) |
+| Attach descriptions | [Metadata](/metadata) |
+| Share schemas through typed keys | [Registries](/schema-registry) |
+| <span id="mocking-schemas"></span><span id="seeded-test-data"></span>Generate validated samples | [Mock data](/schemas/mocking) |
+| Export or import a JSON contract | [JSON Schema](/json-schema) and [OpenAPI](/open-api-schema) |
+
+## Custom schemas
+
+Extend `Schema<Input, Output>` when defining a new schema implementation. Implement raw-value `parse(Object?)` and outcome-returning `tryParse(Object?)`. Capabilities such as checks, defaults, lists, and nullability are opt-in mixins. The factory alias `AcanthisType` is not a generic schema base.
+
+See the repository's `docs/v2/` reference notes for implementation contracts. Most application schemas can be built from native types and pipes.

@@ -1,69 +1,73 @@
-# Missing fields, nulls, and defaults
+---
+description: Decide whether a field may be omitted, contain null, or receive a default.
+---
 
-Presence and nullability answer different questions: may a key be omitted, and
-may its value be null? Start with `object({'name': field})` and choose the policy
-below. Each cell shows the validity and the parsed map returned by `tryParse()`.
-Invalid output is recovery data, not a value you should save.
+# Presence and defaults
 
-| Field and object policy | Missing: `{}` | Null: `{'name': null}` | Invalid: `{'name': ''}` |
+An optional field may be omitted. A nullable value may be null. Choose each behavior explicitly.
+
+## Choose a field policy
+
+For `object({'name': field})`, the policies below produce these results. Every row accepts `'Ada'`.
+
+| Field and object policy | Missing key | Supplied null | Supplied `''` |
 | --- | --- | --- | --- |
-| `string().min(2)` | Invalid; `{}` | Invalid; recovery value | Invalid; `{'name': ''}` |
-| `string().min(2).nullable()` | Invalid; `{}` | Valid; `{'name': null}` | Invalid; `{'name': ''}` |
-| `string().min(2)` + `.optionals(['name'])` | Valid; `{}` | Invalid; recovery value | Invalid; `{'name': ''}` |
-| `string().min(2).nullable()` + `.optionals(['name'])` | Valid; `{}` | Valid; `{'name': null}` | Invalid; `{'name': ''}` |
-| `string().min(2).withDefault('Guest')` | Valid; `{'name': 'Guest'}` | Valid; `{'name': 'Guest'}` | Invalid; `{'name': 'Guest'}` |
-| Same default + `.optionals(['name'])` | Valid; `{'name': 'Guest'}` | Valid; `{'name': 'Guest'}` | Invalid; `{'name': 'Guest'}` |
-| Same default + `.patch()` | Valid; `{}` | Valid; `{'name': 'Guest'}` | Invalid; `{'name': 'Guest'}` |
+| `string().min(2)` | Invalid | Invalid | Invalid |
+| `string().min(2).nullable()` | Invalid | Keeps null | Invalid |
+| `string().min(2)` + `.optionals(['name'])` | Omitted | Invalid | Invalid |
+| Nullable field + `.optionals(['name'])` | Omitted | Keeps null | Invalid |
+| `string().min(2).withDefault('Guest')` | Guest | Guest | Invalid |
+| Same default + `.optionals(['name'])` | Guest | Guest | Invalid |
+| Same default + `.patch()` | Omitted | Guest | Invalid |
 
-All rows accept `{'name': 'Ada'}` and return that value. Type-failure recovery
-without a default is deliberately not specified here; use `issues` to handle the
-failure instead of depending on a replacement value.
-
-## Choose a default
-
-`withDefault()` replaces missing or null input before normal validation. The
-default must pass the field's checks. On invalid supplied input, `tryParse()` can
-return the default as recovery output, but the outcome remains invalid.
+## Optional fields
 
 ```dart
-final schema = object({
-  'name': string().min(2).withDefault('Guest'),
-});
-schema.parse({}); // {name: Guest}
-schema.parse({'name': null}); // {name: Guest}
-final invalid = schema.tryParse({'name': ''});
-print(invalid.isValid); // false
-print(invalid.value); // {name: Guest}
+final account = object({'name': string()}).optionals(['name']);
+print(account.parse({})); // {}
+print(account.validate({'name': null})); // false
 ```
 
-`parse()` throws for that invalid supplied value. A default that fails its own
-constraints also fails validation: `string().min(2).withDefault('x')` does not
-make missing input valid.
+Optionality is an object policy. A supplied value still runs its child schema.
 
-`nullable(defaultValue: 'Guest')` also replaces missing/null input with its
-non-null default. Plain `nullable()` preserves an explicit null. For an explicit
-null default that fills a missing key, use `string().nullable().withDefault(null)`.
+## Nullable fields
+
+```dart
+final account = object({'name': string().nullable()});
+print(account.validate({})); // false
+print(account.parse({'name': null})); // {name: null}
+```
+
+Add `.optionals(['name'])` to permit both omission and null.
+
+## Defaults
+
+```dart
+final account = object({'name': string().min(2).withDefault('Guest')});
+print(account.parse({})); // {name: Guest}
+print(account.parse({'name': null})); // {name: Guest}
+print(account.validate({'name': ''})); // false
+```
+
+Defaults replace missing/null input and undergo normal validation. An invalid default fails; a supplied invalid value is not replaced. Pipeline defaults are output values; see [pipeline defaults](/schemas/transformations#pipeline-defaults).
+
+`nullable(defaultValue: 'Guest')` also supplies a non-null default. To fill a missing key with null, use `.nullable().withDefault(null)`.
 
 ## Preserve omission in updates
 
-`patch()` and `partial()` are aliases. They suppress defaults for omitted fields,
-preserve the original nullability, and retain the unknown-key policy.
+`.patch()` and `.partial()` make fields optional and suppress defaults for omitted keys. Supplied values retain their original validation, nullability, and default handling.
 
 ```dart
 final patch = object({
   'name': string().min(2).withDefault('Guest'),
   'nickname': string().nullable(),
 }).patch();
-patch.parse({}); // {}
-patch.parse({'nickname': null}); // {nickname: null}
-patch.parse({'name': null}); // {name: Guest}
+
+print(patch.parse({})); // {}
+print(patch.parse({'nickname': null})); // {nickname: null}
+print(patch.parse({'name': null})); // {name: Guest}
 ```
 
-Use `containsKey()` when applying a patch; testing `value != null` loses explicit
-null updates. `deep: true` recurses through directly nested object schemas only.
-It does not define database merge semantics or make list elements into patches.
-See the [request-validation recipe](/request-validation#apply-a-patch) for a full example.
+Use `containsKey()` when applying an update so explicit null remains distinct from omission. `deep: true` applies to direct nested object schemas; it does not define database merging or patch list elements. Follow the [request recipe](/request-validation#apply-a-patch) to apply a patch and validate the merged value.
 
-These presence rules also apply to async parsing and live sessions. See
-[objects](/schemas/objects) for composition and
-[validation results](/validation-results) for recovery and issues.
+The same policies apply to async parsing, live sessions, and contract export. Invalid outcomes can lack typed recovery; use their issues and check [hasValue](/validation-results#recovery-values) before inspecting recovery.

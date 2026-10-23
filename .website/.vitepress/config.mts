@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Acanthis',
-  description: 'Composable data validation for Dart and Flutter. Learn schemas, handle errors, and validate with confidence.',
+  description: 'Runtime validation for Dart and Flutter. Define reusable schemas, parse typed values, and report structured issues.',
   lastUpdated: true,
   head: [
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/acanthis-icon-32x32.png' }],
@@ -29,6 +29,7 @@ export default defineConfig({
         { text: 'Strings', link: '/schemas/strings' },
         { text: 'Numbers, booleans & dates', link: '/schemas/numbers' },
         { text: 'Objects', link: '/schemas/objects' },
+        { text: 'Records', link: '/schemas/records' },
         { text: 'Lists & tuples', link: '/schemas/collections' },
         { text: 'Nullable values', link: '/schemas/nullable' },
         { text: 'Presence & defaults', link: '/presence-and-defaults' },
@@ -37,21 +38,24 @@ export default defineConfig({
       ] },
       { text: 'Validation', collapsed: false, items: [
         { text: 'Results & issues', link: '/validation-results' },
-        { text: 'Custom error messages', link: '/error-customization' },
+        { text: 'Messages & localization', link: '/error-customization' },
         { text: 'Custom validation', link: '/schemas/refinements' },
-        { text: 'Transformations & defaults', link: '/schemas/transformations' },
-        { text: 'Context & selected-field rules', link: '/contextual-rules' },
+        { text: 'Transforms, coercion & pipes', link: '/schemas/transformations' },
+        { text: 'Cross-field rules & context', link: '/contextual-rules' },
         { text: 'Live validation', link: '/live-validation' },
       ] },
-      { text: 'Tools & integrations', collapsed: false, items: [
-        { text: 'Flutter live form', link: '/flutter-live-form' },
-        { text: 'API request validation', link: '/request-validation' },
+      { text: 'Tools', collapsed: false, items: [
         { text: 'Metadata', link: '/metadata' },
+        { text: 'Schema registries', link: '/schema-registry' },
         { text: 'JSON Schema', link: '/json-schema' },
         { text: 'OpenAPI', link: '/open-api-schema' },
         { text: 'Export compatibility', link: '/export-compatibility' },
         { text: 'Mock data', link: '/schemas/mocking' },
         { text: 'Seeded mocking', link: '/seeded-mocking' },
+      ] },
+      { text: 'Recipes', items: [
+        { text: 'Flutter live form', link: '/flutter-live-form' },
+        { text: 'API request validation', link: '/request-validation' },
       ] },
       { text: 'Upgrade', items: [{ text: 'Migrating to 2.0', link: '/migration-2' }] },
     ],

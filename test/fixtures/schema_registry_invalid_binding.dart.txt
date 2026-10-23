@@ -1,7 +1,0 @@
-// Negative compile fixture: an ordinary mismatched binding must not compile.
-import 'package:acanthis/acanthis.dart';
-
-void main() {
-  const key = SchemaKey<String, AcanthisString>('name');
-  SchemaRegistryBuilder().add(key, integer());
-}

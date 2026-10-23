@@ -3,37 +3,28 @@ import 'dart:io';
 
 import 'package:acanthis/acanthis.dart';
 
-// Characterization of current behavior, including known discrepancies.
-// Run from the repository root. Tests verify the checked-in snapshot.
+// Characterize current V2 presence behavior without replacing reviewed fixtures.
+// Run from the repository root; output is written under .dart_tool.
 Future<List<Map<String, Object?>>> presenceMatrix() async {
-  final factories = <String, AcanthisMap<dynamic> Function(bool)>{
-    'required': (pure) => AcanthisMap({'value': string()}, isPure: pure),
-    'nullable': (pure) =>
-        AcanthisMap({'value': string().nullable()}, isPure: pure),
-    'optional': (pure) =>
-        AcanthisMap({'value': string()}, isPure: pure).optionals(['value']),
-    'optional_nullable': (pure) => AcanthisMap({
-      'value': string().nullable(),
-    }, isPure: pure).optionals(['value']),
-    'default': (pure) =>
-        AcanthisMap({'value': string().withDefault('fallback')}, isPure: pure),
-    'optional_default': (pure) => AcanthisMap({
-      'value': string().withDefault('fallback'),
-    }, isPure: pure).optionals(['value']),
-    'nullable_default': (pure) => AcanthisMap({
-      'value': string().nullable(defaultValue: 'fallback'),
-    }, isPure: pure),
-    'invalid_default': (pure) =>
-        AcanthisMap({'value': string().min(3).withDefault('x')}, isPure: pure),
-    'passthrough': (pure) =>
-        AcanthisMap({'value': string()}, isPure: pure).passthrough(),
-    'typed_passthrough': (pure) => AcanthisMap({
-      'value': string(),
-    }, isPure: pure).passthrough(type: string()),
-    'partial': (pure) =>
-        AcanthisMap({'value': string()}, isPure: pure).partial(),
-    'deep_partial': (pure) =>
-        AcanthisMap({'value': string()}, isPure: pure).partial(deep: true),
+  final factories = <String, ObjectSchema Function()>{
+    'required': () => object({'value': string()}),
+    'nullable': () => object({'value': string().nullable()}),
+    'optional': () => object({'value': string()}).optionals(['value']),
+    'optional_nullable': () =>
+        object({'value': string().nullable()}).optionals(['value']),
+    'default': () => object({'value': string().withDefault('fallback')}),
+    'optional_default': () =>
+        object({'value': string().withDefault('fallback')})
+            .optionals(['value']),
+    'nullable_default': () =>
+        object({'value': string().nullable(defaultValue: 'fallback')}),
+    'invalid_default': () =>
+        object({'value': string().min(3).withDefault('x')}),
+    'passthrough': () => object({'value': string()}).passthrough(),
+    'typed_passthrough': () =>
+        object({'value': string()}).passthrough(type: string()),
+    'partial': () => object({'value': string()}).partial(),
+    'deep_partial': () => object({'value': string()}).partial(deep: true),
   };
   final inputs = <String, Map<String, dynamic>>{
     'absent': {},
@@ -45,7 +36,7 @@ Future<List<Map<String, Object?>>> presenceMatrix() async {
   };
   final rows = <Map<String, Object?>>[];
   for (final entry in factories.entries) {
-    final schema = entry.value(true);
+    final schema = entry.value();
     final cases = <String, Object?>{};
     for (final input in inputs.entries) {
       final modes = <String, Object?>{};
@@ -54,37 +45,37 @@ Future<List<Map<String, Object?>>> presenceMatrix() async {
         'tryParse',
         'parseAsync',
         'tryParseAsync',
-        'genericTryParse',
         'asyncParse',
         'asyncTryParse',
       ]) {
-        AcanthisType<Map<String, dynamic>> current = entry.value(
-          mode != 'genericTryParse',
-        );
+        var current = entry.value();
         if (mode.startsWith('async')) {
           // A real asynchronous object operation, not the sync forwarding path.
-          current = current.refineAsync(
-            onCheck: (_) async => true,
-            name: 'pass',
-            error: '',
-          );
+          current = current.refineAsync(CallbackAsyncCheck((_, _) async {}));
         }
         try {
           final value = Map<String, dynamic>.of(input.value);
-          final result = switch (mode) {
-            'parse' => AcanthisValid(current.parse(value)),
-            'parseAsync' ||
-            'asyncParse' => AcanthisValid(await current.parseAsync(value)),
-            'tryParseAsync' ||
-            'asyncTryParse' => await current.tryParseAsync(value),
-            _ => current.tryParse(value),
+          AcanthisOutcome<Object?> result;
+          try {
+            result = switch (mode) {
+              'parse' => AcanthisValid(current.parse(value)),
+              'parseAsync' ||
+              'asyncParse' => AcanthisValid(await current.parseAsync(value)),
+              'tryParseAsync' ||
+              'asyncTryParse' => await current.tryParseAsync(value),
+              _ => current.tryParse(value),
+            };
+          } on ValidationError catch (error) {
+            result = error.failure;
+          }
+          final hasValue = switch (result) {
+            AcanthisValid() => true,
+            AcanthisInvalid(:final hasValue) => hasValue,
           };
           modes[mode] = {
             'success': result.isValid,
-            'value': switch (result) {
-              AcanthisValid(:final value) => value,
-              AcanthisInvalid(:final value) => value,
-            },
+            'hasValue': hasValue,
+            if (hasValue) 'value': result.value,
             if (!result.isValid)
               'issues': [
                 for (final issue in result.issues)
@@ -103,16 +94,26 @@ Future<List<Map<String, Object?>>> presenceMatrix() async {
     }
     rows.add({
       'schema': entry.key,
-      'jsonSchema': schema.toJsonSchema(),
-      'openApi': schema.toOpenApiSchema(),
+      'jsonSchema': _export(schema, openApi: false),
+      'openApi': _export(schema, openApi: true),
       'cases': cases,
     });
   }
   return rows;
 }
 
+Map<String, Object?> _export(ObjectSchema schema, {required bool openApi}) {
+  try {
+    return openApi
+        ? schema.toOpenApiSchema(mode: AcanthisSchemaMode.input)
+        : schema.toJsonSchema();
+  } on AcanthisSchemaExportException catch (error) {
+    return {'unsupported': error.reason, 'path': error.path};
+  }
+}
+
 Future<void> main() async {
-  final file = File('test/fixtures/presence_matrix.json');
+  final file = File('.dart_tool/presence_matrix.json');
   await file.parent.create(recursive: true);
   await file.writeAsString(
     '${const JsonEncoder.withIndent('  ').convert(await presenceMatrix())}\n',

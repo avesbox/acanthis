@@ -1,0 +1,3 @@
+plugins:
+  acanthis_analyzer_plugin:
+    path: ..

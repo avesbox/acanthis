@@ -1,242 +1,104 @@
-import 'package:acanthis/src/issue_sink.dart';
+import '../registries/metadata_registry.dart';
+import '../common/fast_schema.dart';
+import '../common/results.dart';
+import '../common/schema.dart';
+import '../common/schema_graph.dart';
+import '../common/schema_operations.dart';
+import '../common/value_schema.dart';
+import '../validators/nullable.dart';
 
-import 'dart:math';
-
-import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:acanthis/src/validators/nullable.dart';
-import 'package:nanoid2/nanoid2.dart';
-
-/// A class to validate nullable types
-class AcanthisNullable<T> extends AcanthisType<T?> {
-  /// The element of the nullable
-  final AcanthisType<T> element;
-  final bool _explicitDefault;
-
-  @override
-  bool get hasDefault => _explicitDefault || defaultValue != null;
-
-  @override
-  bool get isPure => element.isPure && super.isPure;
-
-  @override
-  T? parseInternal(dynamic value) {
-    value ??= defaultValue;
-    if (value == null) {
-      return super.parseInternal(null);
-    }
-    final elementValue = element.parseInternal(value);
-    return super.parseInternal(elementValue);
-  }
-
-  @override
-  T? tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
-    value ??= defaultValue;
-    if (value == null) {
-      return super.tryParseInternal(null, errors: errors);
-    }
-    final initialCount = errors.issueCount;
-    final elementValue = element.tryParseInternal(value, errors: errors);
-    final parsed = super.tryParseInternal(elementValue, errors: errors);
-    return errors.issueCount == initialCount ? parsed : defaultValue ?? parsed;
-  }
-
-  AcanthisNullable(
-    this.element, {
+final class AcanthisNullable<T> extends ValueSchemaBase<T?, AcanthisNullable<T>>
+    implements FastSchema<T?> {
+  AcanthisNullable(this.element, {T? defaultValue, bool hasDefault = false})
+    : super(
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault || defaultValue != null,
+      );
+  AcanthisNullable._(
+    this.element,
+    SchemaOperations<T?> operations,
     T? defaultValue,
-    bool hasDefault = false,
-    super.operations,
-    bool isAsync = false,
-    super.key,
-    super.metadataEntry,
-  }) : _explicitDefault = hasDefault,
-       super(
-         defaultValue: hasDefault
-             ? defaultValue
-             : defaultValue ?? element.defaultValue,
-         isAsync: isAsync || element.isAsync,
-       );
-
-  /// override of the [parse] method from [AcanthisType]
+    bool hasDefault,
+  ) : super(
+        operations: operations,
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault,
+      );
+  final Schema<Object?, T> element;
+  Schema<Object?, T> unwrap() => element;
   @override
-  T? parse(dynamic value) {
-    value ??= defaultValue;
-    if (isAsync) {
-      throw AsyncValidationException('Cannot use parse on async type');
+  bool get hasDefault =>
+      ownDefault ||
+      (element is DefaultSchema<Object?, T> &&
+          (element as DefaultSchema<Object?, T>).hasDefault);
+  @override
+  T? get defaultValue => ownDefault
+      ? configuredDefault
+      : element is DefaultSchema<Object?, T>
+      ? (element as DefaultSchema<Object?, T>).defaultValue
+      : null;
+  @override
+  Iterable<Schema<Object?, Object?>> get schemaChildren => [element];
+  @override
+  late final bool isAsync = schemaGraphIsAsync(this);
+  @override
+  AcanthisNullable<T> rebuild(
+    SchemaOperations<T?> operations,
+    T? defaultValue,
+    bool hasDefault,
+  ) => copySchemaMetadata(
+    this,
+    AcanthisNullable._(element, operations, defaultValue, hasDefault),
+  );
+  AcanthisNullable<T> enumerated(List<T?> values) =>
+      withCheck(EnumeratedNullableCheck<T>(values));
+  @override
+  AcanthisOutcome<T?> parseValue(Object? input, bool collect) => input == null
+      ? AcanthisValid<T?>(null)
+      : collect
+      ? element.tryParse(input)
+      : element.parseOutcome(input);
+  @override
+  Future<AcanthisOutcome<T?>> parseValueAsync(
+    Object? input,
+    bool collect,
+  ) async {
+    if (input == null) return AcanthisValid<T?>(null);
+    final child = element;
+    if (child is AsyncSchema<Object?, T>) {
+      return collect
+          ? child.tryParseAsync(input)
+          : child.parseOutcomeAsync(input);
     }
-    return parseInternal(value);
-  }
-
-  /// override of the [tryParse] method from [AcanthisType]
-  @override
-  AcanthisOutcome<T?> tryParse(dynamic value) {
-    value ??= defaultValue;
-    if (isAsync) {
-      throw AsyncValidationException('Cannot use tryParse on async type');
-    }
-    final errors = IssueSink();
-    final parsed = tryParseInternal(value, errors: errors);
-    return outcomeFromDiagnostics(
-      value: errors.isEmpty ? parsed : defaultValue ?? parsed,
-      errors: errors,
-      metadata: metadataEntry,
-    );
+    return collect ? child.tryParse(input) : child.parseOutcome(input);
   }
 
   @override
-  Future<T?> parseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return parse(value);
-    if (value == null) {
-      return super.parseAsync(null);
-    }
-    final elementResult = await element.parseAsync(value);
-    return await super.parseAsync(elementResult);
-  }
-
+  bool get canFast =>
+      !hasOperations &&
+      element is FastSchema<T> &&
+      (element as FastSchema<T>).canFast;
   @override
-  Future<AcanthisOutcome<T?>> tryParseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return tryParse(value);
-    if (value == null) {
-      return super.tryParseAsyncOperations(null);
-    }
-    final elementResult = await element.tryParseAsync(value);
-    final result = await super.tryParseAsyncOperations(elementResult.value);
-    return outcomeFromDiagnostics(
-      value: result.isValid && elementResult.isValid
-          ? result.value
-          : defaultValue ?? result.value,
-      errors: IssueSink.of(elementResult.errors)..addAll(result.errors),
-      metadata: result.metadata,
-    );
-  }
-
-  @override
-  AcanthisNullable<T> withAsyncCheck(AcanthisAsyncCheck<T?> check) {
-    return AcanthisNullable(
-      element,
-      defaultValue: defaultValue,
-      hasDefault: hasDefault,
-      operations: [...operations, check],
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-    );
-  }
-
-  @override
-  AcanthisNullable<T> withCheck(AcanthisCheck<T?> check) {
-    return AcanthisNullable(
-      element,
-      defaultValue: defaultValue,
-      hasDefault: hasDefault,
-      operations: [...operations, check],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-    );
-  }
-
-  @override
-  AcanthisNullable<T> withTransformation(
-    AcanthisTransformation<T?> transformation,
-  ) {
-    return AcanthisNullable(
-      element,
-      defaultValue: defaultValue,
-      hasDefault: hasDefault,
-      operations: [...operations, transformation],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-    );
-  }
-
-  /// Check if the value is part of the enumerated values
-  AcanthisNullable<T> enumerated(
-    List<T?> values, {
-    String? message,
-    String Function(List<T?> value)? messageBuilder,
-  }) {
-    final enumeratedValue = {...values, null};
-    return withCheck(
-      EnumeratedNullableCheck(
-        enumeratedValue.toList(),
-        message: message,
-        messageBuilder: messageBuilder,
-      ),
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJsonSchema() {
-    final enumerated = operations
-        .whereType<EnumeratedNullableCheck>()
-        .firstOrNull;
-    if (enumerated != null) {
-      final values = {...enumerated.values, defaultValue, null};
-      return {
-        'enum': values.toList(),
-        if (metadataEntry != null) ...metadataEntry!.toJson(),
-      };
-    }
-    return {
-      'oneOf': [
-        {
-          ...element.toJsonSchema(),
-          if (defaultValue != null) 'default': defaultValue,
-        },
-        {'type': 'null'},
-      ],
-      if (metadataEntry != null) ...metadataEntry!.toJson(),
-    };
-  }
-
-  @override
-  AcanthisType<T?> meta(MetadataEntry<T?> metadata) {
-    String key = this.key;
-    if (key.isEmpty) {
-      key = nanoid();
-    }
-    MetadataRegistry().add(key, metadata);
-    return AcanthisNullable(
-      element,
-      defaultValue: defaultValue,
-      hasDefault: hasDefault,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadata,
-    );
-  }
-
-  @override
-  AcanthisType<T?> withDefault(T? value) {
-    return AcanthisNullable(
-      element,
-      defaultValue: value,
-      hasDefault: true,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toOpenApiSchema() {
-    return {
-      ...element.toOpenApiSchema(),
-      'nullable': true,
-      if (defaultValue != null) 'default': defaultValue,
-    };
-  }
-
-  @override
-  T? mock([int? seed]) {
-    final random = Random(seed);
-    return random.nextBool() ? null : element.mock(seed);
+  T? tryFast(Object? input) {
+    if (!canFast || isAsync) return null;
+    if (input == null && hasDefault) input = defaultValue;
+    if (input == null) return null; // The fast protocol falls back on null.
+    return (element as FastSchema<T>).tryFast(input);
   }
 }
+
+/// Compose nullable construction with any other Schema mixins.
+mixin NullableSchema<I, O> on Schema<I, O> {
+  AcanthisNullable<O> nullable({O? defaultValue}) =>
+      AcanthisNullable<O>(this, defaultValue: defaultValue);
+}
+
+extension NullableSchemaComposition<I, O> on Schema<I, O> {
+  AcanthisNullable<O> nullable({O? defaultValue}) =>
+      AcanthisNullable<O>(this, defaultValue: defaultValue);
+}
+
+AcanthisNullable<T> nullable<T>(
+  Schema<Object?, T> element, {
+  T? defaultValue,
+}) => AcanthisNullable<T>(element, defaultValue: defaultValue);

@@ -1,20 +1,28 @@
 ---
-description: Install Acanthis and choose a starting point for validating data in Dart and Flutter.
+description: Define reusable schemas for Dart and Flutter. Parse input, transform values, and report structured issues.
 ---
 
-# Validate data with Acanthis {#introduction}
+# Introduction {#introduction}
 
-Acanthis is a schema validation library for Dart and Flutter. Describe the data you expect, validate input at runtime, and use the result in your application.
+Acanthis validates data at runtime. Define a schema, pass it an input, and get a typed value or issues that describe what failed.
 
-Use it for form fields, API payloads, configuration, or any other data entering your application. Its chainable API is inspired by [Zod](https://zod.dev).
+```dart
+import 'package:acanthis/acanthis.dart';
+
+void main() {
+  final email = string().trim().email();
+
+  final String address = email.parse(' ada@example.com ');
+  print(address); // ada@example.com
+  print(email.validate('invalid')); // false
+}
+```
+
+Schemas compose: use the same email schema in an object, a list, or a nullable field. Fluent methods return new schemas, so adding a check leaves the original reusable.
 
 ## Installation
 
-<span id="requirements"></span>
-
-::: info Version scope
-These docs describe the 2.0 codebase, which requires **Dart 3.13 or later**. Flutter projects need a Flutter SDK with a compatible Dart version. See the [migration guide](/migration-2) when upgrading from 1.x; check [pub.dev](https://pub.dev/packages/acanthis) for published releases.
-:::
+These docs describe the V2 API in this repository. Use Dart **3.13 or later**, or a Flutter SDK that includes a compatible Dart version. When using a published package, check that its version exposes this API.
 
 ::: code-group
 
@@ -28,40 +36,21 @@ flutter pub add acanthis
 
 :::
 
-Import the library wherever you define a schema:
+All public APIs are available from one import:
 
 ```dart
 import 'package:acanthis/acanthis.dart';
 ```
 
-## The core idea
-
-A schema combines a type with checks. Parsing applies those checks to an input and returns a result.
-
-```dart
-final email = string().email();
-final result = email.tryParse('ada@example.com');
-
-print(result.isValid); // true
-if (result is AcanthisValid<String>) {
-  print(result.value); // ada@example.com
-}
-```
-
-Schema methods return new instances, so you can reuse a base schema and extend its checks. Successful validation can preserve input identity; it does not guarantee a deep copy. See [input sharing in 2.0](/migration-2#parsed-values-can-share-input-identity).
-
 ## Choose your next step
 
-<div class="doc-cards">
-<a href="/basic-usage.html"><strong>Start with a complete example →</strong><span>Define an object, validate input, and handle errors.</span></a>
-<a href="/defining-schemas.html"><strong>Find a schema →</strong><span>Browse types, built-in checks, and composition methods.</span></a>
-<a href="/validation-results.html"><strong>Understand results →</strong><span>Choose a parsing API and work with structured issues.</span></a>
-<a href="/live-validation.html"><strong>Validate changing input →</strong><span>Update fields in a live session and inspect validation deltas.</span></a>
-</div>
+| You want to… | Read |
+| --- | --- |
+| Define and parse your first object | [Quick start](/basic-usage) |
+| Find a type or a check | [Schema reference](/defining-schemas) |
+| Show useful errors | [Results and issues](/validation-results) |
+| Validate a form as it changes | [Live validation](/live-validation) |
+| Share a JSON contract | [JSON Schema](/json-schema) |
+| Upgrade an existing project | [Migrating to V2](/migration-2) |
 
-## More than validation
-
-- [Custom rules](/schemas/refinements) for application-specific checks, including async work.
-- [Transformations](/schemas/transformations) for converting input into the output you need.
-- [JSON Schema](/json-schema) and [OpenAPI](/open-api-schema) exports for supported schemas.
-- [Seeded mocking](/seeded-mocking) for reproducible test data within a documented supported subset.
+Acanthis does not require code generation. Objects produce maps; use a [class schema](/schemas/instances#class-schemas) when you want a Dart class as output.

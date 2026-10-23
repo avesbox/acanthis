@@ -1,62 +1,74 @@
-import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/operations/checks.dart';
+import '../common/operations.dart';
+import '../common/schema.dart';
+import 'instance.dart';
+import 'pipeline.dart';
 
-/// Builder for class schemas (I -> T)
-class ClassSchemaBuilder<I, T> {
-  AcanthisType<I>? _input;
+/// Configure a typed input-to-instance pipeline, snapshotted by [build].
+final class ClassSchemaBuilder<I, T> {
+  Schema<Object?, I>? _input;
   T Function(I)? _mapper;
-  AcanthisType<T>? _output;
+  Schema<Object?, T>? _output;
   T? _defaultOutput;
+  bool _hasDefaultOutput = false;
 
-  /// Provide the input schema (can be object(...), list(...), etc.)
-  ClassSchemaBuilder<I, T> input(AcanthisType<I> schema) {
+  ClassSchemaBuilder<I, T> input(Schema<Object?, I> schema) {
     _input = schema;
     return this;
   }
 
-  /// Provide the mapping function from validated input (I) to T.
-  ClassSchemaBuilder<I, T> map(T Function(I value) mapper) {
+  ClassSchemaBuilder<I, T> map(T Function(I) mapper) {
     _mapper = mapper;
     return this;
   }
 
-  /// Provide a default output schema.
+  ClassSchemaBuilder<I, T> validateWith(Schema<Object?, T> schema) {
+    _output = schema;
+    return this;
+  }
+
   ClassSchemaBuilder<I, T> defaultOutput(T value) {
     _defaultOutput = value;
+    _hasDefaultOutput = true;
     return this;
   }
 
-  /// Provide an output validator.
-  ClassSchemaBuilder<I, T> validateWith(AcanthisType<T> type) {
-    _output = type;
-    return this;
-  }
-
-  /// Add an output-level refinement (check) on T.
   ClassSchemaBuilder<I, T> refine({
-    required bool Function(T value) onCheck,
-    required String name,
-    required String error,
+    required bool Function(T) onCheck,
+    String name = 'custom',
+    String? error,
   }) {
-    final base = _output ?? instance<T>();
-    _output = base.withCheck(CustomCheck<T>(onCheck, name: name, error: error));
+    final output = _output ?? InstanceType<T>();
+    final check = PredicateCheck<T>.refinement(
+      onCheck: onCheck,
+      name: name,
+      error: error,
+    );
+    _output = output is CheckableSchema<Object?, T>
+        ? output.withCheck(check)
+        : output.pipe(
+            InstanceType<T>().withCheck(check),
+            transform: (value) => value,
+          );
     return this;
   }
 
-  /// Build the final pipeline I -> T
   AcanthisPipeline<I, T> build() {
-    if (_input == null) {
+    final input = _input;
+    final mapper = _mapper;
+    if (input == null) {
       throw StateError('ClassSchemaBuilder: input() not provided');
     }
-    if (_mapper == null) {
+    if (mapper == null) {
       throw StateError('ClassSchemaBuilder: map() not provided');
     }
-    final input = _input!;
-    final mapper = _mapper!;
-    final out = _output ?? instance<T>();
-    return input.pipe<T>(out, transform: mapper, defaultValue: _defaultOutput);
+    final pipeline = input.pipe(
+      _output ?? InstanceType<T>(),
+      transform: mapper,
+    );
+    return _hasDefaultOutput
+        ? pipeline.withDefault(_defaultOutput as T)
+        : pipeline;
   }
 }
 
-/// Generic factory for arbitrary input type I -> T
 ClassSchemaBuilder<I, T> classSchema<I, T>() => ClassSchemaBuilder<I, T>();

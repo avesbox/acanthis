@@ -28,7 +28,8 @@ Executed against this baseline:
 | `dart compile exe tool/further_analysis_probe.dart -o .dart_tool/further_analysis_probe.exe`, then run that executable | Successful Windows AOT build; output identical to JIT |
 | Analyzer against an isolated negative fixture | Rejected raw `String` assignment to `Email`, `transform(Email.new)`, and assigning pipeline `List<Email?>` to `List<Email>` |
 
-The retained [probe](../tool/further_analysis_probe.dart) prints both successful
+The retained [probe](../tool/further_analysis_probe.dart) now targets V2; the results
+below describe the original V1 baseline. It prints both successful
 observations and caught failures; a zero exit status alone is not its assertion
 of correctness. It is shared with the Error Codes investigation.
 

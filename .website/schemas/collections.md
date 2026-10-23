@@ -1,103 +1,86 @@
 ---
-description: Validate repeated values with lists or fixed positions with tuples.
+description: Validate repeated elements with lists and positional elements with tuples.
 ---
 
 # Lists and tuples
 
-Validate repeated values with lists or fixed positions with tuples.
-
 ## Lists
 
-Use the `list()` method to create a list schema. This method allows you to validate and transform lists.
+`list(schema)` parses every element with the same schema. `schema.list()` is equivalent.
 
 ```dart
-list(string()).min(5);
+final names = string().trim().min(2).list();
+final List<String> parsed = names.parse([' Ada ', 'Grace']);
+print(parsed); // [Ada, Grace]
+```
+
+Failed children include their integer index in the issue path. Unchanged typed lists can reuse their input; use `List.of(parsed)` for an independent outer list.
+
+### Length
+
+```dart
+list(string()).min(1);
 list(string()).max(10);
-list(string()).length(5);
-list(string()).everyOf(['Acanthis', 'Dart']);
-list(string()).anyOf(['Acanthis', 'Dart']);
+list(string()).length(3);
+```
+
+### Membership and uniqueness
+
+```dart
+list(string()).contains('admin');
+list(string()).anyOf(['admin', 'editor']);
+list(string()).everyOf(['admin', 'editor']);
 list(string()).unique();
 ```
 
-You can also create a list from the type.
+| Check | Requirement |
+| --- | --- |
+| `contains(value)` | At least one element equals the value |
+| `anyOf(values)` | At least one element belongs to the allowed values |
+| `everyOf(values)` | Every element belongs to the allowed values |
+| `unique()` | No two elements compare equal |
+
+Checks run on parsed elements and use Dart equality. `everyOf()` does not require every allowed value to appear. Container equality is not automatically structural.
+
+### `unwrap()`
 
 ```dart
-string().list();
-number().list();
-boolean().list();
-```
-
-Instead, if you want to get the element type from the list type you can use the `unwrap()` method.
-
-```dart
-final names = string().list();
-final elementType = names.unwrap(); // string()
+final names = string().min(2).list();
+final element = names.unwrap();
+print(element.tryParse('A').isValid); // false
 ```
 
 ## Tuples
 
-Unlike lists, tuples are fixed-length lists that specify different schemas for each index.
+`tuple()` assigns a schema to each position and requires the declared length. Output is a heterogeneous list.
 
 ```dart
-final tupleSchema = tuple([
-  string(),
-  number(),
-  boolean(),
-]);
+final point = tuple([string(), number(), number()]);
+print(point.parse(['home', 10, 20])); // [home, 10, 20]
 ```
 
-You can also create a tuple from the type.
+`.and()` includes the receiver as the first element.
 
 ```dart
-final tupleSchema = string().tuple([
-  string(),
-  number(),
-  boolean(),
-]);
+final pair = string().and([integer()]);
+print(pair.parse(['Ada', 28])); // [Ada, 28]
 ```
-
-::: info
-The previous example creates a tuple of 4 elements not 3. The first element is the schema type that is used to create the tuple and the rest are what you pass to the `tuple()` method.
-
-```dart
-final tupleSchema = string().tuple([
-  string(),
-  number(),
-  boolean(),
-]); // [string(), string(), number(), boolean()]
-```
-
-:::
 
 ### `variadic()`
 
-To create a variadic tuple, you can use the `variadic()` method. This method allows you to create a tuple with a fixed number of elements and a variable number of elements.
+Repeat the final schema zero or more times after the fixed prefix. The minimum length is one less than the original tuple length.
 
 ```dart
-final tupleSchema = string().tuple([
-  string(),
-  number(),
-]).variadic();
+final row = tuple([string(), number()]).variadic();
+print(row.parse(['scores', 10, 20, 30])); // [scores, 10, 20, 30]
+print(row.validate(['scores'])); // true
 ```
 
-The last element will behave like a list. It will accept any number of elements of the same type.
+## Nullable lists and elements
 
 ```dart
-final tupleSchema = string().tuple([
-  string(),
-  number(),
-]).variadic();
-
-tupleSchema.parse([
-  'Acanthis',
-  'Dart',
-  5,
-  10,
-  15,
-  20,
-]); // ✅
+final List<String?> elements = string().nullable().list().parse(['Ada', null]);
+final List<String>? collection = string().list().nullable().parse(null);
 ```
 
----
-
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+Modifier order determines which value can be null. See [nullable values](/schemas/nullable).

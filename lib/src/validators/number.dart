@@ -1,289 +1,142 @@
-import 'package:acanthis/src/results.dart' show singleIssueParameter;
-import 'package:acanthis/src/operations/checks.dart';
+import '../common/issue.dart' show freezeIssueParameters;
+import '../common/operations.dart';
 
-/// Number check for less than or equal to a value.
-class LteNumberCheck<T extends num> extends AcanthisCheck<T> {
-  @override
-  Map<String, Object?> get parameters => singleIssueParameter('value', value);
+/// Native numeric predicates, with frozen constraint metadata.
+sealed class NumberCheck<T extends num> implements Check<T> {
+  NumberCheck(this.code, {Map<String, Object?> parameters = const {}})
+    : parameters = freezeIssueParameters(parameters);
 
-  final T value;
-
-  LteNumberCheck(
-    this.value, {
-    String? message,
-    String Function(T value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be less than or equal to $value',
-         name: 'lte',
-       );
+  final String code;
+  final Map<String, Object?> parameters;
+  bool test(T value);
 
   @override
-  bool call(T value) {
-    return value <= this.value;
+  void evaluate(T value, CheckContext context) {
+    if (!test(value)) context.addIssue(code, parameters: parameters);
   }
 }
 
-/// Number check for greater than or equal to a value.
-class GteNumberCheck<T extends num> extends AcanthisCheck<T> {
-  @override
-  Map<String, Object?> get parameters => singleIssueParameter('value', value);
-
+final class LteNumberCheck<T extends num> extends NumberCheck<T> {
+  LteNumberCheck(this.value) : super('lte', parameters: {'value': value});
   final T value;
-
-  GteNumberCheck(
-    this.value, {
-    String? message,
-    String Function(T value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be greater than or equal to $value',
-         name: 'gte',
-       );
-
   @override
-  bool call(T value) {
-    return value >= this.value;
-  }
+  bool test(T value) => value <= this.value;
 }
 
-/// Number check for between two values.
-class BetweenNumberCheck<T extends num> extends AcanthisCheck<T> {
+final class GteNumberCheck<T extends num> extends NumberCheck<T> {
+  GteNumberCheck(this.value) : super('gte', parameters: {'value': value});
+  final T value;
   @override
-  Map<String, Object?> get parameters => {'min': min, 'max': max};
+  bool test(T value) => value >= this.value;
+}
 
+final class GtNumberCheck<T extends num> extends NumberCheck<T> {
+  GtNumberCheck(this.value) : super('gt', parameters: {'value': value});
+  final T value;
+  @override
+  bool test(T value) => value > this.value;
+}
+
+final class LtNumberCheck<T extends num> extends NumberCheck<T> {
+  LtNumberCheck(this.value) : super('lt', parameters: {'value': value});
+  final T value;
+  @override
+  bool test(T value) => value < this.value;
+}
+
+final class BetweenNumberCheck<T extends num> extends NumberCheck<T> {
+  BetweenNumberCheck(this.min, this.max)
+    : super('between', parameters: {'min': min, 'max': max});
   final T min;
   final T max;
-
-  BetweenNumberCheck(
-    this.min,
-    this.max, {
-    String? message,
-    String Function(T min, T max)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(min, max) ??
-             message ??
-             'Value must be between $min and $max',
-         name: 'between',
-       );
-
   @override
-  bool call(T value) {
-    return value >= min && value <= max;
-  }
+  bool test(T value) => value >= min && value <= max;
 }
 
-/// Number check for Greater than a value.
-class GtNumberCheck<T extends num> extends AcanthisCheck<T> {
+final class PositiveNumberCheck<T extends num> extends NumberCheck<T> {
+  PositiveNumberCheck() : super('positive');
   @override
-  Map<String, Object?> get parameters => singleIssueParameter('value', value);
-
-  final T value;
-
-  GtNumberCheck(
-    this.value, {
-    String? message,
-    String Function(T value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be greater than $value',
-         name: 'gt',
-       );
-
-  @override
-  bool call(T value) {
-    return value > this.value;
-  }
+  bool test(T value) => value > 0;
 }
 
-/// Number check for Less than a value.
-class LtNumberCheck<T extends num> extends AcanthisCheck<T> {
+final class NegativeNumberCheck<T extends num> extends NumberCheck<T> {
+  NegativeNumberCheck() : super('negative');
   @override
-  Map<String, Object?> get parameters => singleIssueParameter('value', value);
-
-  final T value;
-
-  LtNumberCheck(
-    this.value, {
-    String? message,
-    String Function(T value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be less than $value',
-         name: 'lt',
-       );
-
-  @override
-  bool call(T value) {
-    return value < this.value;
-  }
+  bool test(T value) => value < 0;
 }
 
-/// Number check for positive value.
-class PositiveNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const PositiveNumberCheck({String? message})
-    : super(error: message ?? 'Value must be positive', name: 'positive');
-
+final class NonPositiveNumberCheck<T extends num> extends NumberCheck<T> {
+  NonPositiveNumberCheck() : super('nonpositive');
   @override
-  bool call(T value) {
-    return value > 0;
-  }
+  bool test(T value) => value <= 0;
 }
 
-/// Number check for negative value.
-class NegativeNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const NegativeNumberCheck({String? message})
-    : super(error: message ?? 'Value must be negative', name: 'negative');
-
+final class NonNegativeNumberCheck<T extends num> extends NumberCheck<T> {
+  NonNegativeNumberCheck() : super('nonnegative');
   @override
-  bool call(T value) {
-    return value < 0;
-  }
+  bool test(T value) => value >= 0;
 }
 
-/// Number check for nonpositive value.
-class NonPositiveNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const NonPositiveNumberCheck({String? message})
-    : super(error: message ?? 'Value must be nonpositive', name: 'nonpositive');
-
-  @override
-  bool call(T value) {
-    return value <= 0;
+final class MultipleOfCheck<T extends num> extends NumberCheck<T> {
+  MultipleOfCheck(this.value)
+    : super('multipleOf', parameters: {'value': value}) {
+    if (value == 0) {
+      throw ArgumentError.value(value, 'value', 'Must be nonzero');
+    }
   }
-}
-
-/// Number check for nonnegative value.
-class NonNegativeNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const NonNegativeNumberCheck({String? message})
-    : super(error: message ?? 'Value must be nonnegative', name: 'nonnegative');
-
-  @override
-  bool call(T value) {
-    return value >= 0;
-  }
-}
-
-/// Number check for multiple of a value.
-class MultipleOfCheck<T extends num> extends AcanthisCheck<T> {
-  @override
-  Map<String, Object?> get parameters => singleIssueParameter('value', value);
-
   final int value;
-
-  MultipleOfCheck(
-    this.value, {
-    String? message,
-    String Function(int value)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(value) ??
-             message ??
-             'Value must be a multiple of $value',
-         name: 'multipleOf',
-       );
-
   @override
-  bool call(T value) {
-    return value % this.value == 0;
-  }
+  bool test(T value) => value % this.value == 0;
 }
 
-/// Number check for integer value.
-class IntegerNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const IntegerNumberCheck({String? message})
-    : super(error: message ?? 'Value must be an integer', name: 'integer');
-
+final class IntegerNumberCheck<T extends num> extends NumberCheck<T> {
+  IntegerNumberCheck() : super('integer');
   @override
-  bool call(T value) {
-    return value is int;
-  }
+  bool test(T value) => value is int;
 }
 
-/// Number check for double value.
-class DoubleNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const DoubleNumberCheck({String? message})
-    : super(error: message ?? 'Value must be a double', name: 'double');
-
+final class DoubleNumberCheck<T extends num> extends NumberCheck<T> {
+  DoubleNumberCheck() : super('double');
   @override
-  bool call(T value) {
-    return value is! int;
-  }
+  bool test(T value) => value is! int;
 }
 
-/// Number check for finite value.
-class FiniteNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const FiniteNumberCheck({String? message})
-    : super(error: message ?? 'Value must be finite', name: 'finite');
-
+final class FiniteNumberCheck<T extends num> extends NumberCheck<T> {
+  FiniteNumberCheck() : super('finite');
   @override
-  bool call(T value) {
-    return value.isFinite;
-  }
+  bool test(T value) => value.isFinite;
 }
 
-/// Number check for infinite value.
-class InfiniteNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const InfiniteNumberCheck({String? message})
-    : super(error: message ?? 'Value must be infinite', name: 'infinite');
-
+final class InfiniteNumberCheck<T extends num> extends NumberCheck<T> {
+  InfiniteNumberCheck() : super('infinite');
   @override
-  bool call(T value) {
-    return value.isInfinite;
-  }
+  bool test(T value) => value.isInfinite;
 }
 
-/// Number check for NaN value.
-class NaNNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const NaNNumberCheck({String? message})
-    : super(error: message ?? 'Value must be NaN', name: 'nan');
-
+final class NaNNumberCheck<T extends num> extends NumberCheck<T> {
+  NaNNumberCheck() : super('nan');
   @override
-  bool call(T value) {
-    return value.isNaN;
-  }
+  bool test(T value) => value.isNaN;
 }
 
-/// Number check for not NaN value.
-class NotNaNNumberCheck<T extends num> extends AcanthisCheck<T> {
-  const NotNaNNumberCheck({String? message})
-    : super(error: message ?? 'Value must not be NaN', name: 'notNaN');
-
+final class NotNaNNumberCheck<T extends num> extends NumberCheck<T> {
+  NotNaNNumberCheck() : super('notNaN');
   @override
-  bool call(T value) {
-    return !value.isNaN;
-  }
+  bool test(T value) => !value.isNaN;
 }
 
-/// Number check for enumerated values.
-class EnumeratedNumberCheck<T extends num> extends AcanthisCheck<T> {
-  @override
-  Map<String, Object?> get parameters => {'values': values};
-
+final class EnumeratedNumberCheck<T extends num> extends NumberCheck<T> {
+  factory EnumeratedNumberCheck(List<T> values) {
+    final snapshot = List<T>.unmodifiable(values);
+    if (snapshot.isEmpty) {
+      throw ArgumentError('Enumeration values cannot be empty');
+    }
+    return EnumeratedNumberCheck._(snapshot);
+  }
+  EnumeratedNumberCheck._(this.values)
+    : super('enumerated', parameters: {'values': values});
   final List<T> values;
-
-  EnumeratedNumberCheck(
-    this.values, {
-    String? message,
-    String Function(List<T> values)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(values) ??
-             message ??
-             'Value must be one of the enumerated values',
-         name: 'enumerated',
-       );
-
+  // Retain List.contains semantics for NaN and numeric int/double equality.
   @override
-  bool call(T value) {
-    return values.contains(value);
-  }
+  bool test(T value) => values.contains(value);
 }

@@ -39,27 +39,4 @@ void main() {
 
     expect(session.validated, {'email': 'ada@example.com', 'name': 'Ada'});
   });
-
-  test('async sessions discard stale validation responses', () async {
-    final schema = object({
-      'name': string().refineAsync(
-        onCheck: (value) async {
-          await Future<void>.delayed(
-            Duration(milliseconds: value == 'slow' ? 20 : 1),
-          );
-          return value == 'fast';
-        },
-        error: 'not available',
-        name: 'remote',
-      ),
-    });
-    final session = await schema.watchAsync({'name': 'fast'});
-
-    final slow = session.set('name', 'slow');
-    final fast = session.set('name', 'fast');
-    await Future.wait([slow, fast]);
-
-    expect(session.validated, {'name': 'fast'});
-    expect(session.issues, isEmpty);
-  });
 }

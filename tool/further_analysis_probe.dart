@@ -1,5 +1,5 @@
-// Reproducible observations for doc/error-codes-analysis.md and
-// doc/branding-analysis.md.
+// Current V2 observations derived from the original V1 reports in
+// doc/error-codes-analysis.md and doc/branding-analysis.md.
 import 'dart:convert';
 
 import 'package:acanthis/acanthis.dart';
@@ -96,7 +96,7 @@ Future<void> main() async {
         .tryParse('other')
         .issues
         .single;
-    return '${issue.parameters} => ${AcanthisMessageCatalogs.italian(issue.code, issue.parameters)}';
+    return '${issue.parameters} => ${AcanthisMessageCatalogs.italian.format(issue.code, issue.parameters)}';
   });
   final nested = object({'a/b~': string().min(3).list()});
   final result = nested.tryParse({
@@ -115,7 +115,7 @@ Future<void> main() async {
     () => AcanthisIssue(
       path: [],
       code: 'app.test',
-      message: 'fallback',
+      defaultCatalog: AcanthisMessageCatalog({'app.test': (_) => 'fallback'}),
       parameters: {
         'date': DateTime.utc(2026),
         'uri': Uri.parse('https://example.com'),
@@ -129,7 +129,7 @@ Future<void> main() async {
     for (final locale in ['it', 'en'])
       AcanthisI18n.runWith(AcanthisLocaleConfig.forLocale(locale), () async {
         await Future<void>.delayed(Duration.zero);
-        return string().min(3).validate('x');
+        return string().min(3).tryParse('x').issues.single.message;
       }),
   ]);
   print('concurrent locale scopes: $localized');

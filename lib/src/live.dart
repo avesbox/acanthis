@@ -1,6 +1,12 @@
 import 'dart:async';
+import 'dart:collection';
 
-import 'package:acanthis/acanthis.dart';
+import 'common/issue.dart';
+import 'common/object_evaluation.dart';
+import 'common/results.dart';
+import 'common/validation_scope.dart';
+import 'rules.dart';
+import 'types/object.dart';
 
 /// A set or removal in a batch. List removal shifts subsequent indices.
 class AcanthisEdit {
@@ -16,8 +22,8 @@ class AcanthisEdit {
   final bool remove;
 }
 
-/// A revision-specific result. A superseded debounced revision is not settled.
-class AcanthisValidationDelta<V> {
+/// A revision-specific result. Superseded or disposed revisions are not settled.
+class AcanthisValidationDelta {
   const AcanthisValidationDelta({
     required this.changedIssues,
     required this.executedFields,
@@ -39,7 +45,7 @@ class AcanthisValidationDelta<V> {
   final Set<String> executedFields;
   final Set<String> executedRules;
   final bool fullValidation;
-  final Map<String, V>? validated;
+  final Map<String, Object?>? validated;
   final Map<String, dynamic> input;
   final int revision;
   final bool isCurrent;
@@ -49,23 +55,43 @@ class AcanthisValidationDelta<V> {
 // JSON-like collections are copied on entry and frozen on publication. Domain
 // objects are opaque: callers must treat them and context as immutable.
 dynamic _copy(dynamic value, {bool freeze = false}) {
-  if (value is Map<String, dynamic>) {
-    final result = value.map(
-      (key, value) => MapEntry(key, _copy(value, freeze: freeze)),
-    );
-    return freeze ? Map<String, dynamic>.unmodifiable(result) : result;
+  final active = HashSet<Object>.identity();
+  var nodes = 0;
+  dynamic visit(dynamic value, int depth) {
+    if (++nodes > 100000 || depth > 128) {
+      throw ArgumentError('Live input exceeds the snapshot limit');
+    }
+    if (value is! Map && value is! List) return value;
+    if (!active.add(value)) throw ArgumentError('Live input contains a cycle');
+    try {
+      if (value is Map) {
+        final result = value is Map<String, dynamic>
+            ? <String, dynamic>{
+                for (final key in value.keys) key: visit(value[key], depth + 1),
+              }
+            : <dynamic, dynamic>{
+                for (final key in value.keys) key: visit(value[key], depth + 1),
+              };
+        return freeze
+            ? (result is Map<String, dynamic>
+                  ? Map<String, dynamic>.unmodifiable(result)
+                  : Map<dynamic, dynamic>.unmodifiable(result))
+            : result;
+      }
+      final result = [for (final item in value as List) visit(item, depth + 1)];
+      return freeze ? List<dynamic>.unmodifiable(result) : result;
+    } finally {
+      active.remove(value);
+    }
   }
-  if (value is List) {
-    final result = value.map((value) => _copy(value, freeze: freeze)).toList();
-    return freeze ? List<dynamic>.unmodifiable(result) : result;
-  }
-  return value;
+
+  return visit(value, 0);
 }
 
 // Preserve the runtime types of schema outputs (including List<int>, DTOs).
 // Parsed values follow the schema's ordinary ownership contract.
-Map<String, V> _freeze<V>(Map<String, V> value) =>
-    Map<String, V>.unmodifiable(value);
+Map<String, Object?> _freeze(Map<String, Object?> value) =>
+    Map<String, Object?>.unmodifiable(value);
 
 Map<String, dynamic> _freezeInput(Map<String, dynamic> value) =>
     _copy(value, freeze: true) as Map<String, dynamic>;
@@ -106,18 +132,18 @@ Map<String, dynamic> _apply(
       throw ArgumentError('Invalid edit destination');
     }
   }
-  return next;
+  return _copy(next) as Map<String, dynamic>;
 }
 
-class _SessionState<V> {
+class _SessionState {
   _SessionState(this.schema, Map<String, dynamic> initial, this.scope)
     : input = _copy(initial) as Map<String, dynamic>;
-  final AcanthisMap<V> schema;
+  final ObjectSchema schema;
   AcanthisValidationScope scope;
   Map<String, dynamic> input;
   int revision = 0;
   List<AcanthisIssue> issues = const [];
-  Map<String, V>? validated;
+  Map<String, Object?>? validated;
   Map<String, AcanthisOutcome<dynamic>> fields = {};
   Map<String, List<AcanthisIssue>> rules = {};
   Set<String> executed = {};
@@ -126,7 +152,7 @@ class _SessionState<V> {
   bool contextChanged = false;
 
   bool get fallback =>
-      schema.operations.isNotEmpty ||
+      schema.hasOperations ||
       schema.hasCrossFieldDependencies ||
       scope.objectPolicy == AcanthisCollectionPolicy.first;
 
@@ -162,8 +188,8 @@ class _SessionState<V> {
     }
   }
 
-  AcanthisValidationDelta<V> result(
-    AcanthisOutcome<Map<String, V>> outcome,
+  AcanthisValidationDelta result(
+    AcanthisOutcome<Map<String, Object?>> outcome,
     Map<String, dynamic> raw,
     int revision,
     List<AcanthisIssue> before,
@@ -172,12 +198,12 @@ class _SessionState<V> {
     Map<String, AcanthisOutcome<dynamic>> fieldCache,
     Map<String, List<AcanthisIssue>> ruleCache,
   ) {
-    final after = outcome is AcanthisInvalid<Map<String, V>>
+    final after = outcome is AcanthisInvalid<Map<String, Object?>>
         ? outcome.issues
         : <AcanthisIssue>[];
     final parsed = outcome.isValid ? _freeze(outcome.value) : null;
     final current = revision == this.revision;
-    final delta = _delta<V>(
+    final delta = _delta(
       before,
       after,
       executedFields,
@@ -203,19 +229,20 @@ class _SessionState<V> {
 }
 
 /// Synchronous editing with dependency-aware field/rule reuse.
-class AcanthisLiveSession<V> {
+class AcanthisLiveSession {
   AcanthisLiveSession._(
-    AcanthisMap<V> schema,
+    ObjectSchema schema,
     Map<String, dynamic> initial,
     AcanthisValidationScope scope,
   ) : _state = _SessionState(schema, initial, scope) {
     if (schema.isAsync) throw ArgumentError('Use watchAsync for async schemas');
     _validate();
   }
-  final _SessionState<V> _state;
-  AcanthisMap<V> get schema => _state.schema;
+  final _SessionState _state;
+  bool _validating = false;
+  ObjectSchema get schema => _state.schema;
   Map<String, dynamic> get input => _freezeInput(_state.input);
-  Map<String, V>? get validated => _state.validated;
+  Map<String, Object?>? get validated => _state.validated;
   List<AcanthisIssue> get issues => _state.issues;
   int get revision => _state.revision;
 
@@ -225,89 +252,92 @@ class AcanthisLiveSession<V> {
       ? '$field was rerun because this schema has object-level or cross-field rules.'
       : '$field was rerun because its value changed.';
 
-  AcanthisValidationDelta<V> set(String field, dynamic value) =>
+  AcanthisValidationDelta set(String field, dynamic value) =>
       setPath(AcanthisPath([field]), value);
-  AcanthisValidationDelta<V> setPath(Object path, dynamic value) =>
+  AcanthisValidationDelta setPath(Object path, dynamic value) =>
       batch([AcanthisEdit.set(path, value)]);
-  AcanthisValidationDelta<V> remove(String field) =>
+  AcanthisValidationDelta remove(String field) =>
       removePath(AcanthisPath([field]));
-  AcanthisValidationDelta<V> removePath(Object path) =>
+  AcanthisValidationDelta removePath(Object path) =>
       batch([AcanthisEdit.remove(path)]);
-  AcanthisValidationDelta<V> batch(List<AcanthisEdit> edits) {
+  AcanthisValidationDelta batch(List<AcanthisEdit> edits) {
+    if (_validating) {
+      throw StateError('Cannot edit during synchronous validation');
+    }
+    _state.scope.throwIfCancelled();
     _state.edit(edits);
     return _validate();
   }
 
   /// Context changes also invalidate nested checks, whose dependencies are unknown.
-  AcanthisValidationDelta<V> updateContext(Object? context) {
+  AcanthisValidationDelta updateContext(Object? context) {
+    if (_validating) {
+      throw StateError('Cannot edit during synchronous validation');
+    }
+    _state.scope.throwIfCancelled();
     _state.scope = _withContext(_state.scope, context);
     _state.contextChanged = true;
     _state.revision++;
     return _validate();
   }
 
-  AcanthisValidationDelta<V> _validate() {
+  AcanthisValidationDelta _validate() {
+    _validating = true;
     _state.validated = null;
+    final raw = _copy(_state.input) as Map<String, dynamic>;
     final fields = Map<String, AcanthisOutcome<dynamic>>.of(_state.fields);
     final rules = Map<String, List<AcanthisIssue>>.of(_state.rules);
     _state.invalidate(fields, rules);
-    final executed = <String>{};
-    final executedRules = <String>{};
-    final result = _state.scope.run(() {
-      if (_state.fallback) {
-        executed.addAll(schema.fields.keys);
-        return schema.tryParse(_state.input);
-      }
-      return schema.evaluateObject(
-        _state.input,
-        fieldCache: fields,
-        ruleCache: rules,
-        executedFields: executed,
-        executedRules: executedRules,
+    final evaluation = ObjectEvaluation(fields, rules);
+    try {
+      final result = _state.scope.run(() {
+        return schema.evaluateObject(raw, evaluation);
+      });
+      return _state.result(
+        result,
+        raw,
+        revision,
+        issues,
+        evaluation.executedFields,
+        evaluation.executedRules,
+        fields,
+        rules,
       );
-    });
-    return _state.result(
-      result,
-      _state.input,
-      revision,
-      issues,
-      executed,
-      executedRules,
-      fields,
-      rules,
-    );
+    } finally {
+      _validating = false;
+    }
   }
 }
 
 /// Async editing with debounce, cooperative cancellation, and revision guards.
 /// A newer edit cancels the previous signal; stale work cannot publish state.
-class AcanthisAsyncLiveSession<V> {
+class AcanthisAsyncLiveSession {
   AcanthisAsyncLiveSession._(
-    AcanthisMap<V> schema,
+    ObjectSchema schema,
     Map<String, dynamic> initial,
     AcanthisValidationScope scope,
     this.debounce,
   ) : _state = _SessionState(schema, initial, scope);
-  final _SessionState<V> _state;
+  final _SessionState _state;
   final Duration debounce;
   AcanthisCancellationSignal? _signal;
   bool _disposed = false;
   Set<String> _pending = const {};
-  AcanthisMap<V> get schema => _state.schema;
+  ObjectSchema get schema => _state.schema;
   int get revision => _state.revision;
   Map<String, dynamic> get input => _freezeInput(_state.input);
-  Map<String, V>? get validated => _state.validated;
+  Map<String, Object?>? get validated => _state.validated;
   List<AcanthisIssue> get issues => _state.issues;
   Set<String> get pendingFields => _pending;
 
-  static Future<AcanthisAsyncLiveSession<V>> create<V>(
-    AcanthisMap<V> schema,
+  static Future<AcanthisAsyncLiveSession> create(
+    ObjectSchema schema,
     Map<String, dynamic> initial, {
     AcanthisValidationScope? scope,
     Duration debounce = Duration.zero,
   }) async {
     if (debounce.isNegative) throw ArgumentError('Debounce cannot be negative');
-    final session = AcanthisAsyncLiveSession<V>._(
+    final session = AcanthisAsyncLiveSession._(
       schema,
       initial,
       scope ?? AcanthisValidationScope.current,
@@ -317,22 +347,24 @@ class AcanthisAsyncLiveSession<V> {
     return session;
   }
 
-  Future<AcanthisValidationDelta<V>> set(String field, dynamic value) =>
+  Future<AcanthisValidationDelta> set(String field, dynamic value) =>
       setPath(AcanthisPath([field]), value);
-  Future<AcanthisValidationDelta<V>> setPath(Object path, dynamic value) =>
+  Future<AcanthisValidationDelta> setPath(Object path, dynamic value) =>
       batch([AcanthisEdit.set(path, value)]);
-  Future<AcanthisValidationDelta<V>> remove(String field) =>
+  Future<AcanthisValidationDelta> remove(String field) =>
       removePath(AcanthisPath([field]));
-  Future<AcanthisValidationDelta<V>> removePath(Object path) =>
+  Future<AcanthisValidationDelta> removePath(Object path) =>
       batch([AcanthisEdit.remove(path)]);
-  Future<AcanthisValidationDelta<V>> batch(List<AcanthisEdit> edits) {
+  Future<AcanthisValidationDelta> batch(List<AcanthisEdit> edits) {
     if (_disposed) throw StateError('Session is disposed');
+    _state.scope.throwIfCancelled();
     _state.edit(edits);
     return _validate();
   }
 
-  Future<AcanthisValidationDelta<V>> updateContext(Object? context) {
+  Future<AcanthisValidationDelta> updateContext(Object? context) {
     if (_disposed) throw StateError('Session is disposed');
+    _state.scope.throwIfCancelled();
     _state.scope = _withContext(_state.scope, context);
     _state.contextChanged = true;
     _state.revision++;
@@ -340,18 +372,22 @@ class AcanthisAsyncLiveSession<V> {
   }
 
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
+    _state.validated = null;
     _signal?.cancel();
     _pending = const {};
     _state.revision++;
   }
 
-  Future<AcanthisValidationDelta<V>> _validate({bool delay = true}) async {
+  Future<AcanthisValidationDelta> _validate({bool delay = true}) async {
     _signal?.cancel();
     final signal = _signal = AcanthisCancellationSignal();
+    final unlink = linkCancellation(_state.scope.cancellation, signal);
     final revision = _state.revision;
     final raw = _copy(_state.input) as Map<String, dynamic>;
     final before = _state.issues;
+    final full = _state.fallback;
     final fields = Map<String, AcanthisOutcome<dynamic>>.of(_state.fields);
     final rules = Map<String, List<AcanthisIssue>>.of(_state.rules);
     _state.invalidate(fields, rules);
@@ -365,55 +401,55 @@ class AcanthisAsyncLiveSession<V> {
       objectPolicy: _state.scope.objectPolicy,
       cancellation: signal,
     );
-    if (delay && debounce > Duration.zero) {
-      await Future.any([Future<void>.delayed(debounce), signal.whenCancelled]);
-      if (signal.isCancelled) {
-        return AcanthisValidationDelta(
-          changedIssues: const [],
-          executedFields: const {},
-          fullValidation: _state.fallback,
-          validated: null,
-          input: _freezeInput(raw),
-          revision: revision,
-          isCurrent: false,
-          settled: false,
-        );
-      }
-    }
-    final executed = <String>{};
-    final executedRules = <String>{};
-    try {
-      final outcome = await scope.run(() {
-        if (_state.fallback) {
-          executed.addAll(schema.fields.keys);
-          return schema.tryParseAsync(raw);
+    final evaluation = ObjectEvaluation(
+      fields,
+      rules,
+      onFieldSettled: (field) {
+        if (revision == _state.revision) {
+          _pending = Set.unmodifiable(_pending.where((key) => key != field));
         }
-        return schema.evaluateObjectAsync(
-          raw,
-          fieldCache: fields,
-          ruleCache: rules,
-          executedFields: executed,
-          executedRules: executedRules,
-          onFieldSettled: (field) {
-            if (revision == _state.revision) {
-              _pending = Set.unmodifiable(
-                _pending.where((key) => key != field),
-              );
-            }
-          },
-        );
+      },
+    );
+    Timer? timer;
+    try {
+      if (delay && debounce > Duration.zero) {
+        final ready = Completer<void>();
+        timer = Timer(debounce, ready.complete);
+        await Future.any([ready.future, signal.whenCancelled]);
+      }
+      signal.throwIfCancelled();
+      final outcome = await scope.run(() {
+        return schema.evaluateObjectAsync(raw, evaluation);
       });
+      signal.throwIfCancelled();
       return _state.result(
         outcome,
         raw,
         revision,
         before,
-        executed,
-        executedRules,
+        evaluation.executedFields,
+        evaluation.executedRules,
         fields,
         rules,
       );
+    } on AcanthisValidationCancelled {
+      // Caller cancellation remains control flow; superseded revisions settle quietly.
+      _state.scope.cancellation?.throwIfCancelled();
+      if (!signal.isCancelled) rethrow;
+      return AcanthisValidationDelta(
+        changedIssues: const [],
+        executedFields: Set.unmodifiable(evaluation.executedFields),
+        executedRules: Set.unmodifiable(evaluation.executedRules),
+        fullValidation: full,
+        validated: null,
+        input: _freezeInput(raw),
+        revision: revision,
+        isCurrent: false,
+        settled: false,
+      );
     } finally {
+      timer?.cancel();
+      unlink();
       if (revision == _state.revision) _pending = const {};
     }
   }
@@ -429,23 +465,23 @@ AcanthisValidationScope _withContext(
   cancellation: scope.cancellation,
 );
 
-extension AcanthisLiveMaps<V> on AcanthisMap<V> {
-  AcanthisLiveSession<V> watch(
+extension AcanthisLiveMaps on ObjectSchema {
+  AcanthisLiveSession watch(
     Map<String, dynamic> initial, {
     AcanthisValidationScope? scope,
-  }) => AcanthisLiveSession<V>._(
+  }) => AcanthisLiveSession._(
     this,
     initial,
     scope ?? AcanthisValidationScope.current,
   );
 }
 
-extension AcanthisAsyncLiveMaps<V> on AcanthisMap<V> {
-  Future<AcanthisAsyncLiveSession<V>> watchAsync(
+extension AcanthisAsyncLiveMaps on ObjectSchema {
+  Future<AcanthisAsyncLiveSession> watchAsync(
     Map<String, dynamic> initial, {
     AcanthisValidationScope? scope,
     Duration debounce = Duration.zero,
-  }) => AcanthisAsyncLiveSession.create<V>(
+  }) => AcanthisAsyncLiveSession.create(
     this,
     initial,
     scope: scope,
@@ -453,27 +489,19 @@ extension AcanthisAsyncLiveMaps<V> on AcanthisMap<V> {
   );
 }
 
-AcanthisValidationDelta<V> _delta<V>(
+AcanthisValidationDelta _delta(
   List<AcanthisIssue> before,
   List<AcanthisIssue> after,
   Set<String> fields,
   Set<String> rules,
   bool full,
-  Map<String, V>? validated,
+  Map<String, Object?>? validated,
   Map<String, dynamic> input,
   int revision,
   bool current,
 ) {
-  final added = List<AcanthisIssue>.of(after);
-  final removed = <AcanthisIssue>[];
-  for (final issue in before) {
-    final index = added.indexOf(issue);
-    if (index < 0) {
-      removed.add(issue);
-    } else {
-      added.removeAt(index);
-    }
-  }
+  final added = _difference(after, before);
+  final removed = _difference(before, after);
   return AcanthisValidationDelta(
     changedIssues: List.unmodifiable([...removed, ...added]),
     addedIssues: List.unmodifiable(added),
@@ -487,4 +515,24 @@ AcanthisValidationDelta<V> _delta<V>(
     revision: revision,
     isCurrent: current,
   );
+}
+
+List<AcanthisIssue> _difference(
+  List<AcanthisIssue> left,
+  List<AcanthisIssue> right,
+) {
+  final counts = <AcanthisIssue, int>{};
+  for (final issue in right) {
+    counts.update(issue, (n) => n + 1, ifAbsent: () => 1);
+  }
+  final result = <AcanthisIssue>[];
+  for (final issue in left) {
+    final count = counts[issue] ?? 0;
+    if (count == 0) {
+      result.add(issue);
+    } else {
+      counts[issue] = count - 1;
+    }
+  }
+  return result;
 }

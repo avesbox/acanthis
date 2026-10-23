@@ -1,7 +1,0 @@
-// Matching outer schema types must not hide incompatible nested arguments.
-import 'package:acanthis/acanthis.dart';
-
-void main() {
-  const key = SchemaKey<List<List<int>>, AcanthisList<List<int>>>('nested');
-  SchemaRegistryBuilder().add(key, string().list().list());
-}

@@ -1,109 +1,97 @@
 ---
-description: Validate existing Dart instances and describe class fields.
+description: Validate existing Dart instances or map validated input into a class.
 ---
 
 # Instances and classes
 
-Validate existing Dart instances and describe class fields.
+## `instance<T>()` {#instances}
 
-## Instances
-
-Use `instance<T>()` to validate already constructed Dart objects (class instances) without converting them to `Map`.  
-You attach field validators via getters. Read the original instance directly from `parse()`; field validators do not rewrite the instance’s properties.
-
-Each field runs its complete child schema once, including nested containers and
-transformations. Transformed child values feed its checks but are not assigned
-back to the instance. Failures retain their original code and parameters under
-the declared field path: `['email']` with code `minLength`, rather than a root
-code such as `email.minLength`. Async child schemas require async entry points.
+Validate an existing Dart object with getters. A successful parse returns the same instance unless you add a root transformation.
 
 ```dart
 class User {
+  const User(this.name, this.age, this.email);
   final String name;
   final int age;
   final String? email;
-  User(this.name, this.age, this.email);
 }
 
-final userSchema = instance<User>()
-  .field('name', (u) => u.name, string().min(3))
-  .field('age', (u) => u.age, number().positive())
-  .field('email', (u) => u.email, string().email(), optional: true);
+final user = instance<User>()
+    .field('name', (value) => value.name, string().min(2))
+    .field('age', (value) => value.age, integer().gte(18))
+    .field('email', (value) => value.email, string().email(), optional: true);
 
-userSchema.parse(User('Alice', 30, null)); // ✅
-userSchema.parse(User('A', 30, null));     // ❌ ValidationError (name.min)
+final input = User('Ada', 28, null);
+print(identical(user.parse(input), input)); // true
 ```
 
-::: info
-A field flagged as optional will be skipped if the getter returns `null`.
-:::
+An optional getter returning null skips its child schema, including any child default. A required nullable getter can instead use a nullable child schema.
 
-### Differences to `object()`
+Each field runs its full schema. Child transformations validate their result but do not write it back to the instance. Issues retain the field path and the child check's code. Async children require async entry points. Inputs of unrelated types fail before getters run.
 
-- `object()` validates `Map` data (often decoded JSON).  
-- `instance()` validates real Dart objects via property getters.
+### Choosing an object schema {#differences-to-object}
 
-### Cross-field validation with refs
+| Input | Schema | Output |
+| --- | --- | --- |
+| A map with named fields | `object({...})` | `Map<String, Object?>` |
+| An existing Dart instance | `instance<T>()` | `T` |
+| Data that should construct an instance | `classSchema<I, T>()` | `T` |
 
-Define reusable references, then create a refinement that can access them.
+## Cross-field validation with refs
+
+Register getter references once, then read them from a refinement.
 
 ```dart
 class Order {
+  const Order(this.quantity, this.price);
   final int quantity;
-  final double unitPrice;
-  Order(this.quantity, this.unitPrice);
+  final double price;
 }
 
-final orderSchema = instance<Order>()
-  .field('quantity', (o) => o.quantity, number().positive())
-  .field('unitPrice', (o) => o.unitPrice, number().positive())
-  .withRefs((r) => r
-    .ref<int>('qty', (o) => o.quantity)
-    .ref<double>('price', (o) => o.unitPrice)
-  )
-  .refineWithRefs(
-    (o, refs) => refs<int>('qty') * refs<double>('price') <= 1000,
-    'Total exceeds limit',
-    name: 'totalLimit',
-  );
+final order = instance<Order>()
+    .field('quantity', (value) => value.quantity, integer().positive())
+    .field('price', (value) => value.price, doubleType().positive())
+    .withRefs((refs) => refs
+      .ref<int>('quantity', (value) => value.quantity)
+      .ref<double>('price', (value) => value.price))
+    .refineWithRefs(
+      (_, refs) => refs<int>('quantity') * refs<double>('price') <= 1000,
+      'Total exceeds the order limit',
+      name: 'orderLimit',
+    );
+print(order.validate(Order(2, 20))); // true
 ```
 
-`refineWithRefs` supplies a `RefAccessor` so you can read previously registered references by name and perform cross-field logic.
+`refineWithCause()` accepts a callback returning null for success or a message for failure. References read the instance's getter values. For rules over parsed map fields and incremental scheduling, use [object rules](/contextual-rules).
 
-## Class Schemas
+## Class schemas
 
-Use `classSchema<I, T>()` to build a typed pipeline that validates the input shape (I), maps the validated input into a class (T) via a pure mapper.
+`classSchema<I, T>()` validates input, maps it to `T`, then validates the mapped output.
 
 ```dart
 class User {
+  const User(this.name, this.age);
   final String name;
   final int age;
-  User(this.name, this.age);
 }
 
-final buildUser = classSchema<Map<String, dynamic>, User>()
-  .input(object({
-    'name': string().min(3),
-    'age': integer().positive(),
-  }))
-  .map((data) => User(data['name'] as String, data['age'] as int))
-  .validateWith(
-    instance<User>()
-      .field('name', (u) => u.name, string().max(50))
-      .field('age', (u) => u.age, number().gte(18)),
-  )
-  .build();
+final user = classSchema<Map<String, Object?>, User>()
+    .input(object({'name': string().min(2), 'age': integer()}))
+    .map((data) => User(data['name'] as String, data['age'] as int))
+    .validateWith(instance<User>()
+      .field('age', (value) => value.age, integer().gte(18)))
+    .build();
 
-final user = buildUser.parse({
-  'name': 'Alice',
-  'age': 30,
-}); // User instance
+final User parsed = user.parse({'name': 'Ada', 'age': 28});
+print(parsed.name); // Ada
 ```
 
-::: info
-You can also validate the result of the mapping using `validateWith` and an `instance()` schema.
-:::
+`input()` and `map()` are required. `validateWith()` is optional; without it, the output is checked as an instance of `T`. `.refine()` adds an output check. `.defaultOutput(value)` supplies an output default for missing/null input, bypassing the source and mapper while still validating the output. `build()` snapshots the builder as a [pipeline](/schemas/transformations#pipes).
 
----
+## Field helpers, export, and mocks
 
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+`instanceSchema.toMap(value)` reads declared raw getter values. It neither validates nor recursively serializes the instance.
+
+Field-based JSON/OpenAPI export describes the declared JSON representation without invoking getters or constructors. It does not make an instance schema accept a decoded map. Each field must satisfy [strict export](/export-compatibility).
+
+For mock construction, attach `.withFactory((fields) => User(...))` to the instance schema. The factory receives generated, parsed field values. See [mock data](/schemas/mocking#instances-and-pipelines).

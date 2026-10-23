@@ -1,46 +1,7 @@
-import 'dart:async';
+import 'common/issue.dart';
+import 'common/validation_scope.dart';
 
-import 'package:acanthis/acanthis.dart';
-
-/// Independent collection policies for field operations and object children.
-enum AcanthisCollectionPolicy { all, first }
-
-/// Cooperative cancellation. Futures already running are not forcibly stopped.
-class AcanthisCancellationSignal {
-  bool _cancelled = false;
-  final Completer<void> _done = Completer<void>();
-  bool get isCancelled => _cancelled;
-  Future<void> get whenCancelled => _done.future;
-  void cancel() {
-    if (_cancelled) return;
-    _cancelled = true;
-    _done.complete();
-  }
-}
-
-/// Per-call settings inherited by nested schemas and async continuations.
-/// Context objects should be immutable; no process-wide state is changed.
-class AcanthisValidationScope {
-  const AcanthisValidationScope({
-    this.context,
-    this.fieldPolicy = AcanthisCollectionPolicy.all,
-    this.objectPolicy = AcanthisCollectionPolicy.all,
-    this.cancellation,
-  });
-  final Object? context;
-  final AcanthisCollectionPolicy fieldPolicy;
-  final AcanthisCollectionPolicy objectPolicy;
-  final AcanthisCancellationSignal? cancellation;
-  static final Object _key = Object();
-  static AcanthisValidationScope get current =>
-      Zone.current[_key] as AcanthisValidationScope? ??
-      const AcanthisValidationScope();
-  T contextAs<T>() => context as T;
-  R run<R>(R Function() action) => runZoned(action, zoneValues: {_key: this});
-}
-
-/// Immutable data path. Integers address list elements; strings address keys.
-class AcanthisPath {
+final class AcanthisPath {
   AcanthisPath(Iterable<Object> segments)
     : segments = List.unmodifiable(segments) {
     if (this.segments.isEmpty ||
@@ -50,9 +11,6 @@ class AcanthisPath {
       throw ArgumentError('Paths require strings or nonnegative integers');
     }
   }
-
-  /// Normalizes a field name, segment list, or an existing immutable path.
-  /// Strings are literal keys: 'user.name' does not mean ['user', 'name'].
   factory AcanthisPath.from(Object path) => switch (path) {
     AcanthisPath() => path,
     String() => AcanthisPath([path]),
@@ -60,16 +18,15 @@ class AcanthisPath {
     _ => throw ArgumentError.value(
       path,
       'path',
-      'Expected a field name, segment list, or AcanthisPath',
+      'Expected a field name or segment list',
     ),
   };
-
   final List<Object> segments;
   bool overlaps(AcanthisPath other) {
-    final n = segments.length < other.segments.length
+    final length = segments.length < other.segments.length
         ? segments.length
         : other.segments.length;
-    for (var i = 0; i < n; i++) {
+    for (var i = 0; i < length; i++) {
       if (segments[i] != other.segments[i]) return false;
     }
     return true;
@@ -86,29 +43,20 @@ class AcanthisPath {
 
 enum AcanthisFieldStatus { missing, invalid, pending, valid }
 
-/// A selected parsed input with independent submitted-presence information.
-class AcanthisFieldState {
+final class AcanthisFieldState {
   const AcanthisFieldState(this.status, {this.value, required this.submitted});
   final AcanthisFieldStatus status;
   final Object? value;
   final bool submitted;
 }
 
-/// Read access is restricted to the paths declared by the rule.
-class AcanthisRuleInputs {
-  AcanthisRuleInputs(this._states);
+final class AcanthisRuleInputs {
+  AcanthisRuleInputs._(this._states);
   final Map<AcanthisPath, AcanthisFieldState> _states;
-  AcanthisFieldState state(Object field) {
-    final path = AcanthisPath.from(field);
-    if (!_states.containsKey(path)) {
-      throw ArgumentError('Undeclared rule input');
-    }
-    return _states[path]!;
-  }
-
-  /// Reads a declared valid input. Use [state] to inspect optional presence.
+  AcanthisFieldState state(Object field) =>
+      _states[AcanthisPath.from(field)] ??
+      (throw ArgumentError('Undeclared rule input'));
   dynamic operator [](Object path) => value<dynamic>(path);
-
   T value<T>(Object path) {
     final selected = state(path);
     if (selected.status != AcanthisFieldStatus.valid) {
@@ -118,15 +66,13 @@ class AcanthisRuleInputs {
   }
 }
 
-/// Selected-field rule. Callbacks see parsed inputs and exceptions propagate.
-/// Missing inputs skip ordinary rules; [allowMissing] enables presence rules.
-/// Invalid prerequisites always skip. Rule issues never gate another rule.
-class AcanthisRule<C> {
+/// Rules read parsed prerequisites and report only their declared output paths.
+final class AcanthisRule<C> {
   AcanthisRule({
     required this.id,
     required Iterable<Object> inputs,
     required Iterable<Object> outputs,
-    required List<AcanthisIssue> Function(AcanthisRuleInputs, C) this._check,
+    required this._check,
     this.allowMissing = false,
     this._when,
   }) : inputs = List.unmodifiable(inputs.map(AcanthisPath.from)),
@@ -154,41 +100,39 @@ class AcanthisRule<C> {
   bool get isAsync => _asyncCheck != null;
 
   AcanthisRuleInputs? _select(
-    Map<String, dynamic> raw,
-    Map<String, dynamic> parsed,
+    Object? raw,
+    Object? parsed,
     List<AcanthisIssue> issues,
   ) {
     final states = <AcanthisPath, AcanthisFieldState>{};
     for (final path in inputs) {
-      final original = readPath(raw, path);
-      final result = readPath(parsed, path);
-      final invalid = issues.any(
+      if (issues.any(
         (issue) =>
             issue.path.isEmpty || path.overlaps(AcanthisPath(issue.path)),
-      );
-      final status = invalid
-          ? AcanthisFieldStatus.invalid
-          : result.present
-          ? AcanthisFieldStatus.valid
-          : AcanthisFieldStatus.missing;
-      if (invalid || (!allowMissing && status == AcanthisFieldStatus.missing)) {
+      )) {
         return null;
       }
+      final original = readRulePath(raw, path);
+      final result = readRulePath(parsed, path);
+      if (!result.present && !allowMissing) return null;
       states[path] = AcanthisFieldState(
-        status,
-        value: invalid ? null : result.value,
+        result.present
+            ? AcanthisFieldStatus.valid
+            : AcanthisFieldStatus.missing,
+        value: result.value,
         submitted: original.present,
       );
     }
-    final selected = AcanthisRuleInputs(states);
-    if (_when != null &&
-        !_when(selected, AcanthisValidationScope.current.context as C)) {
-      return null;
-    }
+    final selected = AcanthisRuleInputs._(states);
+    final scope = AcanthisValidationScope.current;
+    scope.throwIfCancelled();
+    if (_when != null && !_when(selected, scope.context as C)) return null;
+    scope.throwIfCancelled();
     return selected;
   }
 
   List<AcanthisIssue> _verify(List<AcanthisIssue> issues) {
+    AcanthisValidationScope.current.throwIfCancelled();
     for (final issue in issues) {
       if (issue.path.isEmpty || !outputs.contains(AcanthisPath(issue.path))) {
         throw StateError('Rule $id emitted an undeclared issue path');
@@ -197,25 +141,23 @@ class AcanthisRule<C> {
     return List.unmodifiable(issues);
   }
 
-  /// Internal reference evaluator shared with live scheduling.
   List<AcanthisIssue> evaluate(
-    Map<String, dynamic> raw,
-    Map<String, dynamic> parsed,
+    Object? raw,
+    Object? parsed,
     List<AcanthisIssue> issues,
   ) {
+    if (isAsync) throw StateError('Async rule requires async validation');
     final selected = _select(raw, parsed, issues);
-    if (selected == null) return const [];
-    if (isAsync) {
-      throw AsyncValidationException('Async rule requires async validation');
-    }
-    return _verify(
-      _check!(selected, AcanthisValidationScope.current.context as C),
-    );
+    return selected == null
+        ? const []
+        : _verify(
+            _check!(selected, AcanthisValidationScope.current.context as C),
+          );
   }
 
   Future<List<AcanthisIssue>> evaluateAsync(
-    Map<String, dynamic> raw,
-    Map<String, dynamic> parsed,
+    Object? raw,
+    Object? parsed,
     List<AcanthisIssue> issues,
   ) async {
     final selected = _select(raw, parsed, issues);
@@ -229,8 +171,7 @@ class AcanthisRule<C> {
   }
 }
 
-/// Reads a path without conflating omission with explicit null.
-({bool present, dynamic value}) readPath(dynamic value, AcanthisPath path) {
+({bool present, Object? value}) readRulePath(Object? value, AcanthisPath path) {
   for (final segment in path.segments) {
     if (value is Map && value.containsKey(segment)) {
       value = value[segment];
@@ -241,4 +182,44 @@ class AcanthisRule<C> {
     }
   }
   return (present: true, value: value);
+}
+
+/// Legacy dependencies intentionally read raw values and do not gate on validity.
+final class AcanthisFieldDependency {
+  const AcanthisFieldDependency(this.dependent, this.dependsOn, this.check);
+  final String dependent;
+  final String dependsOn;
+  final bool Function(dynamic, dynamic) check;
+  Object? _read(Object? value, String query) {
+    for (final part in query.split('.')) {
+      if (value is Map) {
+        value = value[part];
+      } else if (value is List) {
+        final index = int.tryParse(
+          part.replaceAll('[', '').replaceAll(']', ''),
+        );
+        if (index == null || index < 0 || index >= value.length) return null;
+        value = value[index];
+      } else {
+        return null;
+      }
+    }
+    return value;
+  }
+
+  List<AcanthisIssue> evaluate(Object? raw) {
+    final from = _read(raw, dependsOn);
+    final to = _read(raw, dependent);
+    final valid = from != null && to != null && check(from, to);
+    AcanthisValidationScope.current.throwIfCancelled();
+    return valid
+        ? const []
+        : [
+            AcanthisIssue(
+              path: [dependent],
+              code: 'dependency',
+              parameters: {'dependsOn': dependsOn},
+            ),
+          ];
+  }
 }

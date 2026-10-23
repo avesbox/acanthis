@@ -1,175 +1,90 @@
-import 'dart:math';
+import '../registries/metadata_registry.dart';
+import '../common/fast_schema.dart';
+import '../common/issue_sink.dart';
+import '../common/results.dart';
+import '../common/schema_operations.dart';
+import '../common/value_schema.dart';
+import '../validators/boolean.dart';
 
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:acanthis/src/registries/metadata_registry.dart';
-import 'package:acanthis/src/validators/boolean.dart';
-import 'package:nanoid2/nanoid2.dart';
-
-import '../exceptions/validation_error.dart';
-import 'types.dart';
-
-class AcanthisBoolean extends AcanthisType<bool> {
+final class AcanthisBoolean extends ValueSchemaBase<bool, AcanthisBoolean>
+    implements FastSchema<bool> {
+  AcanthisBoolean({this.coercionEnabled = false, bool? defaultValue})
+    : super(configuredDefault: defaultValue, ownDefault: defaultValue != null);
+  AcanthisBoolean._(
+    this.coercionEnabled,
+    SchemaOperations<bool> operations,
+    bool? defaultValue,
+    bool hasDefault,
+  ) : super(
+        operations: operations,
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault,
+      );
   final bool coercionEnabled;
-
+  bool get isIdentity => !hasOperations && !coercionEnabled && !hasDefault;
+  AcanthisBoolean coerce() => copySchemaMetadata(
+    this,
+    AcanthisBoolean._(true, operations, configuredDefault, ownDefault),
+  );
+  AcanthisBoolean isTrue() => withCheck(const IsTrueCheck());
+  AcanthisBoolean isFalse() => withCheck(const IsFalseCheck());
   @override
-  bool get isPure => !coercionEnabled && super.isPure;
+  AcanthisBoolean rebuild(
+    SchemaOperations<bool> operations,
+    bool? defaultValue,
+    bool hasDefault,
+  ) => copySchemaMetadata(
+    this,
+    AcanthisBoolean._(coercionEnabled, operations, defaultValue, hasDefault),
+  );
 
-  AcanthisBoolean({
-    super.operations,
-    super.isAsync,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-    this.coercionEnabled = false,
-  });
-
-  AcanthisBoolean coerce() {
-    return AcanthisBoolean(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: true,
-    );
-  }
-
-  @override
-  bool coerceInput(dynamic value) {
-    if (!coercionEnabled) {
-      return super.coerceInput(value);
-    }
-    if (value is bool) {
-      return value;
-    }
-    if (value is num) {
-      if (value == 1) return true;
-      if (value == 0) return false;
-    }
-    if (value is String) {
-      switch (value.trim().toLowerCase()) {
-        case 'true':
-        case '1':
-          return true;
-        case 'false':
-        case '0':
-          return false;
+  bool? _decode(Object? input) {
+    if (input is bool) return input;
+    if (coercionEnabled) {
+      if (input is num) {
+        if (input == 1) return true;
+        if (input == 0) return false;
+      } else if (input is String) {
+        return switch (input.trim().toLowerCase()) {
+          'true' || '1' => true,
+          'false' || '0' => false,
+          _ => null,
+        };
       }
     }
-    throw ValidationError.diagnostic(
-      'Invalid value: expected coercible boolean value',
-      code: 'type',
-    );
-  }
-
-  /// Add a check to the boolean to check if it is true
-  AcanthisBoolean isTrue({String? message}) {
-    return withCheck(IsTrueCheck(message: message));
-  }
-
-  /// Add a check to the boolean to check if it is false
-  AcanthisBoolean isFalse({String? message}) {
-    return withCheck(IsFalseCheck(message: message));
+    return null;
   }
 
   @override
-  AcanthisBoolean withAsyncCheck(AcanthisAsyncCheck<bool> check) {
-    return AcanthisBoolean(
-      operations: [...operations, check],
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
+  AcanthisOutcome<bool> parseValue(Object? input, bool collect) {
+    final value = _decode(input);
+    return value == null
+        ? AcanthisInvalid<bool>.withoutValue(
+            IssueSink.single(
+              'type',
+              parameters: const {'expected': 'bool'},
+            ).takeIssues(),
+          )
+        : AcanthisValid(value);
   }
 
+  late final bool _fastChecks =
+      !coercionEnabled &&
+      !isAsync &&
+      transformations.isEmpty &&
+      checks.every((check) => check is BooleanCheck);
   @override
-  AcanthisBoolean withCheck(AcanthisCheck<bool> check) {
-    return AcanthisBoolean(
-      operations: [...operations, check],
-      key: key,
-      isAsync: isAsync,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
+  bool get canFast => isIdentity || _fastChecks;
   @override
-  AcanthisBoolean withTransformation(
-    AcanthisTransformation<bool> transformation,
-  ) {
-    return AcanthisBoolean(
-      operations: [...operations, transformation],
-      key: key,
-      isAsync: isAsync,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJsonSchema() {
-    return {
-      'type': 'boolean',
-      if (metadataEntry != null) ...metadataEntry!.toJson(),
-    };
-  }
-
-  @override
-  AcanthisBoolean meta(MetadataEntry<bool> metadata) {
-    String key = this.key;
-    if (key.isEmpty) {
-      key = nanoid();
+  bool? tryFast(Object? input) {
+    if (!canFast) return null;
+    input ??= defaultValue;
+    if (input is! bool) return null;
+    for (final check in checks) {
+      if (!(check as BooleanCheck).test(input)) return null;
     }
-    MetadataRegistry().add(key, metadata);
-    return AcanthisBoolean(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
-  @override
-  AcanthisBoolean withDefault(bool value) {
-    return AcanthisBoolean(
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-      coercionEnabled: coercionEnabled,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toOpenApiSchema() {
-    if (operations.any((op) => op is IsTrueCheck)) {
-      return {
-        'type': 'boolean',
-        'enum': [true],
-      };
-    } else if (operations.any((op) => op is IsFalseCheck)) {
-      return {
-        'type': 'boolean',
-        'enum': [false],
-      };
-    }
-    return {'type': 'boolean'};
-  }
-
-  @override
-  bool mock([int? seed]) {
-    final random = Random(seed);
-    return random.nextBool();
+    return input;
   }
 }
 
-/// Create a boolean validator
 AcanthisBoolean boolean() => AcanthisBoolean();

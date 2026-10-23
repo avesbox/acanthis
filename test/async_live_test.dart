@@ -11,15 +11,13 @@ void main() {
       AcanthisCancellationSignal? oldSignal;
       final schema = object({
         'name': string().refineAsync(
-          onCheck: (v) async {
+          CallbackAsyncCheck((v, context) async {
             if (v == 'slow') {
               oldSignal = AcanthisValidationScope.current.cancellation;
               await slow.future;
             }
-            return v != 'slow';
-          },
-          error: 'unavailable',
-          name: 'remote',
+            if (v == 'slow') context.addIssue('remote');
+          }),
         ),
         'other': string(),
       });
@@ -36,7 +34,8 @@ void main() {
       final stale = await old;
       expect(stale.isCurrent, false);
       expect(stale.input['name'], 'slow');
-      expect(stale.issues.single.code, 'remote');
+      expect(stale.settled, isFalse);
+      expect(stale.issues, isEmpty);
       expect(latest.revision, 2);
       expect(session.validated!['name'], 'fast');
       expect(session.pendingFields, isEmpty);
@@ -49,12 +48,9 @@ void main() {
     var calls = 0;
     final schema = object({
       'a': string().refineAsync(
-        onCheck: (_) async {
+        CallbackAsyncCheck((_, context) async {
           calls++;
-          return true;
-        },
-        error: 'x',
-        name: 'x',
+        }),
       ),
       'b': string(),
     });
@@ -81,15 +77,12 @@ void main() {
       final schema = object({
         'a': string(),
         'b': string().refineAsync(
-          onCheck: (v) async {
+          CallbackAsyncCheck((v, context) async {
             if (v == 'wait') {
               entered.complete();
               await waiting.future;
             }
-            return true;
-          },
-          error: 'remote',
-          name: 'remote',
+          }),
         ),
       });
       final session = await schema.watchAsync({'a': 'a', 'b': 'b'});

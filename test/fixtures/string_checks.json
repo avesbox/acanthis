@@ -1,0 +1,512 @@
+[
+  {
+    "name": "email",
+    "code": "email",
+    "valid": [
+      "me@example.com"
+    ],
+    "invalid": [
+      "not-an-email",
+      ""
+    ]
+  },
+  {
+    "name": "min",
+    "code": "minLength",
+    "valid": [
+      "abc",
+      "abcd"
+    ],
+    "invalid": [
+      "",
+      "ab"
+    ]
+  },
+  {
+    "name": "max",
+    "code": "maxLength",
+    "valid": [
+      "",
+      "abc"
+    ],
+    "invalid": [
+      "abcd"
+    ]
+  },
+  {
+    "name": "length",
+    "code": "exactLength",
+    "valid": [
+      "abc"
+    ],
+    "invalid": [
+      "",
+      "ab",
+      "abcd"
+    ]
+  },
+  {
+    "name": "pattern",
+    "code": "pattern",
+    "valid": [
+      "abc"
+    ],
+    "invalid": [
+      "",
+      "abc1"
+    ]
+  },
+  {
+    "name": "patternInsensitive",
+    "code": "pattern",
+    "valid": [
+      "hello",
+      "HELLO"
+    ],
+    "invalid": [
+      "hello!",
+      ""
+    ]
+  },
+  {
+    "name": "letters",
+    "code": "letters",
+    "valid": [
+      "Abc"
+    ],
+    "invalid": [
+      "",
+      "a1",
+      "123"
+    ]
+  },
+  {
+    "name": "lettersLoose",
+    "code": "letters",
+    "valid": [
+      "a1"
+    ],
+    "invalid": [
+      "",
+      "123"
+    ]
+  },
+  {
+    "name": "digits",
+    "code": "digits",
+    "valid": [
+      "123"
+    ],
+    "invalid": [
+      "",
+      "1a",
+      "abc"
+    ]
+  },
+  {
+    "name": "digitsLoose",
+    "code": "digits",
+    "valid": [
+      "a1"
+    ],
+    "invalid": [
+      "",
+      "abc"
+    ]
+  },
+  {
+    "name": "alphanumeric",
+    "code": "alphanumeric",
+    "valid": [
+      "Abc123"
+    ],
+    "invalid": [
+      "",
+      "a!"
+    ]
+  },
+  {
+    "name": "alphanumericLoose",
+    "code": "alphanumeric",
+    "valid": [
+      "!a!"
+    ],
+    "invalid": [
+      "",
+      "!!!"
+    ]
+  },
+  {
+    "name": "alphanumericWithSpaces",
+    "code": "alphanumericWithSpaces",
+    "valid": [
+      "Abc 123",
+      " "
+    ],
+    "invalid": [
+      "",
+      "a!"
+    ]
+  },
+  {
+    "name": "alphanumericWithSpacesLoose",
+    "code": "alphanumericWithSpaces",
+    "valid": [
+      "! a !"
+    ],
+    "invalid": [
+      "",
+      "!!!"
+    ]
+  },
+  {
+    "name": "specialCharacters",
+    "code": "specialCharacters",
+    "valid": [
+      "!#$"
+    ],
+    "invalid": [
+      "",
+      "a!"
+    ]
+  },
+  {
+    "name": "specialCharactersLoose",
+    "code": "specialCharacters",
+    "valid": [
+      "a!"
+    ],
+    "invalid": [
+      "",
+      "abc"
+    ]
+  },
+  {
+    "name": "allCharacters",
+    "code": "allCharacters",
+    "valid": [
+      "abc !£[]_-"
+    ],
+    "invalid": [
+      "",
+      "😀"
+    ]
+  },
+  {
+    "name": "allCharactersLoose",
+    "code": "allCharacters",
+    "valid": [
+      "😀a"
+    ],
+    "invalid": [
+      "",
+      "😀"
+    ]
+  },
+  {
+    "name": "upperCase",
+    "code": "upperCase",
+    "valid": [
+      "ABC",
+      "123",
+      ""
+    ],
+    "invalid": [
+      "Abc"
+    ]
+  },
+  {
+    "name": "lowerCase",
+    "code": "lowerCase",
+    "valid": [
+      "abc",
+      "123",
+      ""
+    ],
+    "invalid": [
+      "Abc"
+    ]
+  },
+  {
+    "name": "mixedCase",
+    "code": "mixedCase",
+    "valid": [
+      "Abc"
+    ],
+    "invalid": [
+      "",
+      "ABC",
+      "abc",
+      "123"
+    ]
+  },
+  {
+    "name": "dateTime",
+    "code": "dateTime",
+    "valid": [
+      "2024-01-15T12:30:00Z"
+    ],
+    "invalid": [
+      "not-a-date",
+      ""
+    ]
+  },
+  {
+    "name": "time",
+    "code": "time",
+    "valid": [
+      "0:00",
+      "23:59:59"
+    ],
+    "invalid": [
+      "24:00",
+      "12:60",
+      ""
+    ]
+  },
+  {
+    "name": "hexColor",
+    "code": "hexColor",
+    "valid": [
+      "#A1b2C3"
+    ],
+    "invalid": [
+      "#abc",
+      "#aabbccdd",
+      "aabbcc",
+      ""
+    ]
+  },
+  {
+    "name": "uri",
+    "code": "uri",
+    "valid": [
+      "",
+      "relative/path",
+      "https://example.com"
+    ],
+    "invalid": [
+      "http://["
+    ]
+  },
+  {
+    "name": "url",
+    "code": "url",
+    "valid": [
+      "https://example.com",
+      "ftp://example.com/file"
+    ],
+    "invalid": [
+      "",
+      "relative/path",
+      "https://"
+    ]
+  },
+  {
+    "name": "required",
+    "code": "required",
+    "valid": [
+      "a",
+      " "
+    ],
+    "invalid": [
+      ""
+    ]
+  },
+  {
+    "name": "notEmpty",
+    "code": "notEmpty",
+    "valid": [
+      "a",
+      " "
+    ],
+    "invalid": [
+      ""
+    ]
+  },
+  {
+    "name": "contains",
+    "code": "contains",
+    "valid": [
+      "--needle--",
+      "needle"
+    ],
+    "invalid": [
+      "",
+      "Needle"
+    ]
+  },
+  {
+    "name": "startsWith",
+    "code": "startsWith",
+    "valid": [
+      "prefix",
+      "prefix-more"
+    ],
+    "invalid": [
+      "",
+      "-prefix"
+    ]
+  },
+  {
+    "name": "endsWith",
+    "code": "endsWith",
+    "valid": [
+      "suffix",
+      "more-suffix"
+    ],
+    "invalid": [
+      "",
+      "suffix-more"
+    ]
+  },
+  {
+    "name": "card",
+    "code": "card",
+    "valid": [
+      "4111111111111111",
+      "4111-1111-1111-1111"
+    ],
+    "invalid": [
+      "4111111111111112",
+      "",
+      "123"
+    ]
+  },
+  {
+    "name": "enumerated",
+    "code": "enumerated",
+    "valid": [
+      "red",
+      "green"
+    ],
+    "invalid": [
+      "RED",
+      "blue",
+      ""
+    ]
+  },
+  {
+    "name": "enumeratedTransformed",
+    "code": "enumerated",
+    "valid": [
+      "RED",
+      "GREEN"
+    ],
+    "invalid": [
+      "red",
+      "blue",
+      ""
+    ]
+  },
+  {
+    "name": "contained",
+    "code": "enumerated",
+    "valid": [
+      "red",
+      "green"
+    ],
+    "invalid": [
+      "RED",
+      "blue",
+      ""
+    ]
+  },
+  {
+    "name": "cuid",
+    "code": "cuid",
+    "valid": [
+      "c12345678",
+      "C12345678"
+    ],
+    "invalid": [
+      "c123",
+      "c1234-678",
+      ""
+    ]
+  },
+  {
+    "name": "cuid2",
+    "code": "cuid2",
+    "valid": [
+      "abc123",
+      "ABC123",
+      "123"
+    ],
+    "invalid": [
+      "abc-123",
+      ""
+    ]
+  },
+  {
+    "name": "ulid",
+    "code": "ulid",
+    "valid": [
+      "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    ],
+    "invalid": [
+      "01ARZ3NDEKTSV4RRFFQ69G5FAI",
+      ""
+    ]
+  },
+  {
+    "name": "uuid",
+    "code": "uuid",
+    "valid": [
+      "550e8400-e29b-41d4-a716-446655440000",
+      "00000000-0000-0000-0000-000000000000"
+    ],
+    "invalid": [
+      "550e8400",
+      ""
+    ]
+  },
+  {
+    "name": "nanoid",
+    "code": "nanoid",
+    "valid": [
+      "123456789012345678901"
+    ],
+    "invalid": [
+      "123",
+      "12345678901234567890!",
+      ""
+    ]
+  },
+  {
+    "name": "jwt",
+    "code": "jwt",
+    "valid": [
+      "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxIn0."
+    ],
+    "invalid": [
+      "a.b",
+      ""
+    ]
+  },
+  {
+    "name": "base64",
+    "code": "base64",
+    "valid": [
+      "",
+      "aGVsbG8=",
+      "TQ=="
+    ],
+    "invalid": [
+      "???",
+      "a"
+    ]
+  },
+  {
+    "name": "exact",
+    "code": "exact",
+    "valid": [
+      "fixed"
+    ],
+    "invalid": [
+      "Fixed",
+      "fixed ",
+      ""
+    ]
+  }
+]

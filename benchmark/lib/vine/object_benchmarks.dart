@@ -1,5 +1,6 @@
 import 'package:benchmarks/shared/acanthis_benchmark.dart';
 import 'package:vine/vine.dart';
+import 'package:benchmarks/shared/payloads.dart';
 
 class VineNestedObjectValidator extends AcanthisBenchmark {
   VineNestedObjectValidator() : super(name: 'VineNestedObjectValidator');
@@ -21,12 +22,7 @@ class VineNestedObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {
-      'username': 'John Doe',
-      'password': 'secret',
-      'contact': {'name': 'John Doe', 'address': '123 Main St'},
-    };
-    validator.validate(payload);
+    validator.validate(Payloads.nestedObjectPayload);
   }
 }
 
@@ -43,8 +39,7 @@ class VineFlatObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {'firstname': 'John', 'lastname': 'Doe'};
-    validator.validate(payload);
+    validator.validate(Payloads.flatObjectPayload);
   }
 }
 
@@ -65,12 +60,6 @@ class VineArrayObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {
-      'contacts': [
-        {'type': 'email', 'value': 'foo@bar.com'},
-        {'type': 'phone', 'value': '12345678'},
-      ],
-    };
-    validator.validate(payload);
+    validator.validate(Payloads.objectArrayPayload);
   }
 }

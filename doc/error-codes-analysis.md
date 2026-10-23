@@ -62,7 +62,8 @@ Executed against this baseline:
 | `dart run tool/further_analysis_probe.dart` | Observations recorded below |
 | `dart compile exe tool/further_analysis_probe.dart -o .dart_tool/further_analysis_probe.exe`, then run that executable | Successful Windows AOT build; output identical to JIT |
 
-The retained [probe](../tool/further_analysis_probe.dart) prints both successful
+The retained [probe](../tool/further_analysis_probe.dart) now targets V2; the results
+below describe the original V1 baseline. It prints both successful
 observations and caught failures; a zero exit status alone is not its assertion
 of correctness. Existing [structured issue tests](../test/structured_issues_test.dart)
 cover duplicate ordering, escaped paths, union branches, async parity, custom

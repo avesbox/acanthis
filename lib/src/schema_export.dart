@@ -1,55 +1,270 @@
 import 'dart:collection';
+import 'dart:convert';
 
-import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/validators/boolean.dart';
-import 'package:acanthis/src/validators/common.dart';
-import 'package:acanthis/src/validators/list.dart';
-import 'package:acanthis/src/validators/number.dart';
-import 'package:acanthis/src/validators/string.dart';
+import 'common/schema.dart';
+import 'common/schema_graph.dart';
+import 'schema_import.dart';
+import 'types/list.dart';
+import 'types/instance.dart';
+import 'types/object.dart';
+import 'types/record.dart';
+import 'types/lazy.dart';
+import 'types/number.dart';
+import 'types/string.dart';
+import 'types/boolean.dart';
+import 'types/literal.dart';
+import 'types/nullable.dart';
+import 'types/union.dart';
+import 'types/tuple.dart';
+import 'types/template.dart';
+import 'validators/common.dart';
+import 'validators/number.dart';
+import 'validators/string.dart';
+import 'validators/list.dart';
+import 'validators/object.dart';
+import 'validators/boolean.dart';
+import 'validators/nullable.dart';
+
+part 'schema_export_collections.dart';
 
 /// Select the accepted JSON input or successful JSON output contract.
 enum AcanthisSchemaMode { input, output }
 
-/// An exact schema cannot represent this runtime behavior.
-class AcanthisSchemaExportException implements Exception {
-  AcanthisSchemaExportException(this.path, this.reason);
+final class AcanthisSchemaExportException implements Exception {
+  const AcanthisSchemaExportException(this.path, this.reason);
   final String path;
   final String reason;
   @override
   String toString() => 'Cannot export ${path.isEmpty ? "/" : path}: $reason';
 }
 
-extension AcanthisContractExport on AcanthisType {
-  /// Exports the supported JSON-only subset using JSON Schema 2020-12.
-  /// Unaudited checks, coercion and transformations throw
-  /// with a schema path instead of silently claiming an exact contract.
-  Map<String, dynamic> exportJsonSchema({required AcanthisSchemaMode mode}) => {
-    r'$schema': 'https://json-schema.org/draft/2020-12/schema',
-    ..._ContractExporter(mode).export(this),
-  };
+final _exports = Expando<_CachedExports>();
 
-  /// Returns an OpenAPI 3.1 Schema Object (not a complete OpenAPI document).
-  Map<String, dynamic> exportOpenApiSchema({
-    required AcanthisSchemaMode mode,
-  }) => _ContractExporter(mode).export(this);
+sealed class _ExportState {
+  const _ExportState();
 }
 
-String _childPath(String path, String key) =>
-    '$path/${key.replaceAll('~', '~0').replaceAll('/', '~1')}';
+final class _SeenExport extends _ExportState {
+  const _SeenExport();
+}
 
-List<Map<String, dynamic>> _constraints(AcanthisType type, String path) {
+final class _CompiledExport extends _ExportState {
+  const _CompiledExport(this.build, [this.auditDefaults]);
+  final Map<String, Object?> Function() build;
+  final void Function()? auditDefaults;
+}
+
+const _seen = _SeenExport();
+
+final class _CachedExports {
+  _ExportState? input;
+  _ExportState? output;
+}
+
+extension AcanthisContractExport on Schema<Object?, Object?> {
+  /// Format the same audited JSON Schema using [indent] spaces per level.
+  String toPrettyJsonSchema({
+    int indent = 2,
+    AcanthisSchemaMode mode = AcanthisSchemaMode.input,
+  }) {
+    if (indent < 0) {
+      throw ArgumentError.value(indent, 'indent', 'Must be nonnegative');
+    }
+    return JsonEncoder.withIndent(' ' * indent)
+        .convert(toJsonSchema(mode: mode));
+  }
+
+  Map<String, Object?> exportJsonSchema({required AcanthisSchemaMode mode}) =>
+      toJsonSchema(mode: mode);
+  Map<String, Object?> exportOpenApiSchema({
+    required AcanthisSchemaMode mode,
+  }) => toOpenApiSchema(mode: mode);
+
+  /// JSON Schema 2020-12 for the audited JSON-only runtime subset.
+  Map<String, Object?> toJsonSchema({
+    AcanthisSchemaMode mode = AcanthisSchemaMode.input,
+  }) => {
+    r'$schema': 'https://json-schema.org/draft/2020-12/schema',
+    ...toOpenApiSchema(mode: mode),
+  };
+
+  /// An OpenAPI 3.1 Schema Object, not a complete OpenAPI document.
+  Map<String, Object?> toOpenApiSchema({required AcanthisSchemaMode mode}) {
+    if (this is AcanthisJsonContract) {
+      return (this as AcanthisJsonContract).exportDefinition();
+    }
+    final cached = _exports[this] ??= _CachedExports();
+    final existing = mode == AcanthisSchemaMode.input
+        ? cached.input
+        : cached.output;
+    if (existing is _CompiledExport) {
+      existing.auditDefaults?.call();
+      return existing.build();
+    }
+    final collection =
+        metadataEntry != null ||
+            this is InstanceType ||
+            this is ObjectSchema ||
+            this is AcanthisUnion ||
+            this is AcanthisTuple ||
+            this is AcanthisTemplate ||
+            this is AcanthisList ||
+            this is RecordSchema ||
+            this is ResolvedSchema ||
+            this is LazyEntry ||
+            this is AcanthisLiteral ||
+            this is AcanthisNullable
+        ? _CollectionExport(mode)
+        : null;
+    final result = collection?.build(this) ?? _exportPrimitive(this, mode);
+    // Metadata examples may contain caller-owned nested values.
+    if (collection?.hasMetadata ?? false) return result;
+    // One-off exports need no snapshot compiler. On the second export, compile
+    // builders from isolated data; never retain the mutable map returned here.
+    final next = existing == null
+        ? _seen
+        : _CompiledExport(_compileCopy(result), collection?.revalidateDefaults);
+    if (mode == AcanthisSchemaMode.input) {
+      cached.input = next;
+    } else {
+      cached.output = next;
+    }
+    return result;
+  }
+}
+
+Map<String, Object?> _metadataAnnotations(
+  Schema<Object?, Object?> schema,
+  String path,
+) {
+  final metadata = schema.metadataEntry;
+  if (metadata == null) return {};
+  final Map<String, Object?> annotations;
+  try {
+    annotations = metadata.toJson();
+  } on ArgumentError catch (error) {
+    throw AcanthisSchemaExportException(path, error.message.toString());
+  }
+  if (annotations.containsKey('format')) {
+    throw AcanthisSchemaExportException(
+      path,
+      'Metadata format is not an audited validation contract.',
+    );
+  }
+  final id = annotations.remove('id');
+  if (id != null) annotations['x-acanthis-id'] = id;
+  final properties =
+      annotations.remove('otherProperties') as Map<String, Object?>?;
+  for (final entry
+      in properties?.entries ?? const <MapEntry<String, Object?>>[]) {
+    if (!entry.key.startsWith('x-') ||
+        entry.key == 'x-acanthis-id' && id != null) {
+      throw AcanthisSchemaExportException(
+        path,
+        'Additional metadata must use non-conflicting x- annotation names.',
+      );
+    }
+    annotations[entry.key] = entry.value;
+  }
+  return annotations;
+}
+
+// Compile fresh-snapshot builders once. Repeated exports do not rediscover each
+// scalar map/list shape or rerun the runtime-contract audit.
+Map<String, Object?> Function() _compileCopy(Map<String, Object?> value) {
+  if (value.isEmpty) return () => <String, Object?>{};
+  if (value.length == 1) {
+    final key = value.keys.first;
+    final scalar = value[key];
+    if (_scalar(scalar)) return () => {key: scalar};
+    final child = _compileValue(scalar);
+    return () => {key: child()};
+  }
+  final keys = value.keys.toList(growable: false);
+  final values = [for (final key in keys) _compileValue(value[key])];
+  return () => {for (var i = 0; i < keys.length; i++) keys[i]: values[i]()};
+}
+
+bool _scalar(Object? value) =>
+    value == null || value is String || value is num || value is bool;
+
+Object? Function() _compileValue(Object? value) {
+  if (_scalar(value)) return () => value;
+  if (value is List<Object?>) {
+    if (value.every(_scalar)) {
+      final snapshot = List<Object?>.unmodifiable(value);
+      return () => List<Object?>.of(snapshot);
+    }
+    final children = [for (final item in value) _compileValue(item)];
+    return () => [for (final build in children) build()];
+  }
+  return _compileCopy(value as Map<String, Object?>);
+}
+
+Map<String, Object?> _exportPrimitive(
+  Schema<Object?, Object?> type,
+  AcanthisSchemaMode mode,
+) {
   Never unsupported(String reason) =>
-      throw AcanthisSchemaExportException(path, reason);
+      throw AcanthisSchemaExportException('', reason);
+  if (type is AsyncSchema<Object?, Object?> && type.isAsync) {
+    unsupported('Async validation cannot be represented.');
+  }
+  final List<Object> checks;
+  final Object? defaultValue;
+  final String kind;
+  if (type is AcanthisString) {
+    if (type.coercionEnabled) {
+      unsupported('String coercion cannot be represented.');
+    }
+    if (type.transformations.isNotEmpty) {
+      unsupported('Transformations cannot be represented.');
+    }
+    checks = type.checks;
+    defaultValue = type.defaultValue;
+    kind = 'string';
+  } else if (type is AcanthisNumeric<num>) {
+    if (type is AcanthisNumeric<int> || type is AcanthisNumeric<double>) {
+      unsupported(
+        'Dart int/double representation restrictions have no exact JSON number contract.',
+      );
+    }
+    if (type.coercionEnabled) {
+      unsupported('Number coercion cannot be represented.');
+    }
+    if (type.transformations.isNotEmpty) {
+      unsupported('Transformations cannot be represented.');
+    }
+    checks = type.checks;
+    defaultValue = type.defaultValue;
+    kind = 'number';
+  } else if (type is AcanthisBoolean) {
+    if (type.coercionEnabled) {
+      unsupported('Boolean coercion cannot be represented.');
+    }
+    if (type.transformations.isNotEmpty) {
+      unsupported('Transformations cannot be represented.');
+    }
+    checks = type.checks;
+    defaultValue = type.defaultValue;
+    kind = 'boolean';
+  } else {
+    unsupported('${type.runtimeType} has no audited JSON contract.');
+  }
   num finite(num value) {
     if (!value.isFinite) {
       unsupported('Constraint bounds must be finite JSON numbers.');
     }
+    if (value < -9007199254740991 || value > 9007199254740991) {
+      unsupported(
+        'Numeric constraints outside the safe integer range have no audited mixed int/double contract.',
+      );
+    }
     return value;
   }
 
-  Map<String, dynamic> enumeration(Iterable<dynamic> values) {
-    final unique = values.toSet().toList();
+  Map<String, Object?> enumeration(Iterable<Object?> values) {
+    final unique = LinkedHashSet<Object?>.of(values).toList();
     for (final value in unique) {
       if (value is! String &&
           value is! bool &&
@@ -59,277 +274,68 @@ List<Map<String, dynamic>> _constraints(AcanthisType type, String path) {
       }
       if (value is num) finite(value);
     }
-    return unique.isEmpty ? {'not': <String, dynamic>{}} : {'enum': unique};
+    return unique.isEmpty ? {'not': <String, Object?>{}} : {'enum': unique};
   }
 
-  return [
-    for (final operation in type.operations)
+  final constraints = <Map<String, Object?>>[
+    for (final operation in checks)
       switch (operation) {
-        LteNumberCheck() when type is AcanthisNumeric => {
-          'maximum': finite(operation.value),
-        },
-        GteNumberCheck() when type is AcanthisNumeric => {
-          'minimum': finite(operation.value),
-        },
-        LtNumberCheck() when type is AcanthisNumeric => {
-          'exclusiveMaximum': finite(operation.value),
-        },
-        GtNumberCheck() when type is AcanthisNumeric => {
-          'exclusiveMinimum': finite(operation.value),
-        },
-        BetweenNumberCheck() when type is AcanthisNumeric => {
+        IsTrueCheck() => {'const': true},
+        IsFalseCheck() => {'const': false},
+        LteNumberCheck<num>() => {'maximum': finite(operation.value)},
+        GteNumberCheck<num>() => {'minimum': finite(operation.value)},
+        LtNumberCheck<num>() => {'exclusiveMaximum': finite(operation.value)},
+        GtNumberCheck<num>() => {'exclusiveMinimum': finite(operation.value)},
+        BetweenNumberCheck<num>() => {
           'minimum': finite(operation.min),
           'maximum': finite(operation.max),
         },
-        PositiveNumberCheck() when type is AcanthisNumeric => {
-          'exclusiveMinimum': 0,
-        },
-        NegativeNumberCheck() when type is AcanthisNumeric => {
-          'exclusiveMaximum': 0,
-        },
-        NonPositiveNumberCheck() when type is AcanthisNumeric => {'maximum': 0},
-        NonNegativeNumberCheck() when type is AcanthisNumeric => {'minimum': 0},
-        FiniteNumberCheck() ||
-        NotNaNNumberCheck() when type is AcanthisNumeric => {},
-        InfiniteNumberCheck() || NaNNumberCheck()
-            when type is AcanthisNumeric =>
-          {'not': <String, dynamic>{}},
-        EnumeratedNumberCheck() when type is AcanthisNumeric => enumeration(
-          operation.values,
-        ),
-        ExactCheck()
-            when type is AcanthisNumeric ||
-                type is AcanthisString ||
-                type is AcanthisBoolean =>
-          enumeration([operation.value]),
-        IsTrueCheck() when type is AcanthisBoolean => {'const': true},
-        IsFalseCheck() when type is AcanthisBoolean => {'const': false},
-        ContainedStringCheck() when type is AcanthisString => enumeration(
-          operation.values,
-        ),
-        RequiredStringCheck() ||
-        NotEmptyStringCheck() when type is AcanthisString => {'minLength': 1},
-        MinItemsListCheck() when type is AcanthisList => {
-          'minItems': operation.minItems < 0 ? 0 : operation.minItems,
-        },
-        MaxItemsListCheck() when type is AcanthisList =>
-          operation.maxItems < 0
-              ? {'not': <String, dynamic>{}}
-              : {'maxItems': operation.maxItems},
-        LengthListCheck() when type is AcanthisList =>
-          operation.length < 0
-              ? {'not': <String, dynamic>{}}
-              : {'minItems': operation.length, 'maxItems': operation.length},
+        PositiveNumberCheck<num>() => {'exclusiveMinimum': 0},
+        NegativeNumberCheck<num>() => {'exclusiveMaximum': 0},
+        NonPositiveNumberCheck<num>() => {'maximum': 0},
+        NonNegativeNumberCheck<num>() => {'minimum': 0},
+        FiniteNumberCheck<num>() || NotNaNNumberCheck<num>() => {},
+        InfiniteNumberCheck<num>() ||
+        NaNNumberCheck<num>() => {'not': <String, Object?>{}},
+        EnumeratedNumberCheck<num>() => enumeration(operation.values),
+        ExactCheck<Object?>() => enumeration([operation.value]),
+        ContainedStringCheck() => enumeration(operation.values),
+        RequiredStringCheck() || NotEmptyStringCheck() => {'minLength': 1},
         MinStringLengthCheck() ||
         MaxStringLengthCheck() ||
         ExactStringLengthCheck() => unsupported(
-          'String length checks count UTF-16 code units; JSON Schema counts Unicode code points. '
-          'Use the legacy exporter only if this approximation is acceptable.',
+          'String length checks count UTF-16 code units; JSON Schema counts Unicode code points.',
         ),
-        UniqueItemsListCheck() => unsupported(
-          'List uniqueness uses Dart equality; JSON Schema uses structural JSON equality.',
-        ),
-        IntegerNumberCheck() || DoubleNumberCheck() => unsupported(
+        IntegerNumberCheck<num>() || DoubleNumberCheck<num>() => unsupported(
           'Dart int/double representation checks have no exact JSON number contract.',
         ),
-        MultipleOfCheck() => unsupported(
-          'Dart floating-point remainder has not been audited against JSON Schema multipleOf.',
-        ),
-        AcanthisCheck() => unsupported(
-          'Check ${operation.name.isEmpty ? operation.runtimeType : operation.name} '
-          'has no audited JSON contract. Remove it or use the legacy best-effort exporter.',
+        MultipleOfCheck<num>() => unsupported(
+          'Floating-point remainder has no audited JSON Schema multipleOf contract.',
         ),
         _ => unsupported(
-          'Transformations and custom operations cannot be represented.',
+          'Check ${operation.runtimeType} has no audited JSON contract.',
         ),
       },
   ];
-}
-
-class _ContractExporter {
-  _ContractExporter(this.mode);
-  final AcanthisSchemaMode mode;
-  final _active = HashMap<AcanthisType, String>.identity();
-  final _referenced = <String>{};
-  final _definitions = <String, dynamic>{};
-  int _nextId = 0;
-
-  Map<String, dynamic> export(AcanthisType type) {
-    final schema = _exportContract(type, '');
-    return {...schema, if (_definitions.isNotEmpty) r'$defs': _definitions};
-  }
-
-  Map<String, dynamic> _exportContract(AcanthisType type, String path) {
-    final existing = _active[type];
-    if (existing != null) {
-      _referenced.add(existing);
-      return {r'$ref': '#/\$defs/$existing'};
+  Map<String, Object?> schema = {
+    'type': kind,
+    if (constraints.isNotEmpty) 'allOf': constraints,
+  };
+  if (defaultValue != null) {
+    if (defaultValue is num && !defaultValue.isFinite) {
+      unsupported('The default must be a finite JSON value.');
     }
-    if (_active.length >= 64) {
-      throw AcanthisSchemaExportException(
-        path,
-        'Schema expansion exceeds 64 levels. Lazy callbacks must reuse a '
-        'stable schema (for example parent.list()), not rebuild it at each level.',
-      );
+    if (!type.tryParse(null).isValid) {
+      unsupported('The default does not satisfy its schema.');
     }
-    final id = 'schema${_nextId++}';
-    _active[type] = id;
-    try {
-      final schema = _body(type, path);
-      if (_referenced.contains(id)) _definitions[id] = schema;
-      return schema;
-    } finally {
-      _active.remove(type);
-    }
-  }
-
-  Map<String, dynamic> _body(AcanthisType type, String path) {
-    Never unsupported(String reason) =>
-        throw AcanthisSchemaExportException(path, reason);
-    if (type.isAsync) unsupported('Async validation cannot be represented.');
-    final constraints = _constraints(type, path);
-    late Map<String, dynamic> schema;
-    if (type is AcanthisMap) {
-      if (type.hasCrossFieldDependencies || type.rules.isNotEmpty) {
-        unsupported('Cross-field dependencies cannot be represented.');
-      }
-      final required = <String>[];
-      final properties = <String, dynamic>{};
-      for (final entry in type.fields.entries) {
-        final field = entry.value;
-        final fieldPath = _childPath(path, entry.key);
-        AcanthisType resolved = field;
-        if (field is LazyEntry) {
-          if (field.operations.isNotEmpty || field.isAsync) {
-            throw AcanthisSchemaExportException(
-              fieldPath,
-              'Operations on LazyEntry are not an audited runtime contract.',
-            );
-          }
-          try {
-            resolved = field.call(type);
-          } catch (_) {
-            throw AcanthisSchemaExportException(
-              fieldPath,
-              'Lazy callback failed to resolve. Return a stable non-LazyEntry schema.',
-            );
-          }
-        }
-        properties[entry.key] = _exportContract(resolved, fieldPath);
-        final isRequired =
-            !type.isOptionalField(entry.key) ||
-            (mode == AcanthisSchemaMode.output &&
-                !type.isPatch &&
-                field.hasDefault);
-        if (isRequired &&
-            !(mode == AcanthisSchemaMode.input && field.hasDefault)) {
-          required.add(entry.key);
-        }
-      }
-      schema = {
-        'type': 'object',
-        'properties': properties,
-        'required': required,
-        'additionalProperties': switch (type.unknownKeyPolicy) {
-          AcanthisUnknownKeys.reject => false,
-          AcanthisUnknownKeys.strip => mode == AcanthisSchemaMode.input,
-          AcanthisUnknownKeys.preserve =>
-            type.additionalValueType == null
-                ? true
-                : _exportContract(type.additionalValueType!, '$path/*'),
-        },
-      };
-    } else if (type is AcanthisNullable) {
-      final element = _exportContract(type.element, path);
-      schema = mode == AcanthisSchemaMode.output && type.defaultValue != null
-          ? element
-          : {
-              'anyOf': [
-                element,
-                {'type': 'null'},
-              ],
-            };
-    } else if (type is AcanthisList) {
-      schema = {
-        'type': 'array',
-        'items': _exportContract(type.element, '$path/*'),
-      };
-    } else if (type is AcanthisUnion) {
-      if (type.hasGuards) {
-        unsupported('Arbitrary variant guards cannot be represented.');
-      }
-      final branches = type.alternatives;
+    if (mode == AcanthisSchemaMode.input) {
       schema = {
         'anyOf': [
-          for (var index = 0; index < branches.length; index++)
-            _exportContract(branches[index], '$path/anyOf/$index'),
+          schema,
+          {'type': 'null'},
         ],
       };
-    } else if (type is AcanthisString) {
-      if (type.coercionEnabled) {
-        unsupported('String coercion cannot be represented.');
-      }
-      schema = {'type': 'string'};
-    } else if (type is AcanthisBoolean) {
-      if (type.coercionEnabled) {
-        unsupported('Boolean coercion cannot be represented.');
-      }
-      schema = {'type': 'boolean'};
-    } else if (type is AcanthisNumeric) {
-      if (type.coercionEnabled) {
-        unsupported('Number coercion cannot be represented.');
-      }
-      // JSON does not preserve Dart int versus double representation.
-      if (type.elementType != num) {
-        unsupported(
-          'Dart int/double representation restrictions have no exact JSON number contract.',
-        );
-      }
-      schema = {'type': 'number'};
-    } else if (type is AcanthisLiteral &&
-        (type.value == null ||
-            type.value is String ||
-            type.value is bool ||
-            type.value is num)) {
-      if (type.value is num &&
-          (type.elementType != num || !(type.value as num).isFinite)) {
-        unsupported(
-          'Numeric literals require a finite num-typed value for exact export.',
-        );
-      }
-      schema = {'const': type.value};
-    } else {
-      unsupported('${type.runtimeType} has no audited JSON contract.');
     }
-    if (constraints.isNotEmpty) {
-      schema = {...schema, 'allOf': constraints};
-    }
-    if (type.hasDefault) {
-      if (!type.tryParse(null).isValid) {
-        unsupported('The default does not satisfy its schema.');
-      }
-      if (mode == AcanthisSchemaMode.input) {
-        schema = {
-          'anyOf': [
-            schema,
-            {'type': 'null'},
-          ],
-        };
-      }
-    }
-    // Metadata is presentation data, not a way to override structural keywords.
-    final metadata = type.metadataEntry?.toJson();
-    return {
-      if (metadata != null)
-        for (final key in [
-          'title',
-          'description',
-          'deprecated',
-          'readOnly',
-          'writeOnly',
-        ])
-          if (metadata.containsKey(key)) key: metadata[key],
-      ...schema,
-    };
   }
+  return schema;
 }

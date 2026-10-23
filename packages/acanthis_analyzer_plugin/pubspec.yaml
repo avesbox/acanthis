@@ -1,0 +1,16 @@
+name: acanthis_analyzer_plugin
+description: Memory-conscious schema diagnostics and DTO assists for Acanthis.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  analysis_server_plugin: 0.3.13
+  analyzer: 12.0.0
+  analyzer_plugin: 0.14.7
+dev_dependencies:
+  lints: ^6.0.0
+  acanthis:
+    path: ../..
+  test: ^1.28.0
+  vm_service: ^15.0.2

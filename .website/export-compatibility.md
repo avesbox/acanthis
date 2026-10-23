@@ -1,72 +1,61 @@
-# Schema export compatibility
+---
+description: Check which native Dart schema behaviors have faithful JSON Schema and OpenAPI representations.
+---
 
-Runtime validation can execute Dart code. JSON Schema and OpenAPI describe JSON
-data, so they cannot express every runtime rule. Choose an export API explicitly:
+# Export compatibility {#schema-export-compatibility}
 
-| API | Contract | Unsupported behavior |
+Every native export helper uses the same strict audit. A contract is emitted only when the schema's supported behavior can be represented faithfully for JSON values. Unsupported behavior throws rather than disappearing from the contract.
+
+## Export helpers
+
+| API | Result | Default mode |
 | --- | --- | --- |
-| `exportJsonSchema(mode: ...)` | Audited JSON Schema 2020-12, input or output | Throws `AcanthisSchemaExportException` with a path and reason |
-| `exportOpenApiSchema(mode: ...)` | Audited OpenAPI 3.1 Schema Object, input or output | Same supported subset and rejection behavior |
-| `toJsonSchema()` / `toPrettyJsonSchema()` | Legacy best-effort description | May omit runtime semantics; no equivalence guarantee |
-| `toOpenApiSchema()` | Legacy best-effort description, including `nullable` | May omit runtime semantics; no equivalence guarantee |
+| `toJsonSchema(mode: ...)` | JSON Schema 2020-12 map | Input |
+| `exportJsonSchema(mode: ...)` | Same JSON Schema map | Explicit mode required |
+| `toPrettyJsonSchema(indent: 2, mode: ...)` | Formatted JSON string | Input |
+| `toOpenApiSchema(mode: ...)` | OpenAPI 3.1 Schema Object | Explicit mode required |
+| `exportOpenApiSchema(mode: ...)` | Same OpenAPI Schema Object | Explicit mode required |
 
 ## Supported behavior
 
-“Supported” below assumes every nested schema, constraint, and default is also
-exportable. Both audited exporters use the same support rules.
+Every child, constraint, default, and annotation must pass the audit.
 
-| Behavior | Runtime | Audited exports |
-| --- | --- | --- |
-| JSON primitives, objects, lists, tuples, nullable values | Supported | Supported |
-| Required/optional fields, valid defaults, PATCH omission | Supported | Supported; input/output modes differ |
-| Strip, preserve, reject unknown keys; typed extra values | Supported | Supported; choose the appropriate mode |
-| Numeric bounds; JSON scalar equality/enumeration; boolean checks | Supported | Supported |
-| `string().notEmpty()`; list length bounds | Supported | Supported |
-| Ordinary unions; stable recursive objects | Supported | `anyOf`; local `$defs` / `$ref` |
-| General string lengths, formats, regexes | Supported | Rejected |
-| Dart integer/double representation checks, `multipleOf` | Supported | Rejected |
-| Object property counts, list uniqueness | Supported | Rejected |
-| Coercion, transformations, pipes | Supported | Rejected |
-| Custom/async checks, selected-field rules, variant guards | Supported | Rejected |
-| Dart instances and `DateTime` schemas | Supported | No audited JSON contract |
+| Native behavior | Export |
+| --- | --- |
+| Unconstrained strings, numbers, booleans, scalar literals | Supported when scalar equality is representable |
+| Objects, lists, tuples, nullable values, string-key records | Supported when their children and checks are supported |
+| Optional fields, defaults, PATCH, unknown-key policies | Supported; input/output modes can differ |
+| Numeric bounds, scalar equality/enumeration, boolean checks | Supported with representable finite constraints |
+| Empty/nonempty string constraints | Supported |
+| List lengths, scalar membership, uniqueness | Supported within the audited equality subset |
+| Object property counts | Supported |
+| Plain unions, scalar templates, stable recursive objects | Supported subset; recursion uses local references |
+| Field-described instances | Declared JSON representation; getters do not run |
+| General string lengths, patterns, and formats | Rejected |
+| Dart `integer()` / `doubleType()` restrictions | Rejected |
+| Coercion, transforms, pipes, custom/async checks, guarded unions, field rules | Rejected |
+| Native dates and opaque domain schemas | Rejected |
 
-String length is a notable boundary: Dart counts UTF-16 code units while JSON
-Schema counts Unicode code points. Export rejects general length constraints
-rather than silently changing their meaning. Repeated supported constraints
-remain conjunctive instead of overwriting one another.
+## Why a check can be rejected
+
+Native string lengths count UTF-16 code units; JSON Schema lengths count Unicode code points. Dart `int` and `double` are distinct runtime representations; JSON numeric types cannot enforce that distinction. Arbitrary callbacks cannot be translated into declarative JSON constraints.
+
+Use an [imported JSON contract](/json-schema#import-a-contract) when JSON semantics are the requirement. Keep additional application checks explicit when a published contract describes only a boundary subset.
 
 ## Input versus output
 
-```dart
-final schema = object({
-  'name': string().notEmpty().withDefault('Guest'),
-  'score': number().gte(0),
-});
-final input = schema.exportJsonSchema(mode: AcanthisSchemaMode.input);
-final output = schema.exportJsonSchema(mode: AcanthisSchemaMode.output);
-```
+Input mode describes accepted JSON, including missing/null values handled by valid defaults. Output mode describes successful parsed values, including the effects of stripping and defaults. Neither describes invalid recovery. An external validator may validate input without applying Acanthis's transformations to it.
 
-The input contract permits the defaulted `name` to be absent or null. Successful
-parsed output contains a non-null `name`. The default strip policy accepts extra
-input keys but removes them from output. Exported defaults are descriptive: an
-external JSON Schema validator does not necessarily insert them or strip keys.
-
-Use input mode for incoming JSON and output mode for successful parsed JSON.
-Neither mode describes best-effort values from invalid outcomes.
-
-## Handle unsupported schemas
+## Handle an export failure {#handle-unsupported-schemas}
 
 ```dart
+final schema = object({'email': string().email()});
 try {
-  string().email().exportJsonSchema(mode: AcanthisSchemaMode.input);
+  schema.toJsonSchema();
 } on AcanthisSchemaExportException catch (error) {
-  print(error); // Identifies the unsupported check and its schema path.
+  print(error.path); // Points to the unsupported part of the schema.
+  print(error.reason);
 }
 ```
 
-Treat this as a schema design decision. If you publish a simpler JSON contract,
-document which additional rules the application enforces. Switching to a legacy
-exporter does not make the missing semantics exact.
-
-See [JSON Schema](/json-schema) for recursion and metadata, and
-[OpenAPI](/open-api-schema) for embedding a Schema Object and preserving references.
+Export does not execute arbitrary validation, conversion, getter, or constructor callbacks. Supported metadata is serialized to fresh JSON containers; cycles and unsafe annotation values fail explicitly.

@@ -1,6 +1,7 @@
 import 'package:luthor/luthor.dart';
 
 import '../shared/acanthis_benchmark.dart';
+import '../shared/payloads.dart';
 
 class LongLuthorStringValidationBenchmark extends AcanthisBenchmark {
   LongLuthorStringValidationBenchmark()
@@ -10,9 +11,11 @@ class LongLuthorStringValidationBenchmark extends AcanthisBenchmark {
     LongLuthorStringValidationBenchmark().report();
   }
 
+  final validator = l.string();
+
   @override
   void run() {
-    l.string().validateValue('long' * 256);
+    validator.validate(Payloads.longStringPayload);
   }
 }
 
@@ -24,9 +27,11 @@ class FixedLuthorLengthStringValidationBenchmark extends AcanthisBenchmark {
     FixedLuthorLengthStringValidationBenchmark().report();
   }
 
+  final validator = l.string().max(5).min(1);
+
   @override
   void run() {
-    l.string().max(5).min(1).validateValue('long');
+    validator.validate(Payloads.fixedLengthStringPayload);
   }
 }
 
@@ -38,9 +43,11 @@ class EmptyLuthorStringValidationBenchmark extends AcanthisBenchmark {
     EmptyLuthorStringValidationBenchmark().report();
   }
 
+  final validator = l.string();
+
   @override
   void run() {
-    l.string().validateValue('');
+    validator.validate(Payloads.emptyStringPayload);
   }
 }
 
@@ -52,9 +59,11 @@ class EmailLuthorStringValidationBenchmark extends AcanthisBenchmark {
     EmailLuthorStringValidationBenchmark().report();
   }
 
+  final validator = l.string().email();
+
   @override
   void run() {
-    l.string().email().validateValue('email@example.com');
+    validator.validate(Payloads.emailStringPayload);
   }
 }
 
@@ -66,8 +75,10 @@ class UuidLuthorStringValidationBenchmark extends AcanthisBenchmark {
     UuidLuthorStringValidationBenchmark().report();
   }
 
+  final validator = l.string().uuid();
+
   @override
   void run() {
-    l.string().uuid().validateValue('550e8400-e29b-41d4-a716-446655440000');
+    validator.validate(Payloads.uuidStringPayload);
   }
 }

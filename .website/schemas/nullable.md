@@ -1,38 +1,53 @@
 ---
-description: Allow null explicitly and distinguish it from an absent object field.
+description: Compose nullability with lists, objects, and other schema capabilities.
 ---
 
 # Nullable values
 
-Allow null explicitly and distinguish it from an absent object field.
+## `nullable()` {#nullables}
 
-For missing keys, defaults, and PATCH updates, see the
-[presence and defaults decision table](/presence-and-defaults).
-
-## Nullables
-
-Use the `nullable()` method to create a nullable schema. This method allows you to validate and transform nullables.
-
-Nullables are a bit special in Acanthis. They are not a type, but a modifier. You can use them with any type to make it nullable.
+`.nullable()` wraps a schema and accepts null in addition to its ordinary input. The output type becomes `T?`.
 
 ```dart
-string().nullable(defaultValue: 'default');
-number().nullable(defaultValue: 5);
-boolean().nullable(defaultValue: true);
-date().nullable(defaultValue: DateTime.now());
-...
+final name = string().min(2).nullable();
+final String? missingName = name.parse(null);
+print(name.parse('Ada')); // Ada
+print(name.validate('A')); // false
 ```
 
-You can also validate the nullable type.
+Nullability composes with other capabilities. The order changes the type:
 
 ```dart
-string().nullable().enumerated(['Acanthis', 'Dart']);
+final List<String?> names = string().nullable().list().parse(['Ada', null]);
+final List<String>? tags = string().list().nullable().parse(null);
 ```
 
-::: info
-At the enumerated list will be added `null` and the default value if provided.
-:::
+## Limit non-null values
 
----
+```dart
+final language = string().nullable().enumerated(['Dart', 'JavaScript']);
+print(language.validate(null)); // true
+print(language.validate('Dart')); // true
+print(language.validate('Rust')); // false
+```
 
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+Nullable enumeration always permits null. Non-null values must also satisfy the wrapped schema.
+
+## Defaults
+
+```dart
+final name = string().min(2).nullable(defaultValue: 'Guest');
+print(name.parse(null)); // Guest
+```
+
+A non-null default replaces null before validation and must pass every relevant check, including nullable enumeration. Plain `.nullable()` has no explicit null default. Use `.nullable().withDefault(null)` when an omitted object field should be filled with null.
+
+## Nullable fields are required
+
+```dart
+final account = object({'nickname': string().nullable()});
+print(account.validate({})); // false
+print(account.validate({'nickname': null})); // true
+```
+
+Add `.optionals(['nickname'])` to allow omission. See [presence and defaults](/presence-and-defaults) for the complete behavior table and PATCH semantics.

@@ -11,13 +11,7 @@ AcanthisRule<void> matching({void Function()? called}) => AcanthisRule<void>(
     called?.call();
     return values.value<String>(password) == values.value<String>(confirm)
         ? []
-        : [
-            AcanthisIssue(
-              path: confirm.segments,
-              code: 'mismatch',
-              message: 'Passwords differ',
-            ),
-          ];
+        : [AcanthisIssue(path: confirm.segments, code: 'mismatch')];
   },
 );
 
@@ -135,11 +129,7 @@ void main() {
         check: (v, context) => v.value<String>(path) == context
             ? []
             : [
-                AcanthisIssue(
-                  path: ['a'],
-                  code: 'tenant',
-                  message: 'Wrong tenant',
-                ),
+                AcanthisIssue(path: ['a'], code: 'tenant'),
               ],
       ),
     );

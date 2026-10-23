@@ -9,11 +9,12 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  luthor: ^0.17.0
-  benchmark_harness: ^2.3.1
+  luthor: ^1.0.0
+  benchmark_harness: ^2.4.0
   acanthis: 
     path: ../
   vine: ^1.8.0
+  ack: ^1.7.0
   
 
 dev_dependencies:

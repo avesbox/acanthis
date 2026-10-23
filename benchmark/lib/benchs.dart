@@ -1,9 +1,11 @@
 import 'package:benchmarks/acanthis/object_benchmarks.dart';
+import 'package:benchmarks/ack/object_benchmarks.dart';
 import 'package:benchmarks/luthor/object_benchmarks.dart';
 import 'package:benchmarks/vine/object_benchmarks.dart';
 
 import 'acanthis/string_benchmarks.dart';
 import 'luthor/string_benchmarks.dart';
+import 'ack/string_benchmarks.dart';
 
 class StringBenchmarks {
   static void main() {
@@ -19,6 +21,11 @@ class StringBenchmarks {
     EmptyLuthorStringValidationBenchmark.main();
     EmailLuthorStringValidationBenchmark.main();
     UuidLuthorStringValidationBenchmark.main();
+    print("Running Ack String benchmarks");
+    LongStringAckValidationBenchmark.main();
+    FixedLengthStringAckValidationBenchmark.main();
+    EmptyStringAckValidationBenchmark.main();
+    EmailStringAckValidationBenchmark.main();
     print("String benchmarks complete");
   }
 }
@@ -33,6 +40,10 @@ class ObjectBenchmarks {
     LuthorNestedObjectValidator.main();
     LuthorFlatObjectValidator.main();
     LuthorArrayObjectValidator.main();
+    print("Running Ack Object benchmarks");
+    NestedObjectAckValidator.main();
+    FlatObjectAckValidator.main();
+    ArrayObjectAckValidator.main();
     print("Running Vine Object benchmarks");
     VineNestedObjectValidator.main();
     VineFlatObjectValidator.main();

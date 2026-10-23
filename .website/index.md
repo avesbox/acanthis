@@ -30,7 +30,7 @@ final result = account.tryParse({
 });
 
 print(result.isValid); // true
-if (result is AcanthisValid<Map<String, dynamic>>) {
+if (result is AcanthisValid<Map<String, Object?>>) {
   print(result.value['name']); // Ada
 }
 ```

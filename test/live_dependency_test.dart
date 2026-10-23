@@ -16,13 +16,7 @@ void main() {
             inputs: [selected],
             outputs: [selected],
             check: (v, _) => v.value<String>(selected) == 'bad'
-                ? [
-                    AcanthisIssue(
-                      path: selected.segments,
-                      code: 'second',
-                      message: 'Bad second item',
-                    ),
-                  ]
+                ? [AcanthisIssue(path: selected.segments, code: 'second')]
                 : [],
           ),
         );
@@ -80,11 +74,7 @@ void main() {
           outputs: [target],
           check: (v, _) => v.value<String>(input).isEmpty
               ? [
-                  AcanthisIssue(
-                    path: ['target'],
-                    code: 'required',
-                    message: 'Required',
-                  ),
+                  AcanthisIssue(path: ['target'], code: 'required'),
                 ]
               : [],
         );
@@ -101,7 +91,7 @@ void main() {
   });
 
   test('typed list outputs retain their element type in sessions', () {
-    final schema = AcanthisMap<List<int>>({'items': integer().list()});
+    final schema = object({'items': integer().list()});
     final session = schema.watch({
       'items': [1, 2],
     });

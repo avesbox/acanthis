@@ -1,96 +1,80 @@
 ---
-description: Set field-specific validation messages and format structured issues for your application.
+description: Customize messages and localize the same validation result without running validation again.
 ---
 
-# Custom error messages
+# Messages and localization
 
-Give users a clear next step when a check fails. Pass `message` to a validator for fixed text, or use `messageBuilder` where supported to include the configured constraint.
+Issues store codes and parameters. A message catalog turns them into text when you display them.
 
-## Set messages on a schema
+## Customize messages {#set-messages-on-a-schema}
 
-```dart
-import 'package:acanthis/acanthis.dart';
-
-void main() {
-  final account = object({
-    'name': string().notEmpty(message: 'Enter your name'),
-    'age': integer().gte(
-      18,
-      messageBuilder: (minimum) => 'You must be at least $minimum years old',
-    ),
-    'email': string().email(message: 'Enter a valid email address'),
-  });
-
-  final result = account.tryParse({
-    'name': '',
-    'age': 16,
-    'email': 'invalid-email',
-  });
-
-  for (final issue in result.issues) {
-    print('${issue.jsonPointer}: ${issue.message}');
-  }
-}
-```
-
-```text [Output]
-/name: Enter your name
-/age: You must be at least 18 years old
-/email: Enter a valid email address
-```
-
-`notEmpty()` checks a supplied string. A missing object key is a separate required-field condition; see [objects](/schemas/objects).
-
-## Group messages by field
-
-Use `result.issues.formatFields()` to get messages grouped by JSON pointer. A field can have more than one message. Use `formatTree()` when your UI needs the nested structure.
-
-## Localize at presentation time
-
-Keep schemas reusable across languages by resolving messages from each issue’s code and parameters. A resolver returns `null` to keep the schema’s fallback message.
-
-See [presentation and localization](/validation-results#presentation-and-localization) for a complete resolver example and the available output formats.
-
-### Custom rules
-
-For `checkFields()` and `checkFieldsAsync()`, resolve the rule's `name` as the
-translation key; `error` supplies the fallback message. For explicit
-`AcanthisRule` callbacks, resolve the returned `AcanthisIssue.code`, which is
-independent of the rule's `id`. Return `null` for unknown codes to preserve the
-fallback. Custom codes are translated by your application.
-
-See [localizing custom rule messages](/contextual-rules#localize-custom-rule-messages)
-for complete examples covering password confirmation, live sessions, and
-parameter interpolation. The same resolver works with
-`result.issues.formatFields()` and `session.issues.formatFields()`.
-
-## Stable codes and transport
-
-Use `AcanthisIssueCodes.minLength` and the other public string constants when
-matching built-in diagnostics. Custom codes remain ordinary strings; use an
-`app.*` or organization prefix. Codes, constraint parameter shapes, data paths,
-and duplicate/branch order form the machine contract. English messages do not.
-
-`AcanthisMessageCatalogs.english` and `.italian` can reformat the same issues
-without rerunning checks. Use `AcanthisI18n.runWith` for request-scoped locale
-selection. Explicit resolvers take precedence; returning null preserves the
-stored message, and an empty string is a valid translation.
-
-For API responses, use the versioned, locale-independent transport projection:
+Extend a bundled catalog to override selected codes and keep its fallback messages.
 
 ```dart
-final result = object({'email': string().min(3)}).tryParse({'email': 'x'});
-final payload = result.issues.toTransport();
-// {version: 1, issues: [{path: [email], code: minLength,
-//                       parameters: {value: 3}}]}
+final catalog = AcanthisMessageCatalogs.english.extend({
+  'minLength': (p) => 'Use at least ${p['value']} characters',
+  'email': (_) => 'Enter a valid email address',
+});
+final issues = string().min(3).tryParse('x').issues;
+print(issues.formatFields(catalog: catalog));
+// {: [Use at least 3 characters]}
 ```
 
-The envelope preserves string/int path segments and nested union branches. It
-omits messages and recovery values; existing `toJson()` and `formatJson()` keep
-resolved messages. Put constraints, never submitted secrets, into custom
-parameters. Cyclic or oversized custom metadata is bounded with explicit markers.
+An explicit `catalog:` replaces normal lookup. A standalone catalog without a fallback renders unknown codes as the code itself. Use `.extend()` for partial overrides.
 
-The [complete contract and migration notes](https://github.com/avesbox/acanthis/blob/main/doc/error-codes.md)
-list the vocabulary, parameter units, metadata limits, and observable changes.
-In 2.1, instance failures use field paths plus the original check code, and
-invalid input conversions become structured `ValidationError` failures.
+A missing object field reports `required`; an empty string can report `notEmpty`. Give application checks distinct codes when they need distinct messages.
+
+## Add a custom check message
+
+```dart
+final slug = string().refine(
+  onCheck: (value) => !value.contains(' '),
+  name: 'slugSpaces',
+  error: 'Use hyphens instead of spaces',
+);
+print(slug.tryParse('hello world').issues.first.message);
+// Use hyphens instead of spaces
+```
+
+`name` is the issue code; `error` supplies that check's fallback text. For parameterized messages, use [custom checks](/schemas/refinements#parameterized-checks).
+
+## Choose a language {#localize-at-presentation-time}
+
+English and Italian catalogs cover built-in codes. Pass a catalog to a formatter to translate an existing result.
+
+```dart
+final issues = string().min(3).tryParse('x').issues;
+print(issues.formatFields(catalog: AcanthisMessageCatalogs.italian));
+// {: [Il valore deve contenere almeno 3 caratteri]}
+```
+
+`issue.formatMessage(catalog: ...)`, `formatFields()`, `formatTree()`, and `formatJson()` accept the same catalogs. These formatters also work with live-session issues.
+
+## Scope a locale
+
+`AcanthisI18n.runWith()` scopes message lookup to an action and its async continuations.
+
+```dart
+final issues = object({'name': string()}).tryParse({}).issues;
+final config = AcanthisLocaleConfig.forLocale('it-CH', overrides: {
+  'it': AcanthisMessageCatalog({'required': (_) => 'Obbligatorio'}),
+  'it-CH': AcanthisMessageCatalog({'required': (_) => 'Campo obbligatorio'}),
+});
+
+final fields = AcanthisI18n.runWith(config, () => issues.formatFields());
+print(fields); // {/name: [Campo obbligatorio]}
+```
+
+Locale lookup tries regional overrides, language overrides, then the bundled language. Locale keys normalize whitespace, case, and `_`/`-`. Application catalogs can supply other languages. `AcanthisMessageCatalogs.forLocale()` exposes the same lookup directly; `AcanthisI18n.configure()` sets the application default.
+
+## Message precedence
+
+With an explicit `catalog:`, only that catalog and its fallbacks are used. Otherwise lookup tries the active locale, the issue's per-check `defaultCatalog`, then English. An unresolved code renders as its code.
+
+A builder returning null continues fallback. An empty string is a resolved message. Formatting changes neither validation nor issue equality, and `toTransport()` never formats messages.
+
+## Translate rules {#custom-rules}
+
+`checkFields()` uses its `name` as the translation key. Extend a catalog with that code, as with any built-in check. An explicit `AcanthisRule` has a scheduling ID separate from the codes it returns. See [cross-field messages](/contextual-rules#localize-custom-rule-messages).
+
+Compare codes using `AcanthisIssueCodes` constants or your application strings. Keep issue parameters limited to shareable constraints; dates become ISO strings and durations become microseconds.

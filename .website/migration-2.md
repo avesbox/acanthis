@@ -1,127 +1,92 @@
-# Migrating to 2.0
+---
+description: Update V1 parsing, diagnostics, object schemas, localization, export, and mock adapters.
+---
+
+# Migrating to V2
+
+This guide covers breaking API and behavior changes. Start with return types, then update your schema and UI adapters.
 
 ## SDK requirement
 
-Acanthis 2.0 requires Dart 3.13 or later. Flutter applications need a Flutter
-SDK that includes a compatible Dart version.
-
-## Parsed values can share input identity
-
-Validation without output changes can return the original map or typed list
-directly from `parse`, or through `AcanthisValid.value` from `tryParse`.
-Mutations through the returned container may affect the input, and read-only
-input may produce read-only output.
-
-```dart
-final input = {'name': 'Ada'};
-final result = object({'name': string()}).parse(input);
-final independent = Map<String, dynamic>.of(result);
-```
-
-This creates an independent outer map, not a deep clone. Use `List.of` for
-an independent outer list. Schemas with transformations, coercion or defaults
-retain their output handling.
-
-## Nested object stripping
-
-Unknown keys are stripped at every object level, including objects inside
-lists. Use `passthrough()` on each object schema whose extra keys should be
-retained. When nested stripping changes a value, the affected ancestor maps
-and lists are copied; the original input is not modified. Unchanged containers
-can still be reused.
-
-## Async and non-throwing parsing
-
-Calling `parseAsync` or `tryParseAsync` on a synchronous map or list schema now
-runs the same parsing path as its synchronous counterpart. Transformations
-execute once. Schemas with async checks must use async entry points.
-
-Wrong map/list input types and non-string map keys produce failed results in
-`tryParse` and `tryParseAsync`, including when nested. User callbacks can still
-throw their own exceptions; these APIs do not suppress arbitrary application
-errors.
-
-## New result and session APIs
-
-`tryParse` and `tryParseAsync` expose typed success/failure outcomes and
-structured issues; see [Validation Results](/validation-results).
-Object schemas expose `watch` and `watchAsync` for live sessions. Synchronous
-sessions provide `explain(field)`; there is no `explainAsync` method.
-See [Live Validation](/live-validation) for update deltas and async behavior.
-
-## Diagnostic paths and legacy errors
-
-The structured outcome API was introduced during unreleased 2.0 development.
-Its final path contract uses data locations only: the draft
-`['account', 'email', 'email']` becomes `['account', 'email']`, with `email`
-kept separately as the code. Published 1.x did not expose this structured API.
-List and tuple indices are integers. Update any adapters written against the
-2.0 draft to stop removing a trailing check segment.
-
-Use `result.issues` for complete ordered diagnostics and `branches` for union
-failures. `errors` stays available but drops duplicate codes, index types, and
-union branch details. Missing-dependency failures now use the stable
-`dependency` code and put the dependency name in `parameters.dependsOn`.
-Built-in coercion messages no longer echo the input value. Custom messages
-remain application-controlled. See [Validation Results](/validation-results)
-for the collection policy, formatting helpers, and localization resolver.
+V2 requires Dart 3.13 or later and a compatible Flutter SDK.
 
 ## Parsing return types
 
-`AcanthisParseResult` and `toOutcome()` have been removed. Update callers as follows:
-
-| Previous API | 2.0 API |
+| Previous usage | V2 usage |
 | --- | --- |
 | `schema.parse(input).value` | `schema.parse(input)` |
 | `(await schema.parseAsync(input)).value` | `await schema.parseAsync(input)` |
 | `result.success` | `result.isValid` |
-| `result.value` after `tryParse` | Still `result.value`, on both branches |
-| `schema.tryParse(input).toOutcome()` | `schema.tryParse(input)` |
-| Draft typed `validate` / `validateAsync` | `tryParse` / `tryParseAsync` |
+| `result.errors` | `result.issues.formatFields()` for messages |
+| `result.metadata` | `schema.metadataEntry` |
+| `AcanthisType<T>` as a schema base | `Schema<Input, Output>` |
+| `AcanthisMap` | `ObjectSchema` or `RecordSchema<K, V>` |
+| `withTransformation(...)` | `withTransform(...)` |
 
-`tryParse` returns `AcanthisOutcome<T>`; `tryParseAsync` returns
-`Future<AcanthisOutcome<T>>`. Both branches expose `value`. Check `isValid` or match the sealed branches
-before treating it as valid data; invalid values are best-effort output.
-The earlier draft name `recoveryValue` has been replaced with `value`.
-Metadata remains available on outcomes and through `schema.metadataEntry`;
-raw values returned by `parse` do not carry metadata.
+`tryParse()` returns `AcanthisOutcome<T>` and collects ordered diagnostics.
+Read `value` on success, or check `AcanthisInvalid.hasValue` before reading typed
+recovery. Missing recovery throws `StateError`; no mock value is fabricated.
 
-`validate(input)` returns `String?` and `validateAsync(input)` returns
-`Future<String?>`: null on success, or the first validation error message.
-See the [Flutter form example](/basic-usage#flutter-textformfield) for nullable
-callback input and synchronous validation requirements. Neither method returns
-an outcome. Custom schema overrides must adopt the new return types too.
+`validate()` returns `bool`, and `validateAsync()` returns `Future<bool>`.
+Flutter's `FormField.validator` requires `String?`: adapt `tryParse()` to return
+null on success and `issues.first.message` on failure. See the
+[validator adapter](/basic-usage#check-validity).
 
-## Reproducible recovery and optional output
+## Parsed values can share input identity
 
-Sync and async non-throwing validation now produce equivalent recovery containers,
-including stripped nested objects when a child fails. Primitive type-failure
-recovery uses a fixed mock seed. Absent optional fields remain absent even when
-nullable; present null is still validated normally. Unchanged invalid containers
-can share input identity just as unchanged valid containers do.
-
-`mockSeeded` is the new bounded generation contract; legacy `mock` remains best
-effort. See [Seeded Mocking](/seeded-mocking) for supported schemas and limits.
+Unchanged typed maps and lists can be returned directly. Mutating the result can
+affect the input; read-only input can produce read-only output. Use `Map.of` or
+`List.of` for an independent outer container. Changed ancestors are copied when
+defaults, coercion, transformations or stripping change a child.
 
 ## Presence, defaults and PATCH
 
-Nullable fields are now required unless listed in `optionals()` or supplied by a
-default. Explicit null remains in the parsed map for nullable fields without a
-non-null default. Defaults apply to both absent and null input and undergo normal
-validation; invalid supplied input remains a failure.
+Fields are required even when nullable, unless listed in `optionals()` or supplied
+by a default. Explicit null is validated normally. Defaults replace missing/null
+input and are themselves validated; supplied invalid values remain invalid.
+`partial()` / `patch()` preserve omission and suppress defaults on absent fields.
+`deep: true` recurses through direct object children. Unknown-key policies and
+typed passthrough are retained. See [presence and defaults](/presence-and-defaults).
 
-`partial()` now preserves omission and original nullability, and keeps the
-unknown-key policy. It no longer inserts null or enables passthrough. `patch()`
-is an alias; omitted fields do not receive defaults in either API. Supplied null
-still uses the field default when present. Deep partial recurses through directly
-nested object schemas only. Object rules remain attached.
+## Diagnostic paths and legacy errors
 
-Use `unknownKeys(AcanthisUnknownKeys.reject)` for strict objects, `strip` for
-accepted-but-removed extras, or `preserve` for retained extras. Typed
-`passthrough(type: ...)` is still available.
+Paths contain data locations only; the check code is separate. List indices are
+integers. `issues.formatFields()` preserves duplicate messages at a location;
+`formatTree()` also distinguishes field names from integer indices.
+`issues.toTransport()` is the versioned, locale-independent protocol.
+The lossy legacy errors map is removed.
 
-For explicit contracts use `exportJsonSchema(mode: AcanthisSchemaMode.input)` or
-`output` (2020-12), and `exportOpenApiSchema(mode: ...)` for OpenAPI 3.1 Schema
-Objects. These APIs currently support structural JSON schemas and reject
-unsupported constraints/transforms with a path-bearing exception. Existing
-`toJsonSchema()` / `toOpenApiSchema()` remain legacy best-effort APIs.
+## Message catalogs and custom checks
+
+Replace built-in `message:` / `messageBuilder:` arguments and resolver callbacks
+with immutable `AcanthisMessageCatalog` entries. Presentation methods accept
+`catalog:`. String-length parameters retain V1's `value` key.
+`refine()` accepts a synchronous predicate and optional fallback text;
+`refineAsync()` takes an `AsyncCheck<T>` such as `CallbackAsyncCheck`.
+Use `withCheck(PredicateCheck<T>(..., parameters: ...))` for parameterized custom
+checks. Programming exceptions propagate instead of becoming failed checks.
+
+`AcanthisLocaleConfig.forLocale(locale, overrides: ...)` and
+`AcanthisMessageCatalogs.forLocale(locale, overrides: ...)` accept catalogs keyed
+by locale. Exact regional overrides fall back to base-language overrides, then
+bundled English/Italian translations. Resolver callbacks from V1 become catalog
+entries in V2. See [localization](/error-customization#localize-at-presentation-time).
+
+## Async and live validation
+
+Async schemas require async parsing methods; synchronous use throws `StateError`.
+Synchronous schemas use the same behavior through async entry points.
+`watch()` and `watchAsync()` provide live edits, revisions, deltas and cancellation.
+See [live validation](/live-validation).
+
+## Export and mocks
+
+All JSON/OpenAPI export helpers now use the strict audited exporter. Unsupported
+behavior throws rather than silently omitting constraints. Input/output modes
+select accepted JSON input or successful JSON output. OpenAPI export requires
+an explicit mode and emits a 3.1 Schema Object. See [export compatibility](/export-compatibility).
+
+`mock()` and `mock(seed)` use the same bounded generator as `mockSeeded()`.
+Returned values are validated; unsupported schemas or exhausted budgets throw
+`AcanthisMockException`. Class pipelines validate mapped output and use bounded
+retries. See [seeded mocking](/seeded-mocking) for the supported subset.

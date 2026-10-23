@@ -1,5 +1,6 @@
 import 'package:acanthis/acanthis.dart';
 import 'package:benchmarks/shared/acanthis_benchmark.dart';
+import 'package:benchmarks/shared/payloads.dart';
 
 class NestedObjectValidator extends AcanthisBenchmark {
   NestedObjectValidator() : super(name: 'NestedObjectValidator');
@@ -16,12 +17,7 @@ class NestedObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {
-      'username': 'John Doe',
-      'password': 'secret',
-      'contact': {'name': 'John Doe', 'address': '123 Main St'},
-    };
-    validator.parse(payload);
+    validator.parse(Payloads.nestedObjectPayload);
   }
 }
 
@@ -36,8 +32,7 @@ class FlatObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {'firstname': 'John', 'lastname': 'Doe'};
-    validator.parse(payload);
+    validator.parse(Payloads.flatObjectPayload);
   }
 }
 
@@ -54,12 +49,6 @@ class ArrayObjectValidator extends AcanthisBenchmark {
 
   @override
   void run() {
-    final payload = {
-      'contacts': [
-        {'type': 'email', 'value': 'foo@bar.com'},
-        {'type': 'phone', 'value': '12345678'},
-      ],
-    };
-    validator.parse(payload);
+    validator.parse(Payloads.objectArrayPayload);
   }
 }

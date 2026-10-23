@@ -1,23 +1,23 @@
-import 'package:acanthis/src/operations/checks.dart';
+import '../common/operations.dart';
 
-/// Boolean checks for True
-class IsTrueCheck extends AcanthisCheck<bool> {
-  const IsTrueCheck({String? message})
-    : super(error: message ?? 'Value must be true', name: 'isTrue');
-
+sealed class BooleanCheck implements Check<bool> {
+  const BooleanCheck(this.code);
+  final String code;
+  bool test(bool value);
   @override
-  bool call(bool value) {
-    return value;
+  void evaluate(bool value, CheckContext context) {
+    if (!test(value)) context.addIssue(code);
   }
 }
 
-/// Boolean checks for False
-class IsFalseCheck extends AcanthisCheck<bool> {
-  const IsFalseCheck({String? message})
-    : super(error: message ?? 'Value must be false', name: 'isFalse');
-
+final class IsTrueCheck extends BooleanCheck {
+  const IsTrueCheck() : super('isTrue');
   @override
-  bool call(bool value) {
-    return !value;
-  }
+  bool test(bool value) => value;
+}
+
+final class IsFalseCheck extends BooleanCheck {
+  const IsFalseCheck() : super('isFalse');
+  @override
+  bool test(bool value) => !value;
 }

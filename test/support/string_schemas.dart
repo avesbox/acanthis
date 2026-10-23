@@ -1,0 +1,56 @@
+import 'package:acanthis/acanthis.dart';
+
+enum _Color { red, green }
+
+AcanthisString buildStringCase(String name) {
+  final s = string();
+  return switch (name) {
+    'email' => s.email(),
+    'min' => s.min(3),
+    'max' => s.max(3),
+    'length' => s.length(3),
+    'pattern' => s.pattern(r'^[a-z]+$'),
+    'patternInsensitive' => s.pattern(RegExp(r'^hello$', caseSensitive: false)),
+    'letters' => s.letters(),
+    'lettersLoose' => s.letters(strict: false),
+    'digits' => s.digits(),
+    'digitsLoose' => s.digits(strict: false),
+    'alphanumeric' => s.alphanumeric(),
+    'alphanumericLoose' => s.alphanumeric(strict: false),
+    'alphanumericWithSpaces' => s.alphanumericWithSpaces(),
+    'alphanumericWithSpacesLoose' => s.alphanumericWithSpaces(strict: false),
+    'specialCharacters' => s.specialCharacters(),
+    'specialCharactersLoose' => s.specialCharacters(strict: false),
+    'allCharacters' => s.allCharacters(),
+    'allCharactersLoose' => s.allCharacters(strict: false),
+    'upperCase' => s.upperCase(),
+    'lowerCase' => s.lowerCase(),
+    'mixedCase' => s.mixedCase(),
+    'dateTime' => s.dateTime(),
+    'time' => s.time(),
+    'hexColor' => s.hexColor(),
+    'uri' => s.uri(),
+    'url' => s.url(),
+    'required' => s.required(),
+    'notEmpty' => s.notEmpty(),
+    'contains' => s.contains('needle'),
+    'startsWith' => s.startsWith('prefix'),
+    'endsWith' => s.endsWith('suffix'),
+    'card' => s.card(),
+    'enumerated' => s.enumerated(_Color.values),
+    'enumeratedTransformed' => s.enumerated(
+      _Color.values,
+      nameTransformer: (name) => name.toUpperCase(),
+    ),
+    'contained' => s.contained(['red', 'green']),
+    'cuid' => s.cuid(),
+    'cuid2' => s.cuid2(),
+    'ulid' => s.ulid(),
+    'uuid' => s.uuid(),
+    'nanoid' => s.nanoid(),
+    'jwt' => s.jwt(),
+    'base64' => s.base64(),
+    'exact' => s.exact('fixed'),
+    _ => throw StateError('Missing reference case: $name'),
+  };
+}

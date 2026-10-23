@@ -1,180 +1,83 @@
 ---
-description: Match exact values or accept one of several schema shapes.
+description: Match exact values, accept alternative shapes, and validate structured strings.
 ---
 
 # Literals and unions
 
-Match exact values or accept one of several schema shapes.
-
 ## Literals
 
-Use `literal()` to create a schema that matches a specific literal value.
+`literal(value)` requires that value before running added checks and transformations.
 
 ```dart
-final numeric = literal(1);
+final tag = literal('published');
+print(tag.validate('published')); // true
+print(tag.validate('draft')); // false
+
+print(literal<int>(1).validate(1.0)); // false
+print(literal<num>(1).validate(1.0)); // true
 ```
 
-Literals support the same fluent refinements and transformations as other
-schemas. They match the exact value before those operations run, which makes
-them useful for tagged objects and unions.
+Matching uses the declared Dart type and `==`. Lists and maps do not gain deep equality. Use scalar literals for tags and JSON contracts. `literal(null)` accepts null.
 
-## Union
+## Unions {#union}
 
-To create a union type, you can use the `union()` method. This method allows you to create a type that can be one of several types.
+`union<T>()` accepts a value when one of its branches succeeds. Plain branches run in declaration order; the first valid branch supplies the output.
 
 ```dart
-final valueSchema = union([
-  string(),
-  number(),
-  boolean(),
-]);
-
-final fluentSchema = string().union([
-  number(),
-  boolean(),
-]); // it is the same as the previous example
-
+final identifier = union<Object?>([string(), integer()]);
+print(identifier.parse('acct_1')); // acct_1
+print(identifier.parse(42)); // 42
+print(identifier.validate(false)); // false
 ```
 
-This will create a type that can be either a string, number or boolean.
+`.or<T>(alternatives)` includes its receiver as the first branch.
 
 ```dart
-final fluentSchema = string().union([
-  number(),
-  boolean(),
-]);
-
-fluentSchema.parse('Acanthis'); // ✅
-fluentSchema.parse(5); // ✅
-fluentSchema.parse(true); // ✅
-fluentSchema.parse([1, 2, 3]); // ❌ throws ValidationError
+final value = string().or<Object?>([number(), boolean()]);
+print(value.parse(true)); // true
 ```
 
-### `variant()`
+Failed union diagnostics retain branch issues. Branch order matters when coercion or transformations overlap.
 
-Use `variant()` to build a discriminated (guarded) branch inside a `union()`.  
-A variant couples a lightweight guard with a full schema. The guard decides if the schema should even be attempted, letting you short‑circuit work and produce clearer errors.
+## `variant()`
 
-Concept:
-
-- Guard: `bool Function(dynamic)` returning true if this branch may validate the value.
-- Schema: the `AcanthisType<T>` executed only when the guard passes.
-- Name (optional): label used in aggregated errors (recommended).
-
-Why variants instead of only plain union element types?
-
-- Selective evaluation: only schemas whose guards return true are parsed (a plain union tries branches until one succeeds).
-- Cleaner error surfaces: if no guard matches you get one union error instead of multiple unrelated schema errors.
-- Natural discriminators: model tagged / algebraic unions (`type` fields, prefix patterns, structural probes).
-- Performance: cheap guards filter out heavy schemas early.
-
-Basic (tagged) example:
+A variant pairs a cheap guard with a full schema. Use it to select tagged shapes before running their child checks.
 
 ```dart
-final shape = union([
+final shape = union<Map<String, Object?>>([
   variant(
     name: 'circle',
-    guard: (v) => v is Map && v['type'] == 'circle',
-    schema: object({
-      'type': string().exact('circle'),
-      'radius': number().positive(),
-    }),
+    guard: (value) => value is Map && value['type'] == 'circle',
+    schema: object({'type': literal('circle'), 'radius': number().positive()}),
   ),
   variant(
     name: 'rectangle',
-    guard: (v) => v is Map && v['type'] == 'rectangle',
+    guard: (value) => value is Map && value['type'] == 'rectangle',
     schema: object({
-      'type': string().exact('rectangle'),
+      'type': literal('rectangle'),
       'width': number().positive(),
       'height': number().positive(),
     }),
   ),
 ]);
-
-shape.parse({'type': 'circle', 'radius': 10});    // ✅
-shape.parse({'type': 'rectangle', 'width': 5, 'height': 7}); // ✅
-shape.parse({'type': 'triangle'}); // ❌ ValidationError (no variant matched)
+print(shape.validate({'type': 'circle', 'radius': 10})); // true
 ```
 
-Mixing variants and plain types:
+Matching variants are tried in order. If a matching variant fails, later matching variants can still succeed. When variants and plain branches are mixed, matching variants run before the plain alternatives, regardless of where plain branches appear in the list.
+
+Keep guards pure and cheap, and name variants for branch diagnostics. Guard callbacks are application code; strict export rejects guarded unions.
+
+## Template literals
+
+`template()` combines literal string pieces and supported scalar schemas. It validates a complete string and returns that string.
 
 ```dart
-final idOrPointOrBool = union([
-  variant(
-    name: 'idString',
-    guard: (v) => v is String && v.startsWith('id:'),
-    schema: string().pattern(RegExp(r'^id:\d+$')),
-  ),
-  variant(
-    name: 'point',
-    guard: (v) => v is Map && v.containsKey('x') && v.containsKey('y'),
-    schema: object({
-      'x': number().finite(),
-      'y': number().finite(),
-    }),
-  ),
-  boolean(), // plain type (checked after matching variants)
-]);
+final size = template([number().positive(), string().contained(['px', 'em', 'rem'])]);
+print(size.parse('12px')); // 12px
+print(size.validate('15pt')); // false
+
+final item = template(['item-', integer().positive()]);
+print(item.parse('item-42')); // item-42
 ```
 
-Fallback pattern (keep last):
-
-```dart
-final numericInput = union([
-  variant(
-    name: 'numberLike',
-    guard: (v) => v is String && double.tryParse(v) != null,
-    schema: string().pipe(number(), transform: double.parse),
-  ),
-  variant(
-    name: 'rawNumber',
-    guard: (v) => v is num,
-    schema: number(),
-  ),
-]);
-```
-
-Guidelines:
-
-- Order matters. Guards are evaluated top‑down. The first variant whose guard returns true is attempted; if its schema fails, later variants whose guards also returned true will still be considered.
-- Keep guards pure, fast, and side‑effect free. They must not throw.
-- Name every variant for clearer aggregated errors (`name:`).
-- Combine variants with plain union element types freely. After all matching variants are tried, remaining plain types are attempted.
-- If no guard matches and no plain type validates, the union fails with a single error.
-- If at least one guard matches but all corresponding schemas fail, union aggregates those failures.
-
-When to use:
-
-- Tagged JSON objects (`type`, `kind`, `opcode`).
-- Structural branching (presence of keys, collection shape).
-- Prefix / pattern based routing for primitives.
-- Performance sensitive large unions.
-
-Use `variant()` whenever a cheap discriminator can prevent wasted work or produce more precise diagnostics.
-
-## Template Literals
-
-Use `template()` to create a schema that matches template literal strings with placeholders.
-
-```dart
-
-enum SizeUnit { px, em, rem }
-
-final sizeSchema = template([
-  number(),
-  string().enumerated(SizeUnit.values),
-]);
-
-sizeSchema.parse('12px'); // ✅
-sizeSchema.parse('5em');  // ✅
-sizeSchema.parse('20rem'); // ✅
-sizeSchema.parse('15pt'); // ❌ ValidationError
-```
-
-The `template()` function takes a list of schemas that represent the placeholders in the template literal. The resulting schema will match strings that follow the pattern defined by the schemas.
-
-Template parts are literal strings or schemas whose exported shape contributes a regular-expression fragment. This checks the resulting string pattern; it does not run each part as a nested validator. Avoid complex objects and refinements as placeholders when their runtime rules must be enforced.
-
----
-
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+Segment shapes choose substring boundaries, then segment schemas validate typed values. Their transformations feed later checks without rewriting the returned template string. Failed checks do not retry alternative splits. Use literal separators to make boundaries unambiguous. Async segments require async parsing; complex object segments and guarded segment unions are unsupported.

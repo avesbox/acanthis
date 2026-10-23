@@ -1,72 +1,42 @@
-# Open API Schema
+---
+description: Export and import OpenAPI 3.1 Schema Objects with explicit input and output contracts.
+---
 
-See the [export compatibility table](/export-compatibility) for supported
-constraints and the differences between audited and legacy exports.
+# OpenAPI
 
-## Audited OpenAPI 3.1 export
+## Export a Schema Object {#audited-openapi-3-1-export}
 
-Use `exportOpenApiSchema` to generate an OpenAPI 3.1 Schema Object:
+`toOpenApiSchema()` produces an OpenAPI **3.1 Schema Object**. Choose input or output mode explicitly.
 
 ```dart
-final schema = object({
+final account = object({
   'name': string().notEmpty(),
   'score': number().gte(0).nullable(),
 });
-final input = schema.exportOpenApiSchema(mode: AcanthisSchemaMode.input);
-final output = schema.exportOpenApiSchema(mode: AcanthisSchemaMode.output);
+
+final requestSchema = account.toOpenApiSchema(mode: AcanthisSchemaMode.input);
+final responseSchema = account.toOpenApiSchema(mode: AcanthisSchemaMode.output);
+print(requestSchema['type']); // object
+print(responseSchema['required']); // [name, score]
 ```
 
-This API uses the same [audited contract and supported subset](/json-schema#audited-input-and-output-contracts)
-as JSON Schema 2020-12. Nullable values and overlapping unions use `anyOf`;
-unsupported checks or transformations throw an exception with a schema path.
-Input and output modes account for defaults and unknown-key policies.
+`exportOpenApiSchema(mode: ...)` is an alias with the same strict audit. The result describes a schema; embed it in your own OpenAPI document. Keep local `$defs` and `$ref` together so references retain their scope.
 
-The result is a standalone Schema Object, not a complete OpenAPI document.
-Recursive references use local `$defs`. When embedding that resource inside a
-larger document, preserve a separate schema resource or rebase its references
-to the document location.
+## Nullable types
 
-## Legacy best-effort export
+Nullable values use JSON Schema alternatives containing `null`. V2 does not emit OpenAPI 3.0's `nullable: true`. A nullable property remains required unless made optional or supplied by a default.
 
-The `toOpenApiSchema` API is retained for compatibility. It uses legacy keywords
-such as `nullable`; use the explicit API above for an audited OpenAPI 3.1 contract.
-
-To convert an Acanthis type to an Open API schema, you can use the `toOpenApiSchema` method. For example:
+## Import a Schema Object
 
 ```dart
-final schema = object({
-  'name': string(),
-  'age': number(),
-}).toOpenApiSchema(); // => Map<String, dynamic>
-// => {
-//   type: 'object',
-//   properties: {
-//     name: {type: 'string'},
-//     age: {type: 'number'}
-//   },
-//   required: ['name', 'age'],
-// }
+final contract = fromOpenApiSchema({
+  'type': ['string', 'null'],
+  'enum': ['draft', 'published', null],
+});
+print(contract.validate('draft')); // true
+print(contract.validate(null)); // true
 ```
 
-This will generate an Open API schema that describes the structure of the Acanthis type.
+`importOpenApiSchema()` is an alias. Pass a supported Schema Object rather than an entire OpenAPI document. Import follows the same JSON semantics and keyword restrictions as [JSON Schema import](/json-schema#import-a-contract).
 
-All the types and most of the checks are converted to their closest Open API equivalents.
-
-## Nullable Types
-
-Nullable types are converted to Open API schema using the `nullable` keyword. This means that the schema will accept either the type or `null`. For example:
-
-```dart
-final schema = object({
-  'name': string().nullable(),
-}).toOpenApiSchema();
-// => {
-//   type: 'object',
-//   properties: {
-//     name: {type: 'string', nullable: true}
-//   },
-//   required: ['name'],
-// }
-```
-
-This indicates that the `name` property can either be a string or `null`.
+Unsupported native behavior throws `AcanthisSchemaExportException`; unsupported imported keywords throw `AcanthisSchemaImportException`. Both report a path and reason. See [export compatibility](/export-compatibility) before publishing a contract.

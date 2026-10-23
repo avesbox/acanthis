@@ -1,310 +1,174 @@
-import 'package:acanthis/src/issue_sink.dart';
+import '../registries/metadata_registry.dart';
+import '../common/validation_scope.dart';
+import '../common/issue.dart';
+import '../common/results.dart';
+import '../common/schema.dart';
+import '../common/schema_graph.dart';
+import '../common/schema_operations.dart';
+import '../common/value_schema.dart';
 
-import 'types.dart' show validationInput;
-
-import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:nanoid2/nanoid2.dart';
-
-class AcanthisTuple extends AcanthisType<List<dynamic>> {
-  final List<AcanthisType> elements;
-
-  final bool _variadic;
-
-  AcanthisTuple(
-    this.elements, {
-    super.operations,
-    bool isAsync = false,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-  }) : _variadic = false,
-       super(isAsync: isAsync || elements.any((element) => element.isAsync));
-
+final class AcanthisTuple
+    extends ValueSchemaBase<List<Object?>, AcanthisTuple> {
+  AcanthisTuple(List<Schema<Object?, Object?>> elements)
+    : this._(
+        List.unmodifiable(elements),
+        false,
+        SchemaOperations<List<Object?>>(),
+        null,
+        false,
+      );
   AcanthisTuple._(
-    this.elements, {
-    super.operations,
-    bool isAsync = false,
-    super.key,
-    this._variadic = false,
-    super.metadataEntry,
-    super.defaultValue,
-  }) : super(isAsync: isAsync || elements.any((element) => element.isAsync));
-
-  @override
-  List<dynamic> parseInternal(dynamic value) => parse(value);
-
-  @override
-  List<dynamic> tryParseInternal(
-    dynamic value, {
-    required Map<String, dynamic> errors,
-  }) {
-    value ??= defaultValue;
-    final result = tryParse(value);
-    errors.addAll(result.errors);
-    return result.value;
-  }
-
-  @override
-  Future<List> parseAsync(dynamic value) async {
-    value ??= defaultValue;
-    final raw = validationInput<List<dynamic>>(value);
-    if (raw.length != elements.length && !_variadic) {
-      throw ValidationError.diagnostic(
-        'Value must have ${elements.length} elements',
-        code: 'tuple',
-        parameters: {'length': elements.length},
+    this.elements,
+    this.isVariadic,
+    SchemaOperations<List<Object?>> operations,
+    List<Object?>? defaultValue,
+    bool hasDefault,
+  ) : super(
+        operations: operations,
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault,
       );
-    }
-    final parsed = <dynamic>[];
-    for (var i = 0; i < raw.length; i++) {
-      try {
-        final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = await element.parseAsync(raw[i]);
-        parsed.add(parsedElement);
-      } on ValidationError catch (e) {
-        throw e.prefixed(i);
-      } on TypeError catch (e) {
-        throw ValidationError.diagnostic(e.toString(), code: 'type', path: [i]);
-      }
-    }
-    return super.parseAsync(parsed);
-  }
-
+  final List<Schema<Object?, Object?>> elements;
+  final bool isVariadic;
   @override
-  Future<AcanthisOutcome<List>> tryParseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (value is! List) {
-      return outcomeFromDiagnostics(
-        value: defaultValue ?? [],
-
-        errors: IssueSink.single('type', 'Invalid type: expected List'),
-      );
-    }
-    final raw = value;
-    if (raw.length != elements.length && !_variadic) {
-      return outcomeFromDiagnostics(
-        value: raw,
-        errors: IssueSink.single(
-          'tuple',
-          'Value must have ${elements.length} elements',
-          parameters: {'length': elements.length},
-        ),
-      );
-    }
-    final parsed = <dynamic>[];
-    final errors = IssueSink();
-    for (var i = 0; i < raw.length; i++) {
-      try {
-        final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = await element.tryParseAsync(raw[i]);
-        parsed.add(parsedElement.value);
-        if (parsedElement.errors.isNotEmpty) {
-          errors.addChild(i, parsedElement.errors);
-        }
-      } on TypeError {
-        errors.addIssue('type', 'Invalid tuple element type', path: [i]);
-      }
-    }
-    final result = await super.tryParseAsyncOperations(parsed);
-    if (result.errors.isNotEmpty) {
-      errors.addAll(result.errors);
-    }
-    final success = errors.isEmpty;
-    return outcomeFromDiagnostics(
-      value: success ? result.value : defaultValue ?? result.value,
-      errors: errors,
-      metadata: result.metadata,
-    );
-  }
-
+  Iterable<Schema<Object?, Object?>> get schemaChildren => elements;
   @override
-  List<dynamic> parse(dynamic value) {
-    if (isAsync) {
-      throw AsyncValidationException('Cannot use parse with async operations');
-    }
-    value ??= defaultValue;
-    final raw = validationInput<List<dynamic>>(value);
-    if (raw.length != elements.length && !_variadic) {
-      throw ValidationError.diagnostic(
-        'Value must have ${elements.length} elements',
-        code: 'tuple',
-        parameters: {'length': elements.length},
-      );
-    }
-    final parsed = <dynamic>[];
-    for (var i = 0; i < raw.length; i++) {
-      try {
-        final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = element.parse(raw[i]);
-        parsed.add(parsedElement);
-      } on ValidationError catch (e) {
-        throw e.prefixed(i);
-      } on TypeError catch (e) {
-        throw ValidationError.diagnostic(e.toString(), code: 'type', path: [i]);
-      }
-    }
-    return super.parseInternal(parsed);
-  }
-
+  late final bool isAsync = schemaGraphIsAsync(this);
   @override
-  AcanthisOutcome<List<dynamic>> tryParse(dynamic value) {
-    value ??= defaultValue;
-    if (isAsync) {
-      throw AsyncValidationException(
-        'Cannot use tryParse with async operations',
-      );
-    }
-    if (value is! List) {
-      return outcomeFromDiagnostics(
-        value: defaultValue ?? [],
-
-        errors: IssueSink.single('type', 'Invalid type: expected List'),
-      );
-    }
-    final raw = value;
-    if (raw.length != elements.length && !_variadic) {
-      return outcomeFromDiagnostics(
-        value: raw,
-        errors: IssueSink.single(
-          'tuple',
-          'Value must have ${elements.length} elements',
-          parameters: {'length': elements.length},
-        ),
-      );
-    }
-    final parsed = <dynamic>[];
-    final errors = IssueSink();
-    for (var i = 0; i < raw.length; i++) {
-      try {
-        final element = i < elements.length ? elements[i] : elements.last;
-        final parsedElement = element.tryParse(raw[i]);
-        parsed.add(parsedElement.value);
-        if (parsedElement.errors.isNotEmpty) {
-          errors.addChild(i, parsedElement.errors);
-        }
-      } on TypeError {
-        errors.addIssue('type', 'Invalid tuple element type', path: [i]);
-      }
-    }
-    final valueWithOperations = super.tryParseInternal(parsed, errors: errors);
-    final success = errors.isEmpty;
-    return outcomeFromDiagnostics(
-      value: success
-          ? valueWithOperations
-          : defaultValue ?? valueWithOperations,
-      errors: errors,
-      metadata: metadataEntry,
-    );
-  }
-
-  @override
-  AcanthisTuple withAsyncCheck(AcanthisAsyncCheck<List<dynamic>> check) {
-    return AcanthisTuple(
+  AcanthisTuple rebuild(
+    SchemaOperations<List<Object?>> operations,
+    List<Object?>? defaultValue,
+    bool hasDefault,
+  ) => copySchemaMetadata(
+    this,
+    AcanthisTuple._(
       elements,
-      operations: [...operations, check],
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
+      isVariadic,
+      operations,
+      defaultValue == null ? null : List.unmodifiable(defaultValue),
+      hasDefault,
+    ),
+  );
 
-  @override
-  AcanthisTuple withCheck(AcanthisCheck<List<dynamic>> check) {
-    return AcanthisTuple(
-      elements,
-      operations: [...operations, check],
-      key: key,
-      isAsync: isAsync,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisTuple withTransformation(
-    AcanthisTransformation<List<dynamic>> transformation,
-  ) {
-    return AcanthisTuple(
-      elements,
-      operations: [...operations, transformation],
-      key: key,
-      isAsync: isAsync,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  /// Returns a new tuple with the last element as variadic
+  /// Repeat the last element zero or more times after the fixed prefix.
   AcanthisTuple variadic() {
-    return AcanthisTuple._(
-      elements,
-      operations: operations,
-      key: key,
-      isAsync: isAsync,
-      variadic: true,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJsonSchema() {
-    return {
-      'type': 'array',
-      'prefixItems': elements.map((e) => e.toJsonSchema()).toList(),
-      'items': _variadic ? elements.last.toJsonSchema() : false,
-      if (metadataEntry != null) ...metadataEntry!.toJson(),
-    };
-  }
-
-  @override
-  AcanthisTuple meta(MetadataEntry<List<dynamic>> metadata) {
-    String key = this.key;
-    if (key.isEmpty) {
-      key = nanoid();
+    if (elements.isEmpty) {
+      throw StateError('A variadic tuple needs a last element');
     }
-    MetadataRegistry().add(key, metadata);
-    return AcanthisTuple(
-      elements,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
+    return copySchemaMetadata(
+      this,
+      AcanthisTuple._(
+        elements,
+        true,
+        operations,
+        configuredDefault,
+        ownDefault,
+      ),
     );
   }
 
+  AcanthisOutcome<List<Object?>>? _shape(Object? input) {
+    if (input is! List) {
+      return AcanthisInvalid<List<Object?>>.withoutValue([
+        AcanthisIssue(path: [], code: 'type'),
+      ]);
+    }
+    final min = isVariadic ? elements.length - 1 : elements.length;
+    if (input.length < min ||
+        (!isVariadic && input.length != elements.length)) {
+      return AcanthisInvalid([
+        AcanthisIssue(
+          path: [],
+          code: 'tuple',
+          parameters: {'length': min, 'variadic': isVariadic},
+        ),
+      ], value: List<Object?>.of(input));
+    }
+    return null;
+  }
+
+  AcanthisOutcome<List<Object?>> _finish(
+    List<Object?> output,
+    List<AcanthisIssue> issues,
+    bool recovery,
+  ) => issues.isEmpty
+      ? AcanthisValid(output)
+      : recovery
+      ? AcanthisInvalid(issues, value: output)
+      : AcanthisInvalid<List<Object?>>.withoutValue(
+          issues,
+          partialValue: output,
+        );
   @override
-  AcanthisType<List> withDefault(List value) {
-    return AcanthisTuple(
-      elements,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-    );
+  AcanthisOutcome<List<Object?>> parseValue(Object? input, bool collect) {
+    final failure = _shape(input);
+    if (failure != null) return failure;
+    final raw = input as List;
+    final output = <Object?>[];
+    final issues = <AcanthisIssue>[];
+    var recovery = true;
+    for (var i = 0; i < raw.length; i++) {
+      AcanthisValidationScope.current.throwIfCancelled();
+      final child = elements[i < elements.length ? i : elements.length - 1];
+      final result = collect
+          ? child.tryParse(raw[i])
+          : child.parseOutcome(raw[i]);
+      AcanthisValidationScope.current.throwIfCancelled();
+      issues.addAll(result.issues.map((issue) => issue.prefixed(i)));
+      if (result is AcanthisInvalid && !result.hasValue) {
+        recovery = false;
+        output.add(result.partialValue);
+      } else {
+        output.add(result.value);
+      }
+      if (!collect && issues.isNotEmpty) {
+        return AcanthisInvalid<List<Object?>>.withoutValue(issues);
+      }
+    }
+    return _finish(output, issues, recovery);
   }
 
   @override
-  Map<String, dynamic> toOpenApiSchema() {
-    return {
-      'type': 'array',
-      'prefixItems': elements.map((e) => e.toOpenApiSchema()).toList(),
-      'items': _variadic ? elements.last.toOpenApiSchema() : false,
-    };
-  }
-
-  @override
-  List<dynamic> mock([int? seed]) {
-    return elements.map((e) => e.mock(seed)).toList();
+  Future<AcanthisOutcome<List<Object?>>> parseValueAsync(
+    Object? input,
+    bool collect,
+  ) async {
+    final failure = _shape(input);
+    if (failure != null) return failure;
+    final raw = input as List;
+    final output = <Object?>[];
+    final issues = <AcanthisIssue>[];
+    var recovery = true;
+    for (var i = 0; i < raw.length; i++) {
+      AcanthisValidationScope.current.throwIfCancelled();
+      final child = elements[i < elements.length ? i : elements.length - 1];
+      final result = child is AsyncSchema<Object?, Object?>
+          ? await (collect
+                ? child.tryParseAsync(raw[i])
+                : child.parseOutcomeAsync(raw[i]))
+          : collect
+          ? child.tryParse(raw[i])
+          : child.parseOutcome(raw[i]);
+      AcanthisValidationScope.current.throwIfCancelled();
+      issues.addAll(result.issues.map((issue) => issue.prefixed(i)));
+      if (result is AcanthisInvalid && !result.hasValue) {
+        recovery = false;
+        output.add(result.partialValue);
+      } else {
+        output.add(result.value);
+      }
+      if (!collect && issues.isNotEmpty) {
+        return AcanthisInvalid<List<Object?>>.withoutValue(issues);
+      }
+    }
+    return _finish(output, issues, recovery);
   }
 }
 
-/// Creates a new [AcanthisTuple] with the given elements.
-AcanthisTuple tuple(List<AcanthisType> elements) {
-  return AcanthisTuple(elements);
+AcanthisTuple tuple(List<Schema<Object?, Object?>> elements) =>
+    AcanthisTuple(elements);
+
+extension TupleComposition<I, O> on Schema<I, O> {
+  AcanthisTuple and(List<Schema<Object?, Object?>> elements) =>
+      AcanthisTuple([this, ...elements]);
 }

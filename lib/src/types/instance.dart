@@ -1,282 +1,190 @@
-import 'package:acanthis/src/types/types.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
-import 'package:acanthis/src/registries/metadata_registry.dart';
+import 'package:meta/meta.dart';
 
-import '../operations/operation.dart';
-import '../results.dart';
+import '../common/i18n.dart';
+import '../common/issue.dart';
+import '../common/operations.dart';
+import '../common/results.dart';
+import '../common/schema.dart';
+import '../common/schema_graph.dart';
+import '../common/schema_operations.dart';
+import '../common/value_schema.dart';
+import '../registries/metadata_registry.dart';
 
-/// Definition of a validated field on an instance
-class _InstanceField<T, P> {
-  final String name;
-  final P Function(T object) getter;
-  final AcanthisType<P> validator;
-  final bool optional;
-  const _InstanceField({
-    required this.name,
-    required this.getter,
-    required this.validator,
-    required this.optional,
-  });
-}
-
-class InstanceRefsBuilder<T> {
-  final Map<String, Object Function(T)> _refs = {};
+final class InstanceRefsBuilder<T> {
+  final _refs = <String, Object Function(T)>{};
 
   InstanceRefsBuilder<T> ref<R extends Object>(
     String name,
     R Function(T) getter,
   ) {
-    _refs[name] = (t) => getter(t);
+    _refs[name] = getter;
     return this;
   }
 }
 
-class RefAccessor<T> {
+final class RefAccessor<T> {
+  RefAccessor(this._refs, this._value);
   final Map<String, Object Function(T)> _refs;
   final T _value;
-  RefAccessor(this._refs, this._value);
 
-  /// Retrieve a reference by name and cast to the expected type.
   R call<R extends Object>(String name) {
     final getter = _refs[name];
-    if (getter == null) {
-      throw ArgumentError('Reference "$name" not found');
-    }
+    if (getter == null) throw ArgumentError('Reference "$name" not found');
     return getter(_value) as R;
   }
 }
 
-/// A validator for already constructed objects of type T.
-/// It validates properties (via getters) using existing AcanthisType validators
-/// and returns the original instance (no transformation performed).
-class InstanceType<T> extends AcanthisType<T> {
-  final List<_InstanceField<T, dynamic>> _fields;
+/// Validate getter values without reconstructing or modifying an instance.
+final class InstanceType<T> extends ValueSchemaBase<T, InstanceType<T>> {
+  InstanceType() : _fields = const [], _refs = const {}, mockFactory = null;
 
+  InstanceType._(
+    this._fields,
+    this._refs,
+    SchemaOperations<T> operations,
+    T? defaultValue,
+    bool hasDefault,
+    this.mockFactory,
+  ) : super(
+        operations: operations,
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault,
+      );
+
+  final List<InstanceField<T>> _fields;
+
+  @internal
+  List<InstanceField<T>> get fieldDefinitions => _fields;
+  @internal
+  final T Function(Map<String, Object?>)? mockFactory;
+
+  /// Construct mock instances from generated, parsed field values.
+  InstanceType<T> withFactory(T Function(Map<String, Object?>) factory) =>
+      copySchemaMetadata(
+        this,
+        InstanceType._(
+          _fields,
+          _refs,
+          operations,
+          configuredDefault,
+          ownDefault,
+          factory,
+        ),
+      );
   final Map<String, Object Function(T)> _refs;
 
-  InstanceType._({
-    super.operations,
-    this._fields = const [],
-    this._refs = const {},
-    super.isAsync,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-  });
-
-  /// Create an empty instance validator
-  InstanceType() : this._();
-
-  AcanthisInvalid<T> _invalidType(dynamic value) {
-    return AcanthisInvalid<T>.withoutValue([
-      AcanthisIssue(
-        path: [],
-        code: 'type',
-        message: 'Invalid type: ${value.runtimeType}, expected $T',
-      ),
-    ], metadata: metadataEntry);
-  }
-
   @override
-  AcanthisOutcome<T> tryParse(dynamic value) {
-    // An unrelated object cannot provide a typed recovery value. In particular,
-    // probing an instance branch in a union must never try to construct T.
-    if (!isAsync && defaultValue == null && value is! T) {
-      return _invalidType(value);
-    }
-    return super.tryParse(value);
-  }
-
+  Iterable<Schema<Object?, Object?>> get schemaChildren =>
+      _fields.map((field) => field.schema);
   @override
-  Future<AcanthisOutcome<T>> tryParseAsync(dynamic value) {
-    if (defaultValue == null && value is! T) {
-      return Future.value(_invalidType(value));
-    }
-    return super.tryParseAsync(value);
-  }
+  late final bool isAsync = schemaGraphIsAsync(this);
+  @override
+  InstanceType<T> rebuild(
+    SchemaOperations<T> operations,
+    T? defaultValue,
+    bool hasDefault,
+  ) => copySchemaMetadata(
+    this,
+    InstanceType._(
+      _fields,
+      _refs,
+      operations,
+      defaultValue,
+      hasDefault,
+      mockFactory,
+    ),
+  );
 
-  /// Add a field validator.
-  /// getter extracts the property from the instance.
-  /// optional skips validation when the extracted value is null.
+  /// Optional getters returning null skip the child, including its default.
+  /// Child transforms validate their result but never write it to the instance.
   InstanceType<T> field<P>(
     String name,
-    P Function(T object) getter,
-    AcanthisType<P> validator, {
+    P Function(T) getter,
+    Schema<Object?, P> validator, {
     bool optional = false,
-  }) {
-    final newFields = [
-      ..._fields,
-      _InstanceField<T, P>(
-        name: name,
-        getter: getter,
-        validator: validator,
-        optional: optional,
-      ),
-    ];
+  }) => copySchemaMetadata(
+    this,
+    InstanceType._(
+      List.unmodifiable([
+        ..._fields,
+        InstanceField(name, getter, validator, optional),
+      ]),
+      _refs,
+      operations.withField(name, getter, validator, optional: optional),
+      configuredDefault,
+      ownDefault,
+      mockFactory,
+    ),
+  );
 
-    final newOps = <AcanthisOperation<T>>[
-      ...operations,
-      AcanthisFieldOperation<T>(name, getter, validator, optional),
-    ];
-
-    final anyAsync = isAsync || validator.isAsync;
-
-    return InstanceType._(
-      operations: newOps,
-      fields: newFields,
-      isAsync: anyAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  InstanceType<T> withCheck(AcanthisCheck<T> check) {
-    return InstanceType._(
-      operations: [...operations, check],
-      fields: _fields,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  InstanceType<T> withAsyncCheck(AcanthisAsyncCheck<T> check) {
-    return InstanceType._(
-      operations: [...operations, check],
-      fields: _fields,
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  InstanceType<T> withTransformation(AcanthisTransformation<T> transformation) {
-    // Instance validator does not change the object; allow transformation though if user wants.
-    return InstanceType._(
-      operations: [...operations, transformation],
-      fields: _fields,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJsonSchema() {
-    final properties = <String, dynamic>{};
-    final required = <String>[];
-    for (final f in _fields) {
-      properties[f.name] = f.validator.toJsonSchema();
-      if (!f.optional) required.add(f.name);
-    }
-    final schema = <String, dynamic>{
-      'type': 'object',
-      'properties': properties,
-      if (required.isNotEmpty) 'required': required,
-    };
-    if (metadataEntry != null) {
-      schema.addAll(metadataEntry!.toJson());
-    }
-    return schema;
-  }
-
-  @override
-  InstanceType<T> meta(MetadataEntry<T> metadata) {
-    var newKey = key;
-    if (newKey.isEmpty) {
-      newKey = 'instance_${T.toString()}';
-    }
-    MetadataRegistry().add(newKey, metadata);
-    return InstanceType._(
-      operations: operations,
-      fields: _fields,
-      isAsync: isAsync,
-      key: newKey,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
-    );
-  }
-
-  /// Add references that can be used in refineWithRefs and refineWithCause
   InstanceType<T> withRefs(
     InstanceRefsBuilder<T> Function(InstanceRefsBuilder<T>) build,
   ) {
-    final builder = InstanceRefsBuilder<T>();
-    final configured = build(builder);
-    return InstanceType._(
-      operations: operations,
-      fields: _fields,
-      isAsync: isAsync,
-      key: key,
-      refs: {..._refs, ...configured._refs},
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
+    final configured = build(InstanceRefsBuilder<T>());
+    return copySchemaMetadata(
+      this,
+      InstanceType._(
+        _fields,
+        Map.unmodifiable({..._refs, ...configured._refs}),
+        operations,
+        configuredDefault,
+        ownDefault,
+        mockFactory,
+      ),
     );
   }
 
-  /// Add a custom check that can use other fields as references
   InstanceType<T> refineWithRefs(
-    bool Function(T value, RefAccessor<T> refs) onCheck,
+    bool Function(T, RefAccessor<T>) onCheck,
     String error, {
     String name = 'refineWithRefs',
-  }) {
-    final check = CustomCheck<T>(
-      (t) => onCheck(t, RefAccessor<T>(_refs, t)),
-      name: name,
-      error: error,
-    );
-    return withCheck(check);
-  }
+  }) => refine(
+    onCheck: (value) => onCheck(value, RefAccessor(_refs, value)),
+    name: name,
+    error: error,
+  );
 
-  /// Add a custom check that can use other fields as references and returns a cause message on failure
   InstanceType<T> refineWithCause(
-    String? Function(T value, RefAccessor<T> refs) onCheck, {
+    String? Function(T, RefAccessor<T>) onCheck, {
     String name = 'refineWithCause',
-  }) {
-    return withCheck(
-      CustomCauseCheck((t) => onCheck(t, RefAccessor<T>(_refs, t)), name: name),
-    );
-  }
+  }) => withCheck(
+    CallbackCheck((value, context) {
+      final cause = onCheck(value, RefAccessor(_refs, value));
+      if (cause != null) {
+        final code = name.isEmpty ? 'custom' : name;
+        context.addIssue(
+          code,
+          catalog: AcanthisMessageCatalog({code: (_) => cause}),
+        );
+      }
+    }),
+  );
 
-  /// Convert the instance to a map using the defined fields.
-  Map<String, dynamic> toMap(T value) {
-    final map = <String, dynamic>{};
-    for (final f in _fields) {
-      map[f.name] = f.getter(value);
-    }
-    return map;
-  }
-
-  @override
-  InstanceType<T> withDefault(T value) {
-    return InstanceType._(
-      operations: operations,
-      fields: _fields,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-    );
-  }
+  /// Extract original getter values; this does not validate or serialize them.
+  Map<String, Object?> toMap(T value) => {
+    for (final field in _fields) field.name: field.read(value),
+  };
 
   @override
-  Map<String, dynamic> toOpenApiSchema() {
-    return toJsonSchema();
-  }
-
-  @override
-  T mock([int? seed]) {
-    throw UnimplementedError('Mocking is not supported for InstanceType');
-  }
+  AcanthisOutcome<T> parseValue(Object? input, bool collect) => input is T
+      ? AcanthisValid(input)
+      : AcanthisInvalid<T>.withoutValue([
+          AcanthisIssue(
+            path: const [],
+            code: 'type',
+            parameters: {'expected': '$T'},
+          ),
+        ]);
 }
 
-/// Factory function to create an instance validator.
+@internal
+final class InstanceField<T> {
+  const InstanceField(this.name, this._getter, this.schema, this.optional);
+  final bool optional;
+  final String name;
+  final Object? Function(T) _getter;
+  Object? read(Object? value) => _getter(value as T);
+  final Schema<Object?, Object?> schema;
+}
+
 InstanceType<T> instance<T>() => InstanceType<T>();

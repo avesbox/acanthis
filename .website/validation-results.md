@@ -1,174 +1,97 @@
-# Validation results
+---
+description: Choose a parsing API, inspect structured issues, and format errors for a UI or an API.
+---
 
-`parse(input)` returns the validated value directly and throws on failure.
-`tryParse(input)` returns a sealed `AcanthisOutcome<T>`: either `AcanthisValid<T>`
-or `AcanthisInvalid<T>`. Both branches expose `value`, `metadata`, `isValid`,
-and ordered `issues` (empty on success). On failure, `value` is best-effort
-output, which may contain defaults or partial transformations and is not
-guaranteed to satisfy the schema. Check `isValid` or match the outcome before
-using it as validated data.
+# Results and issues
+
+Choose an entry point based on the result you need.
+
+| Method | Returns | Invalid input |
+| --- | --- | --- |
+| `parse(input)` | `T` | Throws `ValidationError` at the first failure |
+| `tryParse(input)` | `AcanthisOutcome<T>` | Collects issues |
+| `validate(input)` | `bool` | Returns false at the first failure |
+| `tryValidate(input)` | `bool` | Collects checks, then returns false |
+
+Each method has an async counterpart: `parseAsync`, `tryParseAsync`, `validateAsync`, and `tryValidateAsync`. Async schemas require these entry points. Callback exceptions and cancellation can still propagate; `tryParse()` handles validation failures.
+
+## Handle an outcome
 
 ```dart
-final result = string().email().tryParse('not-an-email');
+final result = object({'email': string().email()})
+    .tryParse({'email': 'invalid'});
 
 if (result.isValid) {
   print(result.value);
 } else {
-  print(result.errors);
+  print(result.issues.formatFields());
 }
 ```
 
-Use `parse()` when invalid input should stop the current operation with a
-`ValidationError`. Use `tryParse()` when the caller needs every error. Schemas
-containing an asynchronous refinement require `parseAsync()` or
-`tryParseAsync()`; calling a synchronous entry point throws
-`AsyncValidationException`.
+`AcanthisValid<T>` contains the parsed value and no issues. `AcanthisInvalid<T>` contains one or more issues. Metadata stays on the schema as `metadataEntry`.
 
-## Typed outcomes
+## Recovery values
 
-Use `tryParse(input)` for exhaustive success and failure branches.
-`tryParseAsync(input)` returns the corresponding typed outcome asynchronously.
-The synchronous `validate(input)` method returns a nullable error message for
-[Flutter form fields](/basic-usage#flutter-textformfield).
+An invalid outcome can retain a typed value for inspection. A failed type conversion may have no value at all.
 
 ```dart
-switch (object({
-  'email': string().email(),
-}).tryParse({
-  'email': 'not-an-email',
-})) {
-  case AcanthisValid(value: final account):
-    save(account);
-  case AcanthisInvalid(issues: final issues):
-    for (final issue in issues) {
-      print('${issue.jsonPointer}: ${issue.message}');
-    }
+final result = integer().gte(18).tryParse(16);
+if (result case AcanthisInvalid<int>(:final hasValue)) {
+  if (hasValue) print(result.value); // 16, still invalid.
 }
 ```
 
-## Structured diagnostics
+Check `hasValue` before reading invalid recovery. Access without recovery throws `StateError`. A default does not replace supplied invalid data. Only successful output should reach your application's accepted-data path.
 
-Validation records an ordered issue list when checks fail. Read it through
-`result.issues`, a failed outcome's `issues`, or a live session's `issues`.
-Issues are no longer reconstructed from the legacy error map.
+## Inspect an issue {#structured-diagnostics}
 
-`AcanthisIssue` contains:
+Each `AcanthisIssue` stores a data `path`, a stable `code`, immutable constraint `parameters`, and optional union `branches`.
 
-- `path`: data locations only, with string object keys and integer list/tuple indices.
-- `code`: a stable check identifier, independent of the message.
-- `parameters`: immutable, JSON-safe schema constraints for localization and adapters.
-- `message`: the schema's fallback message, including existing message overrides.
-- `branches`: failed union branches in evaluation order, with nested diagnostics.
-- `jsonPointer`: an RFC 6901 pointer with `~` and `/` escaped.
+```dart
+final issue = object({'tags': string().min(3).list()})
+    .tryParse({'tags': ['x']}).issues.first;
 
-An invalid nested email has path `['account', 'email']`, code `email`, and
-pointer `/account/email`. A list element has a path such as
-`['accounts', 0, 'email']`. Dots are literal characters in path segments;
-`'0'` remains a string key and `0` remains an integer index. The root path is
-`[]` and its pointer is the empty string; an empty object key has pointer `/`.
-Use the typed path or tree when distinguishing numeric keys from indices
-without the input document: JSON pointers themselves do not encode that type.
+print(issue.path); // [tags, 0]
+print(issue.jsonPointer); // /tags/0
+print(issue.code); // minLength
+print(issue.parameters); // {value: 3}
+print(issue.message); // Localized when read.
+```
 
-### Collection policy
+Paths use strings for keys and integers for list indices. The root path is empty; its JSON pointer is `''`. Pointer encoding escapes `~` and `/`. Codes are separate from paths, and repeated issues retain their order.
 
-Non-throwing validation collects all applicable checks in declaration order,
-including repeated failures with the same code and message. Object children
-follow schema order, list/tuple children follow index order, and container
-operations run after children and dependencies. A type/coercion failure stops
-that value's operations. Missing required fields retain the existing policy:
-report `required` followed by their synchronous declared check messages without
-executing those predicates. A wrong tuple length stops element validation.
+`tryParse()` collects failures up to a failed transformation boundary. [Collection policies](/contextual-rules#collection-policies) can stop after the first check per field or the first failing object child.
 
-A union accepts the first successful branch. When all branches fail, one
-`union` issue contains each branch's diagnostics; branch paths are relative to
-the original input root, not to the union issue. Guarded variants are tried
-before plain types, each in declaration order. A rejected guard has a
-`variantGuard` diagnostic. Once a branch succeeds, union-level checks collect
-all failures. Branch evaluation does not suppress arbitrary application errors.
-
-This policy applies to sync, async, specialized object execution, and live
-sessions. Existing throwing `parse` methods retain their fail-fast API.
-
-### Presentation and localization
-
-Resolve messages from codes and parameters when presenting issues. A resolver
-returns `null` to fall back to the schema's message. No global locale is stored
-on schemas, so one result can be formatted for several locales.
+## Format issues {#presentation-and-localization}
 
 ```dart
 final issues = string().min(3).min(5).tryParse('x').issues;
-
-String? italian(String code, Map<String, Object?> parameters) =>
-    code == 'minLength'
-        ? 'Almeno ${parameters['value']} caratteri'
-        : null;
-
-final fields = issues.formatFields(resolver: italian);
-// {'': ['Almeno 3 caratteri', 'Almeno 5 caratteri']}
-final tree = issues.formatTree(resolver: italian);
-final json = issues.formatJson(resolver: italian);
+print(issues.formatFields());
+print(issues.formatTree().messages);
+print(issues.formatJson());
 ```
 
-`formatFields` groups all messages by JSON pointer. `formatTree` has `messages`
-at each node and `children` keyed by the original string or integer segment.
-`formatJson` serializes the ordered list, retaining typed paths, parameters,
-and branch details. `issue.toJson()` returns one JSON-ready record. All
-formatters accept the same optional resolver; `issue.formatMessage()` formats
-one message. Branches are available explicitly through `branches` and JSON,
-while field/tree views show the top-level union summary.
+| View | Use it for |
+| --- | --- |
+| `formatFields(catalog: ...)` | All messages grouped by JSON pointer |
+| `formatTree(catalog: ...)` | Nested messages with typed string/int child keys |
+| `formatJson(catalog: ...)` | Ordered issue records, messages, and union branch details as JSON |
+| `toTransport()` | Locale-independent records for another process |
 
-Constraint parameters use the check's documented fields: for example
-`minLength` has `value`, `between` has `min` and `max`, and list `minItems`
-has `minItems`. Custom `refine`/`refineAsync` calls accept `parameters`;
-custom check subclasses can override `code` and `parameters`. Dates serialize
-as ISO 8601 strings, durations as microseconds, enums as names, and patterns as
-strings. Arbitrary constraint objects are represented by their type name.
+Field and tree views show a union's summary. JSON and transport retain its branch details. Index `0` and key `'0'` stay distinct in a tree but share pointer `/0` in a field map.
 
-Diagnostics do not retain input values or include them in built-in error
-messages. Best-effort values remain available as `value` on invalid outcomes. Custom messages, cause callbacks, and supplied parameters are
-application-controlled: omit sensitive values from them.
-
-### Legacy errors
-
-`result.errors` remains available as a derived compatibility projection. It
-cannot represent repeated same-code failures at one location, so the last
-message wins. Check names can collide with child field names; integer indices
-become string keys. Union branch diagnostics are available only in `issues`.
-Do not round-trip through this map when forwarding structured diagnostics.
-
-Custom schemas can return `AcanthisValid(value, metadata: ...)` or
-`AcanthisInvalid(issues, value: ..., metadata: ...)` directly.
-Invalid outcomes take an immutable snapshot of the issue list.
-The existing `tryParseInternal(..., errors: ...)` extension point remains
-supported: library-owned sinks record legacy extension writes as they happen.
-Legacy writes using a plain errors map get a best-effort conversion; already
-overwritten duplicates and index types cannot be recovered.
-
-## Object input and output
-
-Object schemas distinguish an absent field from a present `null` value.
-Required fields report `required` only when the key is absent. A present null
-is passed to the field schema and usually produces a type error unless that
-field is nullable.
-
-Object schemas strip unknown keys by default in every execution mode. Use
-`passthrough()` when extra input must be retained, optionally with a schema to
-validate each extra value.
+## Send issues over the wire
 
 ```dart
-final account = object({
-  'email': string().email(),
-});
-
-account.parse({'email': 'ada@example.com', 'debug': true});
-// {email: ada@example.com}
-
-account.passthrough().parse({
-  'email': 'ada@example.com',
-  'debug': true,
-});
-// {email: ada@example.com, debug: true}
+final issues = string().min(3).tryParse('x').issues;
+print(issues.toTransport());
+// {version: 1, issues: [{path: [], code: minLength, parameters: {value: 3}}]}
 ```
 
-Transformations execute once in declared order. This applies equally to a
-nullable schema and to synchronous or asynchronous parsing.
+Transport contains codes, typed paths, parameters, and optional branches. It excludes messages, submitted input, and recovery values. Parameters must remain safe to share: custom parameters are not automatically redacted. Built-in string lengths and numeric bounds use `value`; list minima use `minItems`.
+
+Format the same issues in another language without revalidating. See [messages and localization](/error-customization).
+
+## Upgrade result adapters {#legacy-errors}
+
+Replace V1's `result.errors` with `result.issues.formatFields()` for UI text or `result.issues.toTransport()` for a protocol. Replace `result.success` with `result.isValid`. See the [migration guide](/migration-2) for the remaining return-type changes.

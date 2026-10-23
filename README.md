@@ -1,62 +1,99 @@
-![Acanthis Banner](https://github.com/avesbox/acanthis/raw/main/assets/github-header.png)
-
 # Acanthis
 
-Acanthis is a simple and easy to use validation library for Dart. It is inspired by [Zod](https://github.com/colinhacks/zod) although it is not a port of it. Acanthis is tailored to the Dart language and its features and is type-safe and composable.
-
-[Get Started](https://acanthis.dev/introduction.html) | [Pub.dev](https://pub.dev/packages/acanthis)
-
-## Why Acanthis?
-
-Acanthis provides validation for most of the Dart built-in types and allows you to create custom validators.
-
-But that's not all! Acanthis is designed to be composable, so you can create complex validators by combining simpler ones.
-
-## Quick start
-
-The 2.0 codebase requires Dart 3.13 or later, including a compatible Dart SDK in
-Flutter projects. See [pub.dev](https://pub.dev/packages/acanthis) for published
-versions and the [migration guide](https://acanthis.dev/migration-2.html) for 1.x upgrades.
-
-```sh
-dart pub add acanthis
-```
+Composable runtime validation for Dart and Flutter. Define a schema, parse untrusted input, and get typed values or structured issues.
 
 ```dart
 import 'package:acanthis/acanthis.dart';
 
 void main() {
   final account = object({
-    'name': string().min(2),
+    'name': string().trim().min(2),
     'email': string().email(),
+    'age': integer().gte(18),
   });
+
   final result = account.tryParse({
-    'name': 'Ada',
+    'name': ' Ada ',
     'email': 'ada@example.com',
+    'age': 28,
   });
+
   if (result.isValid) {
-    print(result.value);
+    print(result.value['name']); // Ada
   } else {
-    for (final issue in result.issues) {
-      print('${issue.jsonPointer}: ${issue.message}');
-    }
+    print(result.issues.formatFields());
   }
 }
 ```
 
-Use `parse()` when validation failure should throw, or `validate()` for a nullable
-field-error message. An invalid `tryParse()` result contains best-effort output;
-check `isValid` before using its value. Explore the
-[examples](example/README.md) and [full documentation](https://acanthis.dev/introduction.html).
+These docs describe the V2 code in this repository. Dart 3.13+ is required; Flutter projects need a compatible Dart SDK. Check the API version when using a published release.
 
-## Contributions
+## Install
 
-Contributions are welcome! If you want to contribute to Acanthis, you can open a pull request on the [GitHub repository](https://github.com/avesbox/acanthis/pulls)
+```sh
+dart pub add acanthis
+# Flutter projects:
+flutter pub add acanthis
+```
 
-## License
+## Parse, inspect, or check
 
-Acanthis is licensed under the MIT License. You can read the [MIT license](https://github.com/avesbox/acanthis/blob/main/LICENSE)
+| API | Result |
+| --- | --- |
+| `schema.parse(input)` | Parsed output; throws `ValidationError` on failure |
+| `schema.tryParse(input)` | `AcanthisValid<T>` or `AcanthisInvalid<T>` with issues |
+| `schema.validate(input)` | Boolean, stopping at the first failure |
 
-## Credits
+Async schemas use the corresponding `parseAsync`, `tryParseAsync`, and `validateAsync` methods. Invalid outcomes may have typed recovery; it still fails validation. Read `.value` on success, or check `AcanthisInvalid.hasValue` before inspecting recovery.
 
-Acanthis is developed and maintained by [Avesbox](https://avesbox.com)
+## Compose schemas
+
+```dart
+final name = string().min(2);
+final names = name.list();
+final nullableName = name.nullable();
+final scores = record(string(), integer().gte(0));
+final age = string().pipe(integer().gte(18), transform: int.parse);
+final patch = object({'name': name}).patch();
+```
+
+Native fluent methods return new schemas. Object fields are required by default; unknown keys are stripped. Nullability permits null, while `.optionals([...])` permits omission. Defaults replace missing/null input and are validated. `.patch()` preserves omitted fields, including those with defaults.
+
+Parsed maps and lists can share input identity when unchanged. Copy containers if you need independent mutable data.
+
+## Explore the API
+
+- [Quick start](https://acanthis.dev/basic-usage.html) — define, parse, and handle issues.
+- [Schema reference](https://acanthis.dev/defining-schemas.html) — primitives, objects, records, collections, instances, and composition.
+- [Cross-field rules](https://acanthis.dev/contextual-rules.html) — parsed prerequisites, typed context, and cancellation.
+- [Live validation](https://acanthis.dev/live-validation.html) — incremental edits, debouncing, revisions, and issue deltas.
+- [Localization](https://acanthis.dev/error-customization.html) — presentation-time messages, English/Italian catalogs, and application overrides.
+- [Metadata](https://acanthis.dev/metadata.html) and [registries](https://acanthis.dev/schema-registry.html) — descriptions and typed schema lookup.
+- [JSON Schema](https://acanthis.dev/json-schema.html) and [OpenAPI](https://acanthis.dev/open-api-schema.html) — strict export and compiled import of supported JSON contracts.
+- [Mock generation](https://acanthis.dev/seeded-mocking.html) — bounded, reproducible samples and custom input generators.
+- [Migrating to V2](https://acanthis.dev/migration-2.html) — return types and compatibility changes.
+
+Export and mocking have explicit supported subsets. Unsupported behavior fails with an explanation instead of silently weakening a contract or returning invalid data.
+
+The website sources are in [`.website/`](.website/introduction.md). [V2 reference notes](docs/v2/README.md) describe detailed implementation contracts. [Examples](example/) contain runnable Dart programs.
+
+## Work on the project
+
+From the repository root:
+
+```sh
+dart pub get
+dart analyze --fatal-infos
+dart test --reporter failures-only
+```
+
+Build the documentation from `.website/`:
+
+```sh
+npm ci
+npm run docs:build
+```
+
+The [contract guide](docs/v2/contracts.md) documents the independent JSON/OpenAPI export audit. [Benchmarks](benchmark/README.md) compare implementations; archived V1 sources live under `v1/` for those comparisons.
+
+Released changes are recorded in [CHANGELOG.md](CHANGELOG.md). This project uses the [MIT license](LICENSE).

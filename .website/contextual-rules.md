@@ -1,14 +1,15 @@
-# Context and selected-field rules
+---
+description: Validate related parsed fields, supply request context, and cancel asynchronous work.
+---
 
-Selected-field rules run after their inputs have been parsed, even when an
-unrelated field is invalid. Use them for password confirmation and conditional
-requirements. Whole-object `refine()` and legacy `addFieldDependency()` retain
-their existing behavior.
+# Cross-field rules
 
-## Compare parsed fields
+Use a field rule when a constraint depends on more than one object field. Rules read parsed values and can report an issue even when an unrelated field fails.
+
+## `checkFields()` {#compare-parsed-fields}
 
 ```dart
-final schema = object({
+final signup = object({
   'password': string().min(8),
   'confirmation': string(),
   'email': string().email(),
@@ -20,206 +21,124 @@ final schema = object({
   check: (fields) => fields['password'] == fields['confirmation'],
 );
 
-final result = schema.tryParse({
+final result = signup.tryParse({
   'password': 'password-one',
   'confirmation': 'password-two',
   'email': 'invalid',
-}); // Reports both email and confirmation issues.
-```
-
-Use `checkFields()` for a predicate that reports one error. Its `name` is both
-its unique rule ID and issue code; `at` declares where the error belongs.
-`checkFieldsAsync()` accepts an asynchronous predicate. Both preserve the same
-prerequisite gating and live scheduling as an explicit rule.
-
-Paths accept a field name (`'email'`), a nested segment list
-(`['addresses', 0, 'city']`), or an existing `AcanthisPath`. Strings are literal
-keys: `'user.name'` is not shorthand for `['user', 'name']`. Lists are copied to
-immutable paths at declaration time. `fields[path]` reads a valid parsed value;
-`fields.value<String>(path)` adds a typed cast, and `fields.state(path)` exposes
-presence. You usually do not need to construct `AcanthisPath` yourself.
-
-Use `.rule(AcanthisRule<Context>(...))` for typed context or multiple issues.
-Its `inputs` and `outputs` accept the same field names and segment lists.
-Declare every input and exact output issue path. IDs must be unique in an
-object. Unknown static fields, undeclared reads, and undeclared issue paths
-are rejected. Paths can traverse objects, nullable objects, and lists; an index
-outside the current list is missing. Declare a transformed field itself as an
-input when its internal output shape is not statically known.
-
-A rule sees parsed values, including explicit transformations and defaults.
-Children are parsed once per evaluation. Invalid prerequisites skip the rule;
-recovery values are never treated as valid inputs. Missing prerequisites skip
-ordinary rules. Rules run in declaration order, and their issues do not gate
-other rules. Object operations run after the rules only when children and rules
-are valid. A failed pipeline does not run its downstream transform.
-
-Rule callbacks must be deterministic for their input and context and must not
-mutate values. Return issues for validation failures; callback exceptions
-propagate as application errors in sync and async evaluation. Legacy `refine`
-callbacks still convert exceptions to failed checks. Keep sensitive input out of
-issue parameters. Schema export rejects selected-field rules because their
-arbitrary predicates cannot be represented faithfully.
-
-Schema modifiers retain rules. `pick`, `omit`, or `merge` reject a resulting
-schema if a declared path no longer exists. Define rules after shaping the schema.
-
-## Localize custom rule messages
-
-For `checkFields()` and `checkFieldsAsync()`, `name` is the issue code used as
-the translation key, and `error` is the fallback message. Translate when
-presenting issues so the same schema and result can serve multiple languages.
-
-```dart
-final schema = object({
-  'password': string(),
-  'confirmation': string(),
-}).checkFields(
-  ['password', 'confirmation'],
-  at: 'confirmation',
-  name: 'passwordMismatch',
-  error: 'Passwords do not match',
-  check: (fields) => fields['password'] == fields['confirmation'],
-);
-
-String? italian(String code, Map<String, Object?> parameters) => switch (code) {
-  'passwordMismatch' => 'Le password non coincidono',
-  _ => null, // Keep the schema's fallback message for unknown codes.
-};
-
-final result = schema.tryParse({
-  'password': 'one',
-  'confirmation': 'two',
 });
-final messages = result.issues.formatFields(resolver: italian);
-// {'/confirmation': ['Le password non coincidono']}
+print(result.issues.map((issue) => issue.jsonPointer).toList());
+// [/email, /confirmation]
 ```
 
-Live sessions use the same formatter:
+The first argument declares inputs. `at` declares the issue path, `name` is the unique rule ID and issue code, and `error` is fallback text. `checkFieldsAsync()` accepts an async predicate with the same scheduling and prerequisite rules.
 
-```dart
-final session = schema.watch({'password': 'one', 'confirmation': 'two'});
-final messages = session.issues.formatFields(resolver: italian);
-```
+Rules see child defaults and transformations. Invalid prerequisites skip a rule; recovery values are not valid inputs. Missing prerequisites also skip it unless `allowMissing: true`. Rules run in declaration order, and one rule's issues do not prevent another rule from running. Whole-object operations run only after children and rules succeed.
 
-This also works with `watchAsync()` after awaiting an update. Formatting does
-not rerun validation or change `issue.message`, which remains the fallback.
-`issue.formatMessage(resolver: italian)` formats a single issue; `formatTree()`
-and `formatJson()` also accept the resolver.
+## Paths and field state
 
-### Parameterized messages
+Use a string for a literal key, a segment list for a nested location, or an `AcanthisPath`.
 
-Use an explicit `AcanthisRule` when the message needs parameters. Its `id`
-identifies the rule for scheduling; the returned `AcanthisIssue.code` is the
-translation key. These can differ.
+| Path | Location |
+| --- | --- |
+| `'email'` | Top-level email field |
+| `['addresses', 0, 'city']` | First address's city |
+| `'user.name'` | A literal key containing a dot |
 
-```dart
-final schema = object({'seats': integer()}).rule(AcanthisRule<void>(
-  id: 'bookingCapacity',
-  inputs: ['seats'],
-  outputs: ['seats'],
-  check: (fields, _) => fields.value<int>('seats') <= 4
-      ? []
-      : [AcanthisIssue(
-          path: ['seats'],
-          code: 'seatLimit',
-          message: 'Book at most 4 seats',
-          parameters: {'max': 4},
-        )],
-));
+`fields[path]` reads a valid parsed value. `fields.value<T>(path)` adds a typed cast. `fields.state(path)` exposes status, value, and whether the original input submitted that path. A default can produce a valid value with `submitted == false`.
 
-String? italian(String code, Map<String, Object?> parameters) => switch (code) {
-  'seatLimit' => 'Puoi prenotare al massimo ${parameters['max']} posti',
-  _ => null,
-};
-
-final messages = schema.tryParse({'seats': 5}).issues
-    .formatFields(resolver: italian);
-// {'/seats': ['Puoi prenotare al massimo 4 posti']}
-```
-
-Keep parameters limited to constraints such as limits; do not include passwords
-or other sensitive input. Custom codes need your own translations. See
-[message customization](./error-customization.md#localize-at-presentation-time)
-for the general localization approach.
+Declare every read and exact issue output path. Unknown static fields, undeclared reads, duplicate IDs, and undeclared output paths are rejected. Declare a transformed field itself when its internal output shape is unknown. Derive object shapes before adding rules; shape helpers reject rules whose paths no longer exist.
 
 ## Conditional presence
 
 ```dart
 final account = object({
   'kind': string().contained(['personal', 'business']),
-  'businessId': string().min(1),
+  'businessId': string().notEmpty(),
 }).optionals(['businessId']).checkFields(
   ['kind', 'businessId'],
   at: 'businessId',
-  name: 'required',
+  name: 'businessIdRequired',
   error: 'Enter a business identifier',
   allowMissing: true,
-  when: (fields) => fields.state('kind').status == AcanthisFieldStatus.valid &&
-      fields['kind'] == 'business',
+  when: (fields) => fields['kind'] == 'business',
   check: (fields) => fields.state('businessId').submitted,
 );
+print(account.validate({'kind': 'personal'})); // true
+print(account.validate({'kind': 'business'})); // false
 ```
 
-`allowMissing` allows presence inspection, while invalid inputs still skip the
-rule. `submitted` describes the original input: a default can produce a valid
-value with `submitted == false`. To accept defaults as effective presence, test
-`state.status == AcanthisFieldStatus.valid` instead. Explicit null is submitted;
-its field schema decides whether null is valid. Do not call `value<T>()` for a
-missing input.
+`allowMissing` permits presence inspection; invalid inputs still skip the rule. Test `status == AcanthisFieldStatus.valid` instead of `submitted` when a default should satisfy presence. Do not read `value<T>()` from a missing state. Explicit null is submitted; the child schema decides whether it is valid.
 
-## Request context and asynchronous rules
+## `rule()` and typed context {#request-context-and-asynchronous-rules}
 
-`AcanthisValidationScope` carries per-call context into nested schemas and
-asynchronous continuations without changing global state.
+Use `AcanthisRule<C>` for typed per-call context or several issues.
 
 ```dart
-final allowed = AcanthisPath(['country']);
-final schema = object({'country': string()}).rule(AcanthisRule<Set<String>>(
-  id: 'allowedCountry',
-  inputs: [allowed],
-  outputs: [allowed],
-  check: (fields, countries) => countries.contains(fields.value<String>(allowed))
+final destination = object({'country': string()}).rule(AcanthisRule<Set<String>>(
+  id: 'availableDestination',
+  inputs: ['country'],
+  outputs: ['country'],
+  check: (fields, countries) => countries.contains(fields.value<String>('country'))
       ? []
-      : [AcanthisIssue(
-          path: allowed.segments,
-          code: 'country',
-          message: 'Country is unavailable',
-        )],
+      : [AcanthisIssue(path: ['country'], code: 'countryUnavailable')],
 ));
+
 final result = AcanthisValidationScope(context: {'IT', 'FR'})
-    .run(() => schema.tryParse({'country': 'IT'}));
+    .run(() => destination.tryParse({'country': 'IT'}));
+print(result.isValid); // true
 ```
 
-Use `AcanthisRule<Services>.async(...)` with an async `check` for remote rules,
-then call `tryParseAsync()` or `parseAsync()`. Nested checks can retrieve the same
-typed context with `AcanthisValidationScope.current.contextAs<Services>()`.
-Supply the context type expected by every rule; use a shared application context
-object when different services are needed. Context and opaque domain values must
-be treated as immutable. Concurrent scopes are isolated, including after awaits.
+The rule ID controls scheduling; returned issue codes control messages. Use `AcanthisRule<Services>.async(...)` for an async check, then call an async parsing method. Scopes carry context through nested schemas and awaits, with concurrent scopes isolated. Nested checks can use `context.contextAs<Services>()`.
+
+Supply the expected context type. Keep context and callbacks deterministic and treat their input as immutable so [live validation](/live-validation) can reuse results safely. Callback exceptions propagate.
 
 ## Collection policies
 
 ```dart
+final schema = object({
+  'name': string().min(3).max(10),
+  'email': string().email(),
+});
 final scope = AcanthisValidationScope(
   fieldPolicy: AcanthisCollectionPolicy.first,
   objectPolicy: AcanthisCollectionPolicy.all,
 );
-final schema = object({
-  'username': string().min(3).refineAsync(
-    onCheck: (name) => api.isAvailable(name),
-    name: 'available',
-    error: 'Username is unavailable',
-  ),
-  'email': string().email(),
-});
-final result = await scope.run(() => schema.tryParseAsync(input));
+final result = scope.run(() => schema.tryParse({'name': '', 'email': 'invalid'}));
+print(result.issues.length); // 2
 ```
 
-`fieldPolicy: first` stops later operations in a failing field, including remote
-checks and transformations, while other object fields still collect errors.
-`objectPolicy: first` stops after the first failing child or rule. The defaults
-are `all` for both. Policies apply recursively; whole-object stopping uses full
-validation in live sessions so earlier failures cannot be hidden by a cache.
-`parse()` and `parseAsync()` remain throwing APIs; use collecting APIs when
-selected-field diagnostics must be displayed alongside unrelated field failures.
+`fieldPolicy: first` stops later operations in a failing field, including remote checks. `objectPolicy: first` stops after the first failing child or rule. Collecting defaults are `all` for both. Throwing parsing and `validate()` stop at the first failure regardless of collecting defaults. Policies apply recursively.
+
+## Cancellation
+
+```dart
+final signal = AcanthisCancellationSignal();
+final scope = AcanthisValidationScope(cancellation: signal);
+signal.cancel();
+
+try {
+  scope.run(() => string().parse('Ada'));
+} on AcanthisValidationCancelled {
+  print('Cancelled');
+}
+```
+
+Cancellation propagates as `AcanthisValidationCancelled`, separate from invalid data. Async callbacks can call `context.throwIfCancelled()` before and after awaiting work. Connect `context.cancellation?.whenCancelled` to a client's cancellation API when available. Cancelling a signal does not forcibly terminate an arbitrary Dart Future.
+
+## Rule messages {#localize-custom-rule-messages}
+
+Extend a catalog with the rule's issue code.
+
+```dart
+final catalog = AcanthisMessageCatalogs.italian.extend({
+  'passwordMismatch': (_) => 'Le password non coincidono',
+});
+final issue = AcanthisIssue(path: ['confirmation'], code: 'passwordMismatch');
+print(issue.formatMessage(catalog: catalog)); // Le password non coincidono
+```
+
+Explicit rules can attach parameters and a `defaultCatalog` to each issue. See [localization](/error-customization) for fallback precedence. Strict export rejects arbitrary rules rather than omitting their constraints.
+
+## Legacy dependencies
+
+`addFieldDependency(dependent: ..., dependendsOn: ..., dependency: ...)` remains available for compatibility. It reads raw values using dotted queries and does not gate on parsed field validity. Prefer `checkFields()` for new code; its declared paths also support incremental scheduling.

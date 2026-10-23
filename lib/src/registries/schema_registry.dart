@@ -1,16 +1,16 @@
-import '../types/types.dart';
+import '../common/schema.dart';
 
 /// A canonical token owned by the library defining a schema contract.
 /// Import and reuse it: a different token with the same ID conflicts.
 /// [T] is the parsed value type, including nested generic arguments.
 /// [S] preserves the concrete schema type and its composition methods.
-final class SchemaKey<T, S extends AcanthisType<T>> {
+final class SchemaKey<T, S extends Schema<Object?, T>> {
   const SchemaKey(this.id);
   final String id;
 
   // Uses both original type arguments even when callers widen the key.
-  bool _accepts(AcanthisType<Object?> schema) =>
-      schema is AcanthisType<T> && schema is S;
+  bool _accepts(Schema<Object?, Object?> schema) =>
+      schema is Schema<Object?, T> && schema is S;
 }
 
 enum SchemaRegistryError {
@@ -38,8 +38,8 @@ final class SchemaRegistryException implements Exception {
 /// One binding in the insertion-ordered, read-only catalog.
 final class SchemaRegistryEntry {
   const SchemaRegistryEntry._(this.key, this.schema);
-  final SchemaKey<Object?, AcanthisType<Object?>> key;
-  final AcanthisType<Object?> schema;
+  final SchemaKey<Object?, Schema<Object?, Object?>> key;
+  final Schema<Object?, Object?> schema;
   String get id => key.id;
 }
 
@@ -50,7 +50,7 @@ final class SchemaRegistryBuilder {
   final Map<String, SchemaRegistryEntry> _bindings = {};
   static final _idPattern = RegExp(r'^[A-Za-z_][A-Za-z0-9_.-]*$');
 
-  void add<T, S extends AcanthisType<T>>(SchemaKey<T, S> key, S schema) {
+  void add<T, S extends Schema<Object?, T>>(SchemaKey<T, S> key, S schema) {
     _add(_bindings, SchemaRegistryEntry._(key, schema));
   }
 
@@ -124,10 +124,10 @@ final class SchemaRegistry {
   final List<SchemaRegistryEntry> entries;
 
   /// Tests canonical token identity, not just the string ID.
-  bool contains(SchemaKey<Object?, AcanthisType<Object?>> key) =>
+  bool contains(SchemaKey<Object?, Schema<Object?, Object?>> key) =>
       identical(_bindings[key.id]?.key, key);
 
-  S get<S extends AcanthisType<Object?>>(SchemaKey<Object?, S> key) {
+  S get<S extends Schema<Object?, Object?>>(SchemaKey<Object?, S> key) {
     final schema = find(key);
     if (schema != null) return schema;
     throw SchemaRegistryException(
@@ -138,7 +138,7 @@ final class SchemaRegistry {
   }
 
   /// Returns null only for an absent ID. Conflicting tokens remain errors.
-  S? find<S extends AcanthisType<Object?>>(SchemaKey<Object?, S> key) {
+  S? find<S extends Schema<Object?, Object?>>(SchemaKey<Object?, S> key) {
     final entry = _bindings[key.id];
     if (entry == null) return null;
     if (!identical(entry.key, key)) {

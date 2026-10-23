@@ -1,8 +1,10 @@
+---
+description: Connect a live session to Flutter fields, show pending state, and submit settled output.
+---
+
 # Build a Flutter live form
 
-Use a live session when a form combines field checks, cross-field rules, and
-remote validation. This example checks username availability, compares passwords,
-shows pending state, and submits only settled, valid output.
+Connect field edits to a live session, render its issues, and submit its validated output. This complete example adds username availability and password confirmation.
 
 After [installing Acanthis](/introduction#installation) in a compatible Flutter
 project, replace `lib/main.dart` with the following. The availability and submit
@@ -23,7 +25,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  AcanthisAsyncLiveSession<dynamic>? _session;
+  AcanthisAsyncLiveSession? _session;
   bool _busy = true;
   bool _saving = false;
   String? _error;
@@ -42,15 +44,13 @@ class _SignupPageState extends State<SignupPage> {
     });
     try {
       final schema = object({
-        'username': string().min(3).refineAsync(
-          onCheck: (value) async {
+        'username': string().min(3).refineAsync(CallbackAsyncCheck(
+          (value, context) async {
             // Demo service. Replace with your availability API.
             await Future<void>.delayed(const Duration(milliseconds: 300));
-            return value.toLowerCase() != 'admin';
+            if (value.toLowerCase() == 'admin') context.addIssue('available');
           },
-          name: 'available',
-          error: 'Username is unavailable',
-        ),
+        )),
         'password': string().min(8),
         'confirmation': string(),
       }).checkFields(
@@ -143,7 +143,10 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     final session = _session;
-    final errors = session?.issues.formatFields() ?? <String, List<String>>{};
+    final catalog = AcanthisMessageCatalogs.english.extend({
+      'available': (_) => 'Username is unavailable',
+    });
+    final errors = session?.issues.formatFields(catalog: catalog) ?? <String, List<String>>{};
     return Scaffold(
       appBar: AppBar(title: const Text('Create an account')),
       body: SingleChildScrollView(
@@ -190,14 +193,13 @@ class _SignupPageState extends State<SignupPage> {
 
 ```
 
-## How the state fits together
+## Render validation state
 
 `TextField.onChanged` sends raw edits to the session. Structured issues are
 rendered with `InputDecoration.errorText`, which also lets async failures appear
-without a synchronous `FormField.validator` callback. See Flutter's
-[text-field guide](https://docs.flutter.dev/cookbook/forms/text-field-changes).
+without a synchronous `FormField.validator` callback.
 
-The page displays initial required-field failures once initialization settles.
+The page displays initial field failures once initialization settles.
 To defer messages until interaction, keep a set of touched field names and filter
 the displayed errors; keep submission gated on the whole validated result.
 
@@ -222,8 +224,7 @@ server validation errors as part of that response.
 
 Dispose the session when the widget is removed. If async initialization finishes
 after removal, dispose that newly created session too. Check `mounted` after
-awaits before changing widget state, as required by Flutter's
-[State lifecycle](https://api.flutter.dev/flutter/widgets/State/dispose.html).
+awaits before changing widget state.
 
 Disposal and new revisions cancel Acanthis's cooperative signal, but do not
 forcibly stop a network request. Connect your HTTP client's cancellation support

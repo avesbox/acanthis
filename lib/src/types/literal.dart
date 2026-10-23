@@ -1,174 +1,69 @@
-import 'package:acanthis/src/issue_sink.dart';
-import 'package:acanthis/acanthis.dart';
-import 'package:acanthis/src/operations/checks.dart';
-import 'package:acanthis/src/operations/transformations.dart';
+import '../registries/metadata_registry.dart';
+import '../common/fast_schema.dart';
+import '../common/issue.dart' show singleIssueParameter;
+import '../common/issue_sink.dart';
+import '../common/results.dart';
+import '../common/schema_operations.dart';
+import '../common/value_schema.dart';
 
-/// AcanthisLiteral is a class that represents a literal value.
-class AcanthisLiteral<T> extends AcanthisType<T> {
-  /// The literal value.
+/// Runtime type checking followed by Dart equality, without coercion.
+final class AcanthisLiteral<T> extends ValueSchemaBase<T, AcanthisLiteral<T>>
+    implements FastSchema<T> {
+  AcanthisLiteral(this.value, {T? defaultValue})
+    : super(configuredDefault: defaultValue, ownDefault: defaultValue != null);
+  AcanthisLiteral._(
+    this.value,
+    SchemaOperations<T> operations,
+    T? defaultValue,
+    bool hasDefault,
+  ) : super(
+        operations: operations,
+        configuredDefault: defaultValue,
+        ownDefault: hasDefault,
+      );
   final T value;
-
-  /// Creates a new instance of [AcanthisLiteral].
-  AcanthisLiteral(
-    this.value, {
-    super.operations,
-    super.isAsync,
-    super.key,
-    super.metadataEntry,
-    super.defaultValue,
-  });
-
+  late final Map<String, Object?> _parameters = singleIssueParameter(
+    'expected',
+    value,
+  );
   @override
-  Map<String, dynamic> toJsonSchema() {
-    return {'const': value};
-  }
-
+  AcanthisLiteral<T> rebuild(
+    SchemaOperations<T> operations,
+    T? defaultValue,
+    bool hasDefault,
+  ) => copySchemaMetadata(
+    this,
+    AcanthisLiteral._(value, operations, defaultValue, hasDefault),
+  );
   @override
-  T parseInternal(dynamic value) {
-    value ??= defaultValue;
-    final typedValue = coerceInput(value);
-    if (typedValue == this.value) {
-      return typedValue;
-    }
-    throw ValidationError.diagnostic(
-      'Value does not match literal',
-      code: 'literal',
-      parameters: {'expected': this.value},
-    );
-  }
-
-  @override
-  T tryParseInternal(dynamic value, {required Map<String, dynamic> errors}) {
-    value ??= defaultValue;
-    final typedValue = super.tryParseInternal(value, errors: errors);
-    if (errors.isNotEmpty) {
-      return typedValue;
-    }
-    if (typedValue == this.value) {
-      return typedValue;
-    }
-    errors.addIssue(
-      'literal',
-      'Value does not match literal',
-      parameters: {'expected': this.value},
-    );
-    return defaultValue ?? typedValue;
-  }
-
-  @override
-  Future<T> parseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return parse(value);
-    final typedValue = coerceInput(value);
-    if (typedValue != this.value) {
-      throw ValidationError.diagnostic(
-        'Value does not match literal',
-        code: 'literal',
-        parameters: {'expected': this.value},
+  AcanthisOutcome<T> parseValue(Object? input, bool collect) {
+    if (input is! T) {
+      return AcanthisInvalid<T>.withoutValue(
+        IssueSink.single('type', parameters: {'expected': '$T'}).takeIssues(),
       );
     }
-    return super.parseAsync(typedValue);
+    if (input != value) {
+      return AcanthisInvalid<T>(
+        IssueSink.single('literal', parameters: _parameters).takeIssues(),
+        value: input,
+      );
+    }
+    return AcanthisValid<T>(input);
   }
 
+  /// JSON numeric equality cannot distinguish Dart int and double values.
+  bool get hasJsonNumericEquality => 1 is T && 1.0 is T;
   @override
-  Future<AcanthisOutcome<T>> tryParseAsync(dynamic value) async {
-    value ??= defaultValue;
-    if (!isAsync) return tryParse(value);
-    final result = await super.tryParseAsyncOperations(value);
-    if (!result.isValid || result.value == this.value) return result;
-    return outcomeFromDiagnostics(
-      value: defaultValue ?? result.value,
-      errors: IssueSink.single(
-        'literal',
-        'Value does not match literal',
-        parameters: {'expected': this.value},
-      ),
-
-      metadata: metadataEntry,
-    );
-  }
-
+  bool get canFast =>
+      !hasOperations &&
+      value != null &&
+      (value is String || value is bool || value is num);
   @override
-  AcanthisLiteral<T> meta(MetadataEntry<T> metadata) {
-    return AcanthisLiteral(
-      value,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadata,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisLiteral<T> withAsyncCheck(AcanthisAsyncCheck<T> check) {
-    return AcanthisLiteral(
-      value,
-      operations: [...operations, check],
-      isAsync: true,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisLiteral<T> withCheck(AcanthisCheck<T> check) {
-    return AcanthisLiteral(
-      value,
-      operations: [...operations, check],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisLiteral<T> withTransformation(
-    AcanthisTransformation<T> transformation,
-  ) {
-    return AcanthisLiteral(
-      value,
-      operations: [...operations, transformation],
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: defaultValue,
-    );
-  }
-
-  @override
-  AcanthisType<T> withDefault(T value) {
-    return AcanthisLiteral(
-      this.value,
-      operations: operations,
-      isAsync: isAsync,
-      key: key,
-      metadataEntry: metadataEntry,
-      defaultValue: value,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toOpenApiSchema() {
-    return {
-      'type': switch (value) {
-        String() => 'string',
-        bool() => 'boolean',
-        int() => 'integer',
-        num() => 'number',
-        _ => 'string',
-      },
-      'enum': [value],
-    };
-  }
-
-  @override
-  T mock([int? seed]) {
-    return value;
+  T? tryFast(Object? input) {
+    if (!canFast) return null;
+    if (input == null && hasDefault) input = defaultValue;
+    return input is T && input == value ? input : null;
   }
 }
 
-/// Creates a new instance of [AcanthisLiteral].
 AcanthisLiteral<T> literal<T>(T value) => AcanthisLiteral<T>(value);

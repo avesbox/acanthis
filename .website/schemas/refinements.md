@@ -1,41 +1,74 @@
 ---
-description: Add synchronous or asynchronous rules when built-in checks are not enough.
+description: Add predicates, parameterized checks, multiple issues, and asynchronous validation.
 ---
 
 # Custom validation
 
-Add synchronous or asynchronous rules when built-in checks are not enough.
-
 ## Refinements
 
-Refinements are a way to add custom validation to a schema. You can use the `refine()` method to add a custom validation function to a schema.
-
-::: warning
-Refinement callbacks should return a boolean. Exceptions from application callbacks are not converted into validation issues.
-:::
+Use a refinement when built-in checks cannot express a constraint. A callback returning false reports an issue; callback exceptions propagate.
 
 ### `refine()`
 
-To add a custom sync validation function to a schema, you can use the `refine()` method.
-
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).refine(onCheck: (value) => value['age'] > 4, error: 'Age is lower than 4', name: 'ageCheck');
+final even = integer().refine(
+  onCheck: (value) => value.isEven,
+  name: 'even',
+  error: 'Enter an even number',
+);
+print(even.tryParse(3).issues.first.message); // Enter an even number
 ```
 
-### `refineAsync()`
+`name` becomes the issue code and `error` is an optional fallback message. The check receives the current parsed value. Earlier transformations affect that value.
 
-To add a custom async validation function to a schema, you can use the `refineAsync()` method.
+### Parameterized checks
+
+Use `PredicateCheck<T>` for a code with structured parameters.
 
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).refineAsync(onCheck: (value) async => value['age'] > 4, error: 'Age is lower than 4', name: 'ageCheck');
+final multiple = integer().withCheck(PredicateCheck<int>(
+  (value) => value % 3 == 0,
+  code: 'multiple',
+  parameters: {'divisor': 3},
+  catalog: AcanthisMessageCatalog({
+    'multiple': (p) => 'Enter a multiple of ${p['divisor']}',
+  }),
+));
+print(multiple.tryParse(4).issues.first.message); // Enter a multiple of 3
 ```
 
----
+Parameters are immutable diagnostic data. Include constraints rather than submitted secrets. Catalogs can translate the same code at presentation time.
 
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+### Multiple issues
+
+`CallbackCheck<T>` gives you a context for reporting more than one issue or attaching a relative path.
+
+```dart
+final password = string().withCheck(CallbackCheck<String>((value, context) {
+  if (!value.contains(RegExp(r'[0-9]'))) context.addIssue('passwordDigit');
+  if (!value.contains(RegExp(r'[A-Z]'))) context.addIssue('passwordUppercase');
+}));
+print(password.tryParse('password').issues.length); // 2
+```
+
+Use [cross-field rules](/contextual-rules) when a check should run on selected valid object fields despite unrelated failures.
+
+### `refineAsync()` {#refineasync}
+
+```dart
+final username = string().min(3).refineAsync(CallbackAsyncCheck(
+  (value, context) async {
+    context.throwIfCancelled();
+    final available = await Future.value(value != 'admin');
+    context.throwIfCancelled();
+    if (!available) context.addIssue('usernameTaken');
+  },
+));
+print((await username.tryParseAsync('admin')).isValid); // false
+```
+
+Use `context.contextAs<T>()` for scoped services and `context.cancellation` for cooperative cancellation. Sync entry points reject async schemas. [Validation scopes](/contextual-rules#request-context-and-asynchronous-rules) carry context across nested schemas and awaits.
+
+## Checks and transforms
+
+Checks report validity without replacing a value. [Transforms](/schemas/transformations) replace it. Collecting parsing can run several checks on a failed value, but does not cross a subsequent transform after failure. Use `fieldPolicy: AcanthisCollectionPolicy.first` to stop earlier, for example before a remote check.

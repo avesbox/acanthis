@@ -9,7 +9,7 @@ import ValidationPreview from './ValidationPreview.vue'
       <div class="hero-copy">
         <p class="eyebrow">DATA VALIDATION FOR DART & FLUTTER</p>
         <h1 id="home-title">Good data.<br><em>From the start.</em></h1>
-        <p class="hero-description">Describe the shape of your data. Validate it, transform it, and get clear errors when something doesn’t fit.</p>
+        <p class="hero-description">Define a schema. Parse typed values, transform input, and get structured issues when validation fails.</p>
         <div class="hero-actions">
           <a class="primary-action" href="/basic-usage.html">Start validating <span aria-hidden="true">↗</span></a>
           <a class="secondary-action" href="/defining-schemas.html">Explore the schemas <span aria-hidden="true">→</span></a>
@@ -27,9 +27,9 @@ import ValidationPreview from './ValidationPreview.vue'
     <section class="home-paths" aria-labelledby="paths-title">
       <div class="paths-heading"><p class="eyebrow">THE DOCUMENTATION</p><h2 id="paths-title">A clear path from input to output.</h2></div>
       <div class="path-grid">
-        <a href="/basic-usage.html"><span class="path-number">01 / LEARN</span><h3>Your first validation <span aria-hidden="true">↗</span></h3><p>Build a schema, parse an input, and handle a failed check in one short guide.</p></a>
+        <a href="/basic-usage.html"><span class="path-number">01 / LEARN</span><h3>Quick start <span aria-hidden="true">↗</span></h3><p>Define an object, parse input, and handle issues in a few examples.</p></a>
         <a href="/defining-schemas.html"><span class="path-number">02 / BUILD</span><h3>Find your schema <span aria-hidden="true">↗</span></h3><p>From a single email to nested objects. Find types, constraints, and examples.</p></a>
-        <a href="/validation-results.html"><span class="path-number">03 / HANDLE</span><h3>Make errors useful <span aria-hidden="true">↗</span></h3><p>Read typed outcomes and field-level issues, then show the right message.</p></a>
+        <a href="/validation-results.html"><span class="path-number">03 / HANDLE</span><h3>Results and issues <span aria-hidden="true">↗</span></h3><p>Read paths and codes, localize messages, or send issues to a client.</p></a>
       </div>
     </section>
     <section class="home-more" aria-label="More guides">

@@ -1,22 +1,19 @@
-import 'package:acanthis/acanthis.dart';
+import '../common/schema.dart';
 
-/// Represents a guarded variant inside a union.
-/// The [guard] decides if this variant should be attempted for a given value.
-class AcanthisVariant<T> {
-  final bool Function(dynamic value) guard;
-  final AcanthisType<T> schema;
-  final String name;
-
+/// A guarded union branch. Guards run before plain alternatives.
+final class AcanthisVariant<T> {
   const AcanthisVariant({
     required this.guard,
     required this.schema,
     this.name = '',
   });
+  final bool Function(Object?) guard;
+  final Schema<Object?, T> schema;
+  final String name;
 }
 
-/// Factory to create a variant.
 AcanthisVariant<T> variant<T>({
-  required bool Function(dynamic value) guard,
-  required AcanthisType<T> schema,
+  required bool Function(Object?) guard,
+  required Schema<Object?, T> schema,
   String name = '',
-}) => AcanthisVariant<T>(guard: guard, schema: schema, name: name);
+}) => AcanthisVariant(guard: guard, schema: schema, name: name);

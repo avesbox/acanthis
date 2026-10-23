@@ -1,27 +1,16 @@
-import 'package:acanthis/src/operations/checks.dart';
+import '../common/issue.dart' show singleIssueParameter;
+import '../common/operations.dart';
 
-/// Nullable check for Enumerated values.
-class EnumeratedNullableCheck<T> extends AcanthisCheck<T> {
+final class EnumeratedNullableCheck<T> implements Check<T?> {
+  EnumeratedNullableCheck(List<T?> values)
+    : values = List.unmodifiable(values),
+      parameters = singleIssueParameter('values', [...values, null]);
+  final List<T?> values;
+  final Map<String, Object?> parameters;
   @override
-  Map<String, Object?> get parameters => {'values': values};
-
-  final List<T> values;
-
-  EnumeratedNullableCheck(
-    this.values, {
-    String? message,
-    String Function(List<T> values)? messageBuilder,
-  }) : super(
-         error:
-             messageBuilder?.call(values) ??
-             message ??
-             'Value must be one of the enumerated values',
-         name: 'enumerated',
-       );
-
-  @override
-  bool call(T? value) {
-    if (value == null) return true;
-    return values.contains(value);
+  void evaluate(T? value, CheckContext context) {
+    if (value != null && !values.contains(value)) {
+      context.addIssue('enumerated', parameters: parameters);
+    }
   }
 }

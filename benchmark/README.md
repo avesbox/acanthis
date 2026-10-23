@@ -25,9 +25,9 @@ For a verified run, supply an evidence JSON as the second argument. Its
 conditions and checked command logs; the report no longer assumes a test count
 or power plan from an earlier run. Regenerate all four input JSON files and CPU
 profiles for a fresh baseline; do not combine stale measurements with new hashes.
-The 2026-09-12 archive contains `evidence.json` and command logs. The presence
-audit is reproduced with `dart run test test/presence_matrix_test.dart` from the
-root; regenerate its snapshot only after reviewing intentional behavior changes.
+The 2026-09-12 archive contains `evidence.json` and command logs. Generate current
+V2 presence observations with `dart run tool/presence_matrix.dart` from the root.
+The output goes to `.dart_tool/presence_matrix.json`; reviewed fixtures are not replaced.
 
 `--quick` is a smoke run (3 rounds, 25 ms), not the recorded baseline. Normal
 runs use 5 rounds of 100 ms, a warmup per case, seeded randomized case order,

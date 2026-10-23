@@ -1,6 +1,4 @@
-// Existing-behavior checks for doc/schema-registry-analysis.md.
-import 'dart:convert';
-
+// Current V2 checks derived from the original V1 analysis in doc/schema-registry.md.
 import 'package:acanthis/acanthis.dart';
 
 void verify(bool condition, String description) {
@@ -41,16 +39,29 @@ void main() {
     'repeated non-recursive schema is exported inline twice',
   );
   final tree = object({'children': lazy((parent) => parent.list())});
+  final recursive = tree.exportJsonSchema(mode: AcanthisSchemaMode.input);
+  final imported = fromJsonSchema(recursive);
   verify(
-    jsonEncode(tree.exportJsonSchema(mode: AcanthisSchemaMode.input))
-        .contains(r'"$ref":"#/$defs/schema0"'),
+    (recursive[r'$defs'] as Map).isNotEmpty &&
+        imported.validate({
+          'children': [
+            {'children': []},
+          ],
+        }) &&
+        !imported.validate({
+          'children': [{}],
+        }),
     'stable recursion already uses local definitions',
   );
-  final fields = <String, AcanthisType>{'city': string()};
-  final externallyMutable = object(fields);
+  final city = string();
+  final fields = <String, Schema<Object?, Object?>>{'city': city};
+  final snapshotted = object(fields);
   fields['city'] = number();
   verify(
-    identical(externallyMutable.fields['city'], fields['city']),
-    'object construction retains the caller-owned field map',
+    identical(snapshotted.fields['city'], city) &&
+        !identical(snapshotted.fields['city'], fields['city']) &&
+        snapshotted.validate({'city': 'Rome'}) &&
+        !snapshotted.validate({'city': 42}),
+    'object construction snapshots the caller-owned field map',
   );
 }

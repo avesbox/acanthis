@@ -1,6 +1,7 @@
 import 'package:acanthis/acanthis.dart';
 
 import '../shared/acanthis_benchmark.dart';
+import '../shared/payloads.dart';
 
 class LongStringValidationBenchmark extends AcanthisBenchmark {
   LongStringValidationBenchmark()
@@ -10,9 +11,11 @@ class LongStringValidationBenchmark extends AcanthisBenchmark {
     LongStringValidationBenchmark().report();
   }
 
+  final validator = string();
+
   @override
   void run() {
-    string().parse('long' * 256);
+    validator.parse(Payloads.longStringPayload);
   }
 }
 
@@ -24,9 +27,11 @@ class FixedLengthStringValidationBenchmark extends AcanthisBenchmark {
     FixedLengthStringValidationBenchmark().report();
   }
 
+  final validator = string().max(5).min(1);
+
   @override
   void run() {
-    string().max(5).min(1).parse('long');
+    validator.parse(Payloads.fixedLengthStringPayload);
   }
 }
 
@@ -38,9 +43,11 @@ class EmptyStringValidationBenchmark extends AcanthisBenchmark {
     EmptyStringValidationBenchmark().report();
   }
 
+  final validator = string();
+
   @override
   void run() {
-    string().parse('');
+    validator.parse(Payloads.emptyStringPayload);
   }
 }
 
@@ -52,9 +59,11 @@ class EmailStringValidationBenchmark extends AcanthisBenchmark {
     EmailStringValidationBenchmark().report();
   }
 
+  final validator = string().email();
+
   @override
   void run() {
-    string().email().parse('email@example.com');
+    validator.parse(Payloads.emailStringPayload);
   }
 }
 
@@ -66,8 +75,10 @@ class UuidStringValidationBenchmark extends AcanthisBenchmark {
     UuidStringValidationBenchmark().report();
   }
 
+  final validator = string().uuid();
+
   @override
   void run() {
-    string().uuid().parse('550e8400-e29b-41d4-a716-446655440000');
+    validator.parse(Payloads.uuidStringPayload);
   }
 }

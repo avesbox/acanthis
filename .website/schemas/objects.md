@@ -1,202 +1,149 @@
 ---
-description: Validate named fields, control unknown keys, and compose reusable object schemas.
+description: Validate named fields, choose an unknown-key policy, and derive reusable object shapes.
 ---
 
 # Objects {#object-schemas}
 
-Validate named fields, control unknown keys, and compose reusable object schemas.
+## `object()` {#objects}
 
-## Define an object {#objects}
-
-Use the `object()` method to create an object schema. This method allows you to validate and transform objects.
-
-With objects Acanthis refers to `Map<String, dynamic>` or `Map<String, Object?>` or so called json-encodeable types.
+An object schema parses a map with named string keys. Its output is `Map<String, Object?>`.
 
 ```dart
-object({
-  'name': string().min(3),
-  'age': number().positive(),
+final account = object({
+  'name': string().min(2),
+  'age': integer().gte(18),
 });
+print(account.parse({'name': 'Ada', 'age': 28, 'extra': true}));
+// {name: Ada, age: 28}
 ```
 
-By default, all declared properties are required and unknown properties are
-stripped from the parsed output. A missing property is different from an
-explicit `null`: use `nullable()` when a field may be present with null.
+Fields are required by default. Unknown keys are stripped. Each nested object has its own policies.
 
-See [presence and defaults](/presence-and-defaults) for a side-by-side behavior
-table, and [request validation](/request-validation) for create/PATCH handlers.
-
-When validation does not change the data, pure object schemas can return the
-original input map directly from `parse()`. This includes schemas with validation
-checks, provided they do not transform or coerce values or apply defaults.
-Unknown-key stripping still creates an output map when needed. Pure typed
-lists can likewise return the original list.
+## Optional fields
 
 ```dart
-final schema = object({'name': string().min(1)});
-final input = {'name': 'Ada'};
-final result = schema.parse(input);
-print(identical(result, input)); // true
+final account = object({
+  'name': string(),
+  'nickname': string().nullable(),
+}).optionals(['nickname']);
+
+print(account.parse({'name': 'Ada'})); // {name: Ada}
+print(account.parse({'name': 'Ada', 'nickname': null}));
+// {name: Ada, nickname: null}
 ```
 
-The input and returned value may therefore share identity: mutations through
-either reference are visible through the other, and read-only input remains
-read-only. Use `Map<String, dynamic>.of(result)` if you need an independent,
-mutable outer map. Async validation may also reuse unchanged input; schemas
-that change values retain their transformed output. `parse()` returns the
-map directly; `tryParse()` wraps successful output in `AcanthisValid.value`.
+`.optionals()` permits omission. `.nullable()` permits a supplied null. Defaults can fill omitted fields. See the [presence table](/presence-and-defaults) before choosing a policy.
 
-To add optional properties, you can use the `optionals()` method.
+## Unknown keys
 
 ```dart
-object({
-  'name': string().min(3),
-  'age': number().positive(),
-  'email': string().email(),
-}).optionals([
-  'email',
-]);
+final base = object({'name': string()});
+final strict = base.unknownKeys(AcanthisUnknownKeys.reject);
+final loose = base.passthrough();
+final typedExtras = base.passthrough(type: string());
+
+print(strict.validate({'name': 'Ada', 'team': 'research'})); // false
+print(loose.parse({'name': 'Ada', 'active': true}));
+// {name: Ada, active: true}
+print(typedExtras.validate({'name': 'Ada', 'active': true})); // false
 ```
 
-To define a loose object schema, instead, you can use the `passthrough()` method.
+`unknownKeys(AcanthisUnknownKeys.preserve)` preserves extras without a child schema. `strip` restores the default policy. Typed passthrough validates only the additional properties.
 
-```dart
-object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).passthrough();
-```
+## Shape helpers
 
-This will allow any additional properties to be present in the object without validation.
-
-To the passthrough method can be passed a type to validate the additional properties.
-
-```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).passthrough(type: string());
-
-person.parse({
-  'name': 'Acanthis',
-  'age': 5,
-  'email': 'test@example.com'
-}); // ✅
-
-person.parse({
-  'name': 'Acanthis',
-  'age': 5,
-  'email': 5
-}); // ❌ throws ValidationError
-
-```
-
-Also, Acanthis provides some built-in validators for object validation:
-
-```dart
-object({}).maxProperties(5);
-object({}).minProperties(5);
-```
+Each helper returns a new object schema and retains applicable configuration, metadata, and rules.
 
 ### `extend()`
 
-To add additional properties to the object schema, you can use the `extend()` method.
+Add fields while keeping existing definitions on a name collision.
 
 ```dart
-object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).extend({
-  'email': string().email(),
-});
+final account = object({'name': string()});
+final extended = account.extend({'name': integer(), 'email': string().email()});
+// name still uses string().
 ```
-
-::: warning
-The `extend()` method will not overwrite the existing properties. It will only add the new properties to the schema if they do not already exist.
-:::
 
 ### `merge()`
 
-To merge two object schemas, you can use the `merge()` method.
+Add fields and replace colliding definitions with the supplied definitions.
 
 ```dart
-object({
-  'name': string().min(3),
-  'age': number().positive(),
-}).merge({
-  'email': string().email(),
-});
+final account = object({'name': string()});
+final merged = account.merge({'name': string().min(3)});
 ```
-
-::: warning
-The `merge()` method will overwrite the existing properties.
-:::
 
 ### `pick()`
 
-To pick specific properties from the object schema to create a new schema, you can use the `pick()` method.
+Keep selected fields in the requested order. Unknown names are ignored.
 
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-});
-
-final personWithoutAge = person.pick(['name']);
+final account = object({'name': string(), 'age': integer()});
+final publicName = account.pick(['name']);
 ```
 
 ### `omit()`
 
-To omit specific properties from the object schema to create a new schema, you can use the `omit()` method.
+Remove selected fields.
 
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-});
-
-final personWithoutName = person.omit(['name']);
+final account = object({'name': string(), 'password': string()});
+final publicAccount = account.omit(['password']);
 ```
 
 ### `partial()`
 
-The `partial()` method makes every field optional. Missing fields stay absent, including fields with defaults. A supplied value still has to pass its original schema; use `nullable()` separately to accept explicit null.
+Make fields optional and preserve omission, including for fields with defaults. `.patch()` is an alias.
 
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-});
-
-final personPartial = person.partial();
+final patch = object({
+  'name': string().withDefault('Guest'),
+  'nickname': string().nullable(),
+}).partial();
+print(patch.parse({})); // {}
+print(patch.parse({'nickname': null})); // {nickname: null}
 ```
 
-Set `deep: true` to apply this policy to directly nested object schemas. `patch()` is an alias for `partial()`.
+Supplied values still follow their child schemas. `partial(deep: true)` applies the policy to direct nested objects. It does not make list elements into patches.
+
+Shape helpers reject a resulting schema if a declared rule path no longer exists. Add [cross-field rules](/contextual-rules) after deriving your shape.
+
+## Property counts
 
 ```dart
-final person = object({
-  'name': string().min(3),
-  'age': number().positive(),
-  'address': object({
-    'city': string().min(3),
-    'country': string().min(3),
-  })
-});
-
-final personPartial = person.partial(deep: true);
+object({}).passthrough().minProperties(1).maxProperties(5);
+object({}).passthrough().lengthProperties(2);
 ```
 
-## Recursive Objects
+Counts apply to the parsed map, after child defaults and unknown-key handling.
 
-Sometimes you need to validate recursive objects. For example, a tree structure or a linked list. Acanthis provides a way to do this using the `lazy()` method.
+## Recursive objects
+
+`lazy()` receives the containing object schema. Use it for a recursive field.
 
 ```dart
 final tree = object({
-  'value': number(),
+  'name': string(),
   'children': lazy((parent) => parent.list()),
 });
+
+print(tree.validate({
+  'name': 'root',
+  'children': [{'name': 'leaf', 'children': <Object?>[]}],
+})); // true
 ```
 
----
+The resolver is bound to the parent and reused. Keep definitions deterministic. Automatic binding applies to direct object fields; a standalone lazy definition must be bound explicitly with `definition(parent)`. Async child schemas require async parsing. Recursive export supports local references; mock generation does not support lazy schemas.
 
-[Browse all schemas](/defining-schemas) · [Understand validation results](/validation-results)
+## Input reuse
+
+Unchanged typed maps can be returned directly, including when checks run.
+
+```dart
+final input = <String, Object?>{'name': 'Ada'};
+final output = object({'name': string()}).parse(input);
+print(identical(input, output)); // true
+final independent = Map<String, Object?>.of(output);
+```
+
+Mutations can be visible through both references, and read-only input can produce read-only output. A change such as stripping, a default, coercion, or transformation copies the affected ancestors. `Map.of()` creates an independent outer map; it does not deep-copy nested values. Typed lists can also reuse their input.

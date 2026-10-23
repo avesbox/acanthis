@@ -14,7 +14,10 @@
 include: package:lints/recommended.yaml
 
 analyzer:
-  exclude: [benchmark/**]
+  exclude:
+    - benchmark/**
+    # Archived sources run with their own package configuration in comparisons.
+    - v1/**
 
 # Uncomment the following section to specify additional rules.
 

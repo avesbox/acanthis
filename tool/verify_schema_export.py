@@ -1,29 +1,43 @@
 """Validate exports with jsonschema 4.25.1 and openapi-schema-validator 0.6.3.
 
-Generate with EXPORT_CORPUS_PATH set when running schema_export_contract_test.dart,
+Generate with COLLECTION_EXPORT_CORPUS set when running test/collection_export_test.dart,
 then run: python tool/verify_schema_export.py path/to/corpus.json
-Or run both corpora with: dart run tool/audit_schema_export.dart
+Or run all current corpora with: dart run tool/audit_schema_export.dart
 """
 import json
 import sys
+from functools import cache
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
 from openapi_schema_validator import OAS31Validator
 
-cases = json.loads(Path(sys.argv[1]).read_text())
+
+@cache
+def validator_for(definition, openapi):
+    # Audit each distinct schema once; still validate every input and output.
+    schema = json.loads(definition)
+    validator_type = OAS31Validator if openapi else Draft202012Validator
+    validator_type.check_schema(schema)
+    return validator_type(schema)
+
+
+cases = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
+if not isinstance(cases, list) or not cases:
+    raise ValueError('Expected a nonempty export corpus')
 for index, case in enumerate(cases):
-    for key in ('inputSchema', 'outputSchema'):
-        Draft202012Validator.check_schema(case[key])
-    accepted = Draft202012Validator(case['inputSchema']).is_valid(case['input'])
+    validators = {
+        key: validator_for(json.dumps(case[key], sort_keys=True), False)
+        for key in ('inputSchema', 'outputSchema')
+    }
+    accepted = validators['inputSchema'].is_valid(case['input'])
     assert accepted == case['valid'], f'Input acceptance mismatch in case {index}: {case}'
     if case['valid']:
-        Draft202012Validator(case['outputSchema']).validate(case['output'])
+        validators['outputSchema'].validate(case['output'])
     for key, fallback in [('openApiInput', 'inputSchema'), ('openApiOutput', 'outputSchema')]:
         schema = dict(case.get(key, case[fallback]))
         schema.pop('$schema', None)
-        OAS31Validator.check_schema(schema)
-        validator = OAS31Validator(schema)
+        validator = validator_for(json.dumps(schema, sort_keys=True), True)
         if key == 'openApiInput':
             assert validator.is_valid(case['input']) == case['valid'], f'OpenAPI input mismatch in case {index}: {case}'
         elif case['valid']:

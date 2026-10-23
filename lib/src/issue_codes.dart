@@ -79,6 +79,10 @@ abstract final class AcanthisIssueCodes {
   static const String variantGuard = 'variantGuard';
   static const String transform = 'transform';
   static const String custom = 'custom';
+  static const String containsItem = 'containsItem';
+  static const String duplicateKey = 'duplicateKey';
+  static const String jsonSchemaFalse = 'jsonSchema.false';
+  static const String jsonSchemaNot = 'jsonSchema.not';
 
   /// All built-in codes, including the fallback for unnamed custom checks.
   static const Set<String> values = {
@@ -160,5 +164,9 @@ abstract final class AcanthisIssueCodes {
     variantGuard,
     transform,
     custom,
+    containsItem,
+    duplicateKey,
+    jsonSchemaFalse,
+    jsonSchemaNot,
   };
 }
